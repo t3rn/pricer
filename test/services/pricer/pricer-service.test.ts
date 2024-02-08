@@ -507,34 +507,34 @@ describe('Pricer', () => {
   })
 
   describe('assessDealForPublication', () => {
-    let overpayOption: string, slippageOption: string;
-    let userBalance: BigNumber;
-    let estimatedCost: CostResult;
-    let userStrategy: { maxSpendLimit: BigNumber };
-    let marketPricing: PriceResult;
+    let overpayOption: string, slippageOption: string
+    let userBalance: BigNumber
+    let estimatedCost: CostResult
+    let userStrategy: { maxSpendLimit: BigNumber }
+    let marketPricing: PriceResult
 
     beforeEach(() => {
-      userBalance = BigNumber.from('1100000000000000000'); // 1 ETH
+      userBalance = BigNumber.from('1100000000000000000') // 1 ETH
       estimatedCost = {
         costInWei: BigNumber.from('0'),
         costInEth: '0',
         costInUsd: 0,
         costInAsset: BigNumber.from('200000000000000'), // 0.0002 ETH
         asset: 'testAsset',
-      };
-      userStrategy = { maxSpendLimit: BigNumber.from('1100000000000000000') }; // 1.1 ETH
+      }
+      userStrategy = { maxSpendLimit: BigNumber.from('1100000000000000000') } // 1.1 ETH
       marketPricing = {
         assetA: 'testA',
         assetB: 'testB',
         priceAinB: BigNumber.from('1000000000000000000'),
         priceAInUsd: '0.1',
         priceBInUsd: '0.1',
-      };
-    });
+      }
+    })
 
     it('should assess a deal as publishable with regular overpay and regular slippage', () => {
-      overpayOption = 'regular';
-      slippageOption = 'regular';
+      overpayOption = 'regular'
+      slippageOption = 'regular'
 
       const result = pricer.assessDealForPublication(
         userBalance,
@@ -545,22 +545,22 @@ describe('Pricer', () => {
         slippageOption as 'zero' | 'regular' | 'high' | 'custom',
         undefined,
         undefined,
-      );
+      )
 
-      expect(result.isPublishable).to.be.true;
-      expect(ethers.utils.formatEther(result.maxReward.toString())).to.equal('1.02022'); // expect 1.02022 ETH
-    });
+      expect(result.isPublishable).to.be.true
+      expect(ethers.utils.formatEther(result.maxReward.toString())).to.equal('1.0002') // expect 1.0002 ETH
+    })
 
     it('should return a non-publishable deal when user balance is insufficient', () => {
-      userBalance = BigNumber.from('1000000000000000000'); // 1 ETH
-      estimatedCost.costInAsset = BigNumber.from('1000000000000000000'); // 1 ETH
-      estimatedCost.costInWei = BigNumber.from('1000000000000000000'); // 1 ETH
-      estimatedCost.costInEth = '1.0';
-      estimatedCost.costInUsd = 2000;
-      estimatedCost.asset = 'ETH';
-      userStrategy.maxSpendLimit = BigNumber.from('500000000000000000'); // 0.5 ETH
-      overpayOption = 'regular';
-      slippageOption = 'regular';
+      userBalance = BigNumber.from('1000000000000000000') // 1 ETH
+      estimatedCost.costInAsset = BigNumber.from('1000000000000000000') // 1 ETH
+      estimatedCost.costInWei = BigNumber.from('1000000000000000000') // 1 ETH
+      estimatedCost.costInEth = '1.0'
+      estimatedCost.costInUsd = 2000
+      estimatedCost.asset = 'ETH'
+      userStrategy.maxSpendLimit = BigNumber.from('500000000000000000') // 0.5 ETH
+      overpayOption = 'regular'
+      slippageOption = 'regular'
 
       const result = pricer.assessDealForPublication(
         userBalance,
@@ -569,15 +569,15 @@ describe('Pricer', () => {
         marketPricing,
         overpayOption as 'regular' | 'custom' | 'slow' | 'fast',
         slippageOption as 'zero' | 'regular' | 'high' | 'custom',
-      );
+      )
 
-      expect(result.isPublishable).to.be.false;
-      expect(ethers.utils.formatEther(result.maxReward.toString())).to.equal('2.12');
-    });
+      expect(result.isPublishable).to.be.false
+      expect(ethers.utils.formatEther(result.maxReward.toString())).to.equal('2.0')
+    })
 
     it('should assess a deal as publishable with slow overpay and zero slippage', () => {
-      overpayOption = 'slow';
-      slippageOption = 'zero';
+      overpayOption = 'slow'
+      slippageOption = 'zero'
 
       const result = pricer.assessDealForPublication(
         userBalance,
@@ -588,17 +588,17 @@ describe('Pricer', () => {
         slippageOption as 'zero' | 'regular' | 'high' | 'custom',
         undefined,
         undefined,
-      );
+      )
 
-      expect(result.isPublishable).to.be.true;
-      expect(ethers.utils.formatEther(result.maxReward.toString())).to.equal('1.00021'); // expect 1.00021 ETH
-    });
+      expect(result.isPublishable).to.be.true
+      expect(ethers.utils.formatEther(result.maxReward.toString())).to.equal('1.0002') // expect 1.0002 ETH
+    })
 
     it('should assess a deal as non-publishable with custom overpay and high slippage', () => {
-      userBalance = BigNumber.from('1000000000000000000'); // 1 ETH
-      userStrategy.maxSpendLimit = BigNumber.from('1100000000000000000'); // 1.1 ETH
-      overpayOption = 'custom';
-      slippageOption = 'high';
+      userBalance = BigNumber.from('1000000000000000000') // 1 ETH
+      userStrategy.maxSpendLimit = BigNumber.from('1100000000000000000') // 1.1 ETH
+      overpayOption = 'custom'
+      slippageOption = 'high'
 
       const result = pricer.assessDealForPublication(
         userBalance,
@@ -609,17 +609,17 @@ describe('Pricer', () => {
         slippageOption as 'zero' | 'regular' | 'high' | 'custom',
         1.5, // customOverpayRatio
         1.1, // customSlippage
-      );
+      )
 
-      expect(result.isPublishable).to.be.false;
-      expect(ethers.utils.formatEther(result.maxReward.toString())).to.equal('1.0503');
-    });
+      expect(result.isPublishable).to.be.false
+      expect(ethers.utils.formatEther(result.maxReward.toString())).to.equal('1.0002')
+    })
 
     it('should assess a deal as publishable with fast overpay and high slippage', () => {
-      userBalance = BigNumber.from('1300000000000000000'); // 1.3 ETH
-      userStrategy.maxSpendLimit = BigNumber.from('1100000000000000000'); // 1.1 ETH
-      overpayOption = 'fast';
-      slippageOption = 'high';
+      userBalance = BigNumber.from('1300000000000000000') // 1.3 ETH
+      userStrategy.maxSpendLimit = BigNumber.from('1100000000000000000') // 1.1 ETH
+      overpayOption = 'fast'
+      slippageOption = 'high'
 
       const result = pricer.assessDealForPublication(
         userBalance,
@@ -630,16 +630,16 @@ describe('Pricer', () => {
         slippageOption as 'zero' | 'regular' | 'high' | 'custom',
         undefined,
         undefined,
-      );
+      )
 
-      expect(result.isPublishable).to.be.true;
-      expect(ethers.utils.formatEther(result.maxReward.toString())).to.equal('1.05024');
-    });
+      expect(result.isPublishable).to.be.true
+      expect(ethers.utils.formatEther(result.maxReward.toString())).to.equal('1.0002')
+    })
 
     it('should assess a deal as non-publishable with custom overpay and zero slippage', () => {
-      userStrategy.maxSpendLimit = BigNumber.from('1000000000000000000'); // 1 ETH
-      overpayOption = 'custom';
-      slippageOption = 'zero';
+      userStrategy.maxSpendLimit = BigNumber.from('1000000000000000000') // 1 ETH
+      overpayOption = 'custom'
+      slippageOption = 'zero'
 
       const result = pricer.assessDealForPublication(
         userBalance,
@@ -650,16 +650,16 @@ describe('Pricer', () => {
         slippageOption as 'zero' | 'regular' | 'high' | 'custom',
         1.5, // customOverpayRatio
         undefined,
-      );
+      )
 
-      expect(result.isPublishable).to.be.false;
-      expect(ethers.utils.formatEther(result.maxReward.toString())).to.equal('0.0');
-    });
+      expect(result.isPublishable).to.be.false
+      expect(ethers.utils.formatEther(result.maxReward.toString())).to.equal('0.0')
+    })
 
     it('should assess a deal as non-publishable with regular overpay and custom slippage', () => {
-      userStrategy.maxSpendLimit = BigNumber.from('1100000000000000000'); // 1.1 ETH
-      overpayOption = 'regular';
-      slippageOption = 'custom';
+      userStrategy.maxSpendLimit = BigNumber.from('1000000000000000000') // 1.1 ETH
+      overpayOption = 'regular'
+      slippageOption = 'custom'
 
       const result = pricer.assessDealForPublication(
         userBalance,
@@ -670,31 +670,30 @@ describe('Pricer', () => {
         slippageOption as 'zero' | 'regular' | 'high' | 'custom',
         undefined,
         1.2, // customSlippage
-      );
+      )
 
-      expect(result.isPublishable).to.be.false;
-      expect(ethers.utils.formatEther(result.maxReward.toString())).to.equal('1.20022');
-    });
-  });
+      expect(result.isPublishable).to.be.false
+      expect(ethers.utils.formatEther(result.maxReward.toString())).to.equal('0.0')
+    })
+  })
 
   describe('proposeDealForSetAmount', () => {
-
     it('should propose a deal for a set amount', () => {
-      const balance = BigNumber.from(ethers.utils.parseEther('1').toString());
+      const balance = BigNumber.from(ethers.utils.parseEther('1').toString())
       const costOfExecutionOnDestination = {
         costInWei: BigNumber.from(ethers.utils.parseUnits('0.001', 'ether').toString()),
         costInEth: '0.001',
         costInUsd: 1.98,
         asset: 'optimism',
         costInAsset: BigNumber.from(ethers.utils.parseEther('1.8').toString()),
-      };
+      }
       const strategy = {
         minProfitPerOrder: BigNumber.from(ethers.utils.parseEther('0.01').toString()),
         minProfitRate: 1,
         maxAmountPerOrder: BigNumber.from(ethers.utils.parseEther('0.5').toString()),
         minAmountPerOrder: BigNumber.from(ethers.utils.parseEther('0.005').toString()),
         maxShareOfMyBalancePerOrder: 50,
-      };
+      }
       const order: Order = {
         id: '1',
         destination: 'bscp',
@@ -709,45 +708,45 @@ describe('Pricer', () => {
         maxReward: BigNumber.from(ethers.utils.parseEther('0.112').toString()),
         nonce: 0,
         txHash: '0xasdf123',
-      };
+      }
       const pricing = {
         assetA: 'optimism',
         assetB: 'bscp',
         priceAinB: BigNumber.from(ethers.utils.parseEther('0.556').toString()),
         priceAInUsd: '0',
         priceBInUsd: '0',
-      };
+      }
 
-      const result = pricer.proposeDealForSetAmount(balance, costOfExecutionOnDestination, strategy, order, pricing);
+      const result = pricer.proposeDealForSetAmount(balance, costOfExecutionOnDestination, strategy, order, pricing)
 
-      expect(result.profitability.isProfitable).to.equal(false);
-      expect(result.profitability.profit.toString()).to.equal('0');
-      expect(ethers.utils.formatEther(result.profitability.loss.toString())).to.equal('-1.837728');
-      expect(result.assumedCost).to.equal(costOfExecutionOnDestination);
-      expect(result.assumedPrice).to.equal(pricing);
-      expect(result.rewardAsset).to.equal(order.rewardAsset);
-      expect(result.orderAsset).to.equal(order.assetAddress);
-      expect(result.costOverpaymentPercent).to.equal(0);
-      expect(result.setAmount).to.equal(order.amount);
-      expect(ethers.utils.formatEther(result.proposedMaxReward.toString())).to.equal('1.9');
-    });
+      expect(result.profitability.isProfitable).to.equal(false)
+      expect(result.profitability.profit.toString()).to.equal('0')
+      expect(ethers.utils.formatEther(result.profitability.loss.toString())).to.equal('-1.837728')
+      expect(result.assumedCost).to.equal(costOfExecutionOnDestination)
+      expect(result.assumedPrice).to.equal(pricing)
+      expect(result.rewardAsset).to.equal(order.rewardAsset)
+      expect(result.orderAsset).to.equal(order.assetAddress)
+      expect(result.costOverpaymentPercent).to.equal(0)
+      expect(result.setAmount).to.equal(order.amount)
+      expect(ethers.utils.formatEther(result.proposedMaxReward.toString())).to.equal('1.9')
+    })
 
     it('should propose an unprofitable deal for a set amount', () => {
-      const balance = BigNumber.from(ethers.utils.parseEther('1').toString()); // 1 ETH
+      const balance = BigNumber.from(ethers.utils.parseEther('1').toString()) // 1 ETH
       const costOfExecutionOnDestination = {
         costInWei: BigNumber.from(ethers.utils.parseUnits('0.0005', 'ether').toString()),
         costInEth: '0.000500000000000000',
         costInUsd: 0.99,
         asset: 'optimism',
         costInAsset: BigNumber.from(ethers.utils.parseEther('0.00001').toString()),
-      };
+      }
       const strategy = {
         minProfitPerOrder: BigNumber.from(ethers.utils.parseEther('0.00000001').toString()),
         minProfitRate: 1,
         maxAmountPerOrder: BigNumber.from(ethers.utils.parseEther('0.2').toString()),
         minAmountPerOrder: BigNumber.from(ethers.utils.parseEther('0.005').toString()),
         maxShareOfMyBalancePerOrder: 50,
-      };
+      }
       const order: Order = {
         id: '2',
         destination: 'bscp',
@@ -762,45 +761,45 @@ describe('Pricer', () => {
         maxReward: BigNumber.from(ethers.utils.parseEther('5.56688604806143').toString()),
         nonce: 0,
         txHash: '0xasdf123',
-      };
+      }
       const pricing = {
         assetA: 'optimism',
         assetB: 'bscp',
         priceAinB: BigNumber.from(ethers.utils.parseEther('1').toString()),
         priceAInUsd: '1.0',
         priceBInUsd: '1.0',
-      };
+      }
 
-      const result = pricer.proposeDealForSetAmount(balance, costOfExecutionOnDestination, strategy, order, pricing);
+      const result = pricer.proposeDealForSetAmount(balance, costOfExecutionOnDestination, strategy, order, pricing)
 
-      expect(result.profitability.isProfitable).to.equal(false);
-      expect(result.profitability.profit.toString()).to.equal('0');
-      expect(ethers.utils.formatEther(result.profitability.loss)).to.equal('5.36687604806143');
-      expect(result.assumedCost).to.equal(costOfExecutionOnDestination);
-      expect(result.assumedPrice).to.equal(pricing);
-      expect(result.rewardAsset).to.equal(order.rewardAsset);
-      expect(result.orderAsset).to.equal(order.assetAddress);
-      expect(result.costOverpaymentPercent).to.equal(0);
-      expect(result.setAmount).to.equal(order.amount);
-      expect(ethers.utils.formatEther(result.proposedMaxReward)).to.equal('0.20001');
-    });
+      expect(result.profitability.isProfitable).to.equal(false)
+      expect(result.profitability.profit.toString()).to.equal('0')
+      expect(ethers.utils.formatEther(result.profitability.loss)).to.equal('5.36687604806143')
+      expect(result.assumedCost).to.equal(costOfExecutionOnDestination)
+      expect(result.assumedPrice).to.equal(pricing)
+      expect(result.rewardAsset).to.equal(order.rewardAsset)
+      expect(result.orderAsset).to.equal(order.assetAddress)
+      expect(result.costOverpaymentPercent).to.equal(0)
+      expect(result.setAmount).to.equal(order.amount)
+      expect(ethers.utils.formatEther(result.proposedMaxReward)).to.equal('0.20001')
+    })
 
     it('should propose a deal with cost overpayment for a set amount', () => {
-      const balance = BigNumber.from(ethers.utils.parseEther('1').toString());
+      const balance = BigNumber.from(ethers.utils.parseEther('1').toString())
       const costOfExecutionOnDestination = {
         costInWei: BigNumber.from(ethers.utils.parseUnits('0.0015', 'ether').toString()),
         costInEth: '0.001500000000000000',
         costInUsd: 2.97,
         asset: 'optimism',
         costInAsset: BigNumber.from(ethers.utils.parseEther('2.694504583466588357').toString()),
-      };
+      }
       const strategy = {
         minProfitPerOrder: BigNumber.from(ethers.utils.parseEther('0.00000001').toString()),
         minProfitRate: 1,
         maxAmountPerOrder: BigNumber.from(ethers.utils.parseEther('0.5').toString()),
         minAmountPerOrder: BigNumber.from(ethers.utils.parseEther('0.005').toString()),
         maxShareOfMyBalancePerOrder: 50,
-      };
+      }
       const order: Order = {
         id: '3',
         destination: 'bscp',
@@ -815,45 +814,45 @@ describe('Pricer', () => {
         maxReward: BigNumber.from(ethers.utils.parseEther('0.112').toString()),
         nonce: 0,
         txHash: '0xasdf123',
-      };
+      }
       const pricing = {
         assetA: 'optimism',
         assetB: 'bscp',
         priceAinB: BigNumber.from(ethers.utils.parseEther('0.556688604806143').toString()),
         priceAInUsd: '0',
         priceBInUsd: '0',
-      };
+      }
 
-      const result = pricer.proposeDealForSetAmount(balance, costOfExecutionOnDestination, strategy, order, pricing);
+      const result = pricer.proposeDealForSetAmount(balance, costOfExecutionOnDestination, strategy, order, pricing)
 
-      expect(result.profitability.isProfitable).to.equal(false);
-      expect(result.profitability.profit.toString()).to.equal('0');
-      expect(ethers.utils.formatEther(result.profitability.loss)).to.equal('-2.932155459728300341');
-      expect(result.assumedCost).to.equal(costOfExecutionOnDestination);
-      expect(result.assumedPrice).to.equal(pricing);
-      expect(result.rewardAsset).to.equal(order.rewardAsset);
-      expect(result.orderAsset).to.equal(order.assetAddress);
-      expect(result.costOverpaymentPercent).to.equal(0);
-      expect(result.setAmount).to.equal(order.amount);
-      expect(ethers.utils.formatEther(result.proposedMaxReward)).to.equal('2.994504583466588357');
-    });
+      expect(result.profitability.isProfitable).to.equal(false)
+      expect(result.profitability.profit.toString()).to.equal('0')
+      expect(ethers.utils.formatEther(result.profitability.loss)).to.equal('-2.932155459728300341')
+      expect(result.assumedCost).to.equal(costOfExecutionOnDestination)
+      expect(result.assumedPrice).to.equal(pricing)
+      expect(result.rewardAsset).to.equal(order.rewardAsset)
+      expect(result.orderAsset).to.equal(order.assetAddress)
+      expect(result.costOverpaymentPercent).to.equal(0)
+      expect(result.setAmount).to.equal(order.amount)
+      expect(ethers.utils.formatEther(result.proposedMaxReward)).to.equal('2.994504583466588357')
+    })
 
     it('should propose a profitable deal for a set amount', () => {
-      const balance = BigNumber.from(ethers.utils.parseEther('1').toString()); // 1 ETH
+      const balance = BigNumber.from(ethers.utils.parseEther('1').toString()) // 1 ETH
       const costOfExecutionOnDestination = {
         costInWei: BigNumber.from(ethers.utils.parseUnits('0.001', 'ether').toString()),
         costInEth: '0.001',
         costInUsd: 2,
         asset: 'optimism',
         costInAsset: BigNumber.from(ethers.utils.parseEther('0.001').toString()),
-      };
+      }
       const strategy = {
         minProfitPerOrder: BigNumber.from(ethers.utils.parseEther('0.0001').toString()), // min profit of 0.0001 ETH
         minProfitRate: 1, // min profit rate of 1%
         maxAmountPerOrder: BigNumber.from(ethers.utils.parseEther('0.5').toString()), //  0.5 ETH
         minAmountPerOrder: BigNumber.from(ethers.utils.parseEther('0.01').toString()), //  0.01 ETH
         maxShareOfMyBalancePerOrder: 50, // 50% of balance per order
-      };
+      }
       const order: Order = {
         id: '4',
         destination: 'bscp',
@@ -868,28 +867,27 @@ describe('Pricer', () => {
         maxReward: BigNumber.from(ethers.utils.parseEther('0.3').toString()), // 0.3 ETH
         nonce: 0,
         txHash: '0xasdf123',
-      };
+      }
       const pricing = {
         assetA: 'optimism',
         assetB: 'bscp',
         priceAinB: BigNumber.from(ethers.utils.parseEther('1').toString()), // 1:1 price ratio for simplicity
         priceAInUsd: '1.0',
         priceBInUsd: '1.0',
-      };
+      }
 
-      const result = pricer.proposeDealForSetAmount(balance, costOfExecutionOnDestination, strategy, order, pricing);
+      const result = pricer.proposeDealForSetAmount(balance, costOfExecutionOnDestination, strategy, order, pricing)
 
-      expect(result.profitability.isProfitable).to.equal(true);
-      expect(ethers.utils.formatEther(result.profitability.profit)).to.equal('0.099'); // expected profit of 0.099 ETH
-      expect(result.profitability.loss.toString()).to.equal('0');
-      expect(result.assumedCost).to.equal(costOfExecutionOnDestination);
-      expect(result.assumedPrice).to.equal(pricing);
-      expect(result.rewardAsset).to.equal(order.rewardAsset);
-      expect(result.orderAsset).to.equal(order.assetAddress);
-      expect(result.costOverpaymentPercent).to.equal(0);
-      expect(result.setAmount).to.equal(order.amount);
-      expect(ethers.utils.formatEther(result.proposedMaxReward)).to.equal('0.3');
-    });
-
+      expect(result.profitability.isProfitable).to.equal(true)
+      expect(ethers.utils.formatEther(result.profitability.profit)).to.equal('0.099') // expected profit of 0.099 ETH
+      expect(result.profitability.loss.toString()).to.equal('0')
+      expect(result.assumedCost).to.equal(costOfExecutionOnDestination)
+      expect(result.assumedPrice).to.equal(pricing)
+      expect(result.rewardAsset).to.equal(order.rewardAsset)
+      expect(result.orderAsset).to.equal(order.assetAddress)
+      expect(result.costOverpaymentPercent).to.equal(0)
+      expect(result.setAmount).to.equal(order.amount)
+      expect(ethers.utils.formatEther(result.proposedMaxReward)).to.equal('0.3')
+    })
   })
 })

@@ -21,6 +21,8 @@ import { Config } from '../config/config'
 import { PriceCache } from './price-cache'
 import { AssetMapper } from '../config/circuit-assets'
 
+export const ERC20_GAS_LIMIT = ethers.BigNumber.from(50000)
+export const ETH_TRANSFER_GAS_LIMIT = ethers.BigNumber.from(21000)
 export interface OrderArbitrageStrategy {
   minProfitPerOrder: BigNumber // in target asset
   minProfitRate: number // in %
@@ -123,7 +125,9 @@ export class Pricer {
 
   // Converts a floating-point number to a string representation of a BigInt.
   floatToBigIntString(value: number): string {
-    const asBigInt = BigInt(value)
+    // Truncate the decimal part to ensure the value is a whole number
+    const truncatedValue = Math.trunc(value)
+    const asBigInt = BigInt(truncatedValue)
     return asBigInt.toString()
   }
 
@@ -277,7 +281,7 @@ export class Pricer {
     customSlippage?: number,
   ): DealPublishability {
     // Determine the overpay ratio based on the selected option
-    let overpayRatio
+    let overpayRatio: number
     switch (overpayOption) {
       case 'slow':
         overpayRatio = 1.05 // 5% overpay
@@ -296,7 +300,7 @@ export class Pricer {
     }
 
     // Determine the slippage tolerance
-    let slippageTolerance
+    let slippageTolerance: number
     switch (slippageOption) {
       case 'zero':
         slippageTolerance = 1.0 // No slippage
@@ -314,42 +318,19 @@ export class Pricer {
         slippageTolerance = 1.0
     }
 
-    // Function to calculate the scale factor based on decimal places
-    const calculateScaleFactor = (value: number) => {
-      const decimalPlaces = (value.toString().split('.')[1] || '').length
-      return Math.pow(10, decimalPlaces)
-    }
+    // Adjusted cost calculation using BigNumber for precision
+    const overpayRatioBN = this.floatToBigNum(overpayRatio)
+    const slippageToleranceBN = this.floatToBigNum(slippageTolerance)
 
-    // Determine the maximum scale factor needed for both overpayRatio and slippageTolerance
-    const overpayScaleFactor = calculateScaleFactor(overpayRatio)
-    const slippageScaleFactor = calculateScaleFactor(slippageTolerance)
-
-    // Convert overpayRatio and slippageTolerance to integer equivalents
-    let overpayRatioInt = Math.floor(overpayRatio * overpayScaleFactor)
-    let slippageToleranceInt = Math.floor(slippageTolerance * slippageScaleFactor)
-
-    // Adjust maxReward calculation with overpay and slippage
-    const adjustedCost = estimatedCostOfExecution.costInAsset.mul(overpayRatioInt).div(overpayScaleFactor) // Adjust for the first scaleFactor
-
-    console.log(
-      `overpayRatio: ${overpayRatio}, overpayRatioInt: ${overpayRatioInt}, overpayScaleFactor: ${overpayScaleFactor}`,
-    )
-
-    console.log(
-      `slippageTolerance: ${slippageTolerance}, slippageToleranceInt: ${slippageToleranceInt}, slippageScaleFactor: ${slippageScaleFactor}`,
-    )
-
-    console.log(`adjustedCost: ${utils.formatEther(adjustedCost)}`)
+    // Adjust for overpay
+    const adjustedCost = estimatedCostOfExecution.costInAsset.mul(overpayRatioBN).div(this.floatToBigNum(1))
 
     // Adjust marketPricing.priceAinB with slippage tolerance
-    const adjustedPriceAinB = marketPricing.priceAinB.mul(slippageToleranceInt).div(slippageScaleFactor)
-
-    console.log(`adjustedPriceAinB: ${utils.formatEther(adjustedPriceAinB)}`)
+    const adjustedPriceAinB = marketPricing.priceAinB.mul(slippageToleranceBN).div(this.floatToBigNum(1))
 
     // Calculate maxReward considering the adjusted cost and market pricing with slippage
     const maxReward = adjustedCost.add(adjustedPriceAinB)
 
-    console.log(`userBalance: ${utils.formatEther(userBalance)}, maxReward: ${utils.formatEther(maxReward)}`)
     // Assess if the user's balance is sufficient for the maxReward
     if (userBalance.lt(maxReward)) {
       return {
@@ -357,8 +338,6 @@ export class Pricer {
         maxReward,
       }
     }
-
-    console.log(`maxReward: ${utils.formatEther(maxReward)}`)
 
     // Consider user's strategy constraints (e.g., max spending limit)
     const isWithinStrategyLimits = maxReward.lte(userStrategy.maxSpendLimit as BigNumber)
@@ -510,8 +489,7 @@ export class Pricer {
       (assetObj: AssetAddressOnTarget) => assetObj.asset === asset,
     )
     if (!assetObj) {
-      // See if that's one of the t3rn vendor assets
-      logger.warn(
+      logger.debug(
         {
           asset,
           destinationNetwork,
