@@ -18,13 +18,29 @@ const price_cache_1 = require("./price-cache");
 const circuit_assets_1 = require("../config/circuit-assets");
 exports.ERC20_GAS_LIMIT = ethers_1.ethers.BigNumber.from(50000);
 exports.ETH_TRANSFER_GAS_LIMIT = ethers_1.ethers.BigNumber.from(21000);
+/**
+ * Represents a utility for pricing assets, evaluating orders, and assessing deals for profitability.
+ */
 class Pricer {
+    /**
+     * Initializes a new instance of the Pricer class with the specified configuration.
+     *
+     * @param _config Configuration settings including provider URLs and token configurations.
+     */
     constructor(_config) {
         this.config = _config;
         this.ankr = new ankr_js_1.AnkrProvider(this.config.pricer.providerUrl);
         this.priceCache = new price_cache_1.PriceCache(this.config);
         this.priceCache.initCleanup();
     }
+    /**
+     * Retrieves the USD value of a specified amount of an asset.
+     *
+     * @param asset The asset for which to retrieve the price.
+     * @param destinationNetwork The network on which the asset is located.
+     * @param amount The amount of the asset.
+     * @return The value of the specified amount of the asset in USD.
+     */
     receiveAssetUSDValue(asset, destinationNetwork, amount) {
         return __awaiter(this, void 0, void 0, function* () {
             const price = yield this.receiveAssetPriceWithCache(asset, destinationNetwork);
@@ -32,6 +48,14 @@ class Pricer {
             return Pricer.priceAsFloat(valueOfAmountOfAssetInUSD);
         });
     }
+    /**
+     * Retrieves pricing information for converting between two assets.
+     *
+     * @param assetA The first asset.
+     * @param assetB The second asset, to which the first asset's price is being compared.
+     * @param destinationNetwork The network on which the assets are located.
+     * @return An object containing the price of assetA in terms of assetB.
+     */
     retrieveAssetPricing(assetA, assetB, destinationNetwork) {
         return __awaiter(this, void 0, void 0, function* () {
             const priceA = yield this.receiveAssetPriceWithCache(assetA, destinationNetwork);
@@ -39,6 +63,16 @@ class Pricer {
             return this.calculatePricingAssetAinB(assetA, assetB, priceA, priceB, destinationNetwork);
         });
     }
+    /**
+     * Calculates the cost of executing a transaction in terms of a specified asset.
+     *
+     * @param asset The asset in which the cost is to be calculated.
+     * @param destinationAsset The native asset of the network, used for calculating gas costs.
+     * @param destinationNetwork The network on which the transaction will take place.
+     * @param estGasPriceOnNativeInWei The estimated gas price in Wei.
+     * @param ofTokenTransfer The address of the token being transferred, used to determine gas limits.
+     * @return The cost of the transaction in the specified asset.
+     */
     retrieveCostInAsset(asset, destinationAsset, destinationNetwork, estGasPriceOnNativeInWei, ofTokenTransfer) {
         return __awaiter(this, void 0, void 0, function* () {
             const priceAsset = yield this.receiveAssetPriceWithCache(asset, destinationNetwork);
@@ -53,17 +87,18 @@ class Pricer {
             return this.calculateCostInAsset(asset, priceAsset, priceNative, estGasPriceOnNativeInWei, ofTokenTransfer);
         });
     }
+    // Converts a floating-point number to a string representation of a BigInt.
     floatToBigIntString(value) {
         const asBigInt = BigInt(value);
         return asBigInt.toString();
     }
+    // Converts a floating-point number to a BigNumber.
     floatToBigNum(value) {
         return ethers_1.BigNumber.from(this.floatToBigIntString(value));
     }
     /**
-     * Implement logic on evaluating the order's profitability based on selected by the user / executor strategy
-     * For executor - choose Order-based Arbitrage strategy
-     * For user - choose external sources price compare strategy
+     * Evaluates the profitability of an order based on a given strategy.
+     * Determines whether executing the order would result in a profit or loss.
      *
      * @param {BigNumber} balance Balance of the executor designated in destination asset
      * @param {CostResult}  costOfExecutionOnDestination  Cost designated in destination asset
@@ -155,6 +190,20 @@ class Pricer {
             loss: isProfitable ? ethers_1.BigNumber.from(0) : potentialProfit,
         };
     }
+    /**
+     * Assesses the publishability of a deal based on user balance, estimated cost, and user-defined strategy.
+     * Determines whether the deal can be published given the constraints.
+     *
+     * @param userBalance The balance of the user in the native asset.
+     * @param estimatedCostOfExecution The estimated cost of executing the deal.
+     * @param userStrategy The user's strategy for publishing deals.
+     * @param marketPricing The current market pricing information for involved assets.
+     * @param overpayOption User's preference for overpaying to expedite the deal.
+     * @param slippageOption User's tolerance for price slippage in the deal.
+     * @param customOverpayRatio Custom overpay ratio if the 'custom' option is selected.
+     * @param customSlippage Custom slippage tolerance if the 'custom' option is selected.
+     * @return An object indicating whether the deal is publishable and the maximum reward for the deal.
+     */
     assessDealForPublication(userBalance, estimatedCostOfExecution, userStrategy, marketPricing, overpayOption, slippageOption, customOverpayRatio, customSlippage) {
         // Determine the overpay ratio based on the selected option
         let overpayRatio;
@@ -231,6 +280,16 @@ class Pricer {
             maxReward: isPublishable ? maxReward : ethers_1.BigNumber.from(0),
         };
     }
+    /**
+     * Proposes a deal for a set amount of asset, evaluating its profitability and setting a maximum reward.
+     *
+     * @param balance The balance of the executor in the destination asset.
+     * @param costOfExecutionOnDestination The estimated cost of executing the deal in the destination asset.
+     * @param strategy The strategy for arbitrage or deal-making.
+     * @param order The order for which the deal is being proposed.
+     * @param pricing The current pricing information for the involved assets.
+     * @return An object containing the proposed deal's profitability and reward.
+     */
     proposeDealForSetAmount(balance, costOfExecutionOnDestination, strategy, order, pricing) {
         const { isProfitable, profit, loss } = this.evaluateDeal(balance, costOfExecutionOnDestination, strategy, order, pricing);
         const proposedMaxReward = profit.add(costOfExecutionOnDestination.costInAsset).add(order.amount);
@@ -317,6 +376,15 @@ class Pricer {
             return response.usdPrice;
         });
     }
+    /**
+     * Retrieves the current price of a given asset on a specified network, utilizing a cache to avoid unnecessary API calls.
+     * If the price is not available in the cache, it attempts to fetch the price from an external provider and stores it in the cache.
+     * If the asset is not found in the predefined map or fetching fails, it logs warnings/errors and may return a fake or zero price as a fallback.
+     *
+     * @param asset The asset for which the price is being retrieved.
+     * @param destinationNetwork The network on which the asset price is to be fetched.
+     * @return The price of the asset as a BigNumber. Returns a fake or zero price if the asset is not found or fetching fails.
+     */
     receiveAssetPriceWithCache(asset, destinationNetwork) {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
@@ -355,6 +423,17 @@ class Pricer {
             return this.parsePriceStringToBigNumberOn18Decimals(price);
         });
     }
+    /**
+     * Calculates the price of one asset in terms of another using their respective USD prices.
+     * This method is useful for converting values between two different assets, taking into account their current market prices.
+     *
+     * @param assetA The first asset, whose price is to be expressed in terms of asset B.
+     * @param assetB The second asset, which serves as the base for the price conversion.
+     * @param priceA The current price of asset A in USD.
+     * @param priceB The current price of asset B in USD.
+     * @param destinationNetwork The network relevant to the price information, used for fetching price details from the cache.
+     * @return An object containing the price of asset A in terms of asset B, along with their USD prices for reference.
+     */
     calculatePricingAssetAinB(assetA, assetB, priceA, priceB, destinationNetwork) {
         const priceAinB = this.calculatePriceAinBOn18Decimals(priceA, priceB);
         const priceAInUsd = this.priceCache.get(assetA, destinationNetwork) || '0';
@@ -367,6 +446,18 @@ class Pricer {
             priceBInUsd,
         };
     }
+    /**
+     * Calculates the cost of executing a transaction with a given asset on the blockchain.
+     * This method takes into account the estimated gas price and the gas limit for the transaction type (ETH transfer or ERC20 token transfer).
+     * It then converts the cost from native currency (e.g., ETH) to the specified asset using the current market prices.
+     *
+     * @param asset The asset in which the cost is to be calculated.
+     * @param priceAsset The current price of the specified asset in USD.
+     * @param priceNative The current price of the native currency (e.g., ETH) in USD.
+     * @param estGasPriceOnNativeInWei The estimated gas price for the transaction in Wei.
+     * @param ofTokenTransfer The type of transaction (native currency transfer or ERC20 token transfer) to determine the gas limit.
+     * @return An object containing the cost of the transaction in Wei, ETH, USD, and the specified asset.
+     */
     calculateCostInAsset(asset, priceAsset, priceNative, estGasPriceOnNativeInWei, ofTokenTransfer) {
         const gasLimit = ofTokenTransfer === this.config.tokens.addressZero ? exports.ETH_TRANSFER_GAS_LIMIT : exports.ERC20_GAS_LIMIT;
         const costInWei = estGasPriceOnNativeInWei.mul(gasLimit);

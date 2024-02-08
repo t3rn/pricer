@@ -1,9 +1,12 @@
 {
   "name": "@t3rn/pricer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Retrieve asset prices, evaluate deals, and propose deals for a given set amount.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist/"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "NODE_ENV=test mocha -r ts-node/register --exit test/**/**/*.ts"

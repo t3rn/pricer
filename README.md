@@ -1,27 +1,28 @@
 # Pricer
 
 ## Overview
-The `Pricer` library provides functionality for retrieving asset prices, evaluating deals, and proposing deals for a given set amount.
-
-## Preinstallation
-Copy the contents of .env.example to a new .env in the root directory and fill in any missing fields.
-```bash
-cp .env.example .env
-```
+`@t3rn/pricer` provides functionality for retrieving asset prices, evaluating deals, and proposing deals for a given set amount.
 
 ## Installation
 ```bash
-npm install
+npm i @t3rn/pricer
 ```
 
-## Testing
+or
+
 ```bash
-npm run test
+pnpm add npm i @t3rn/pricer
 ```
 
-## Building
-```bash
-npm run build
+## Usage
+```ts
+const pricer = new Pricer(config)
+...
+const assetValueUSD = await pricer.receiveAssetUSDValue(
+    assetNamePriceProvider,
+    networkNamePriceProvider,
+    order.maxReward,
+)
 ```
 
 ## Documentation
