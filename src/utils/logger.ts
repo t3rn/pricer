@@ -19,8 +19,8 @@ const loggerConfig = {
   stream: process.stdout,
   transport: isPrettyPrintEnabled
     ? {
-      target: 'pino-pretty',
-    }
+        target: 'pino-pretty',
+      }
     : undefined,
 }
 
