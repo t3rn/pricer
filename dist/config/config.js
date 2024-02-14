@@ -40,7 +40,7 @@ const config = () => ({
         providerUrl: get('PRICER_PROVIDER_URL').required().asString(),
         useMultichain: get('PRICER_USE_MULTICHAIN').required().default('false').asBoolStrict(),
         cleanupIntervalSec: get('PRICER_CLEANUP_INTERVAL_SEC').required().default(60).asInt(),
-    }
+    },
 });
 exports.default = config();
 //# sourceMappingURL=config.js.map

@@ -394,8 +394,7 @@ class Pricer {
             }
             const assetObj = (_a = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) === null || _a === void 0 ? void 0 : _a.find((assetObj) => assetObj.asset === asset);
             if (!assetObj) {
-                // See if that's one of the t3rn vendor assets
-                logger_1.logger.warn({
+                logger_1.logger.debug({
                     asset,
                     destinationNetwork,
                 }, '🍐 Asset not found in assetToAddressMap. Defaulting to fake price.');
