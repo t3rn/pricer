@@ -9,7 +9,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "NODE_ENV=test mocha -r ts-node/register --exit test/**/**/*.ts"
+    "test": "NODE_ENV=test mocha -r ts-node/register --exit test/**/**/*.ts",
+    "fmt": "prettier --write src test"
   },
   "keywords": [
     "utility",
@@ -17,21 +18,22 @@
   ],
   "author": "t3rn",
   "license": "MIT",
-  "devDependencies": {
-    "@types/chai": "^4.3.11",
-    "@types/mocha": "^10.0.2",
-    "@types/node": "^20.11.16",
-    "chai": "^4.3.10",
-    "mocha": "^10.2.0",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.3.3",
-    "pino-pretty": "^10.3.0"
-  },
   "dependencies": {
     "@ankr.com/ankr.js": "^0.5.0",
     "dotenv": "^16.4.1",
     "env-var": "^7.4.1",
     "ethers": "^5.7.2",
     "pino": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.11",
+    "@types/mocha": "^10.0.2",
+    "@types/node": "^20.11.16",
+    "chai": "^4.3.10",
+    "mocha": "^10.2.0",
+    "pino-pretty": "^10.3.0",
+    "prettier": "^3.2.5",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.3"
   }
 }

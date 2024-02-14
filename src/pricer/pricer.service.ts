@@ -42,7 +42,7 @@ export class Pricer {
 
   /**
    * Initializes a new instance of the Pricer class with the specified configuration.
-   * 
+   *
    * @param _config Configuration settings including provider URLs and token configurations.
    */
   constructor(_config: Config) {
@@ -54,7 +54,7 @@ export class Pricer {
 
   /**
    * Retrieves the USD value of a specified amount of an asset.
-   * 
+   *
    * @param asset The asset for which to retrieve the price.
    * @param destinationNetwork The network on which the asset is located.
    * @param amount The amount of the asset.
@@ -73,7 +73,7 @@ export class Pricer {
 
   /**
    * Retrieves pricing information for converting between two assets.
-   * 
+   *
    * @param assetA The first asset.
    * @param assetB The second asset, to which the first asset's price is being compared.
    * @param destinationNetwork The network on which the assets are located.
@@ -91,7 +91,7 @@ export class Pricer {
 
   /**
    * Calculates the cost of executing a transaction in terms of a specified asset.
-   * 
+   *
    * @param asset The asset in which the cost is to be calculated.
    * @param destinationAsset The native asset of the network, used for calculating gas costs.
    * @param destinationNetwork The network on which the transaction will take place.
@@ -135,7 +135,7 @@ export class Pricer {
   /**
    * Evaluates the profitability of an order based on a given strategy.
    * Determines whether executing the order would result in a profit or loss.
-   * 
+   *
    * @param {BigNumber} balance Balance of the executor designated in destination asset
    * @param {CostResult}  costOfExecutionOnDestination  Cost designated in destination asset
    * @param {OrderArbitrageStrategy}  strategy
@@ -255,7 +255,7 @@ export class Pricer {
   /**
    * Assesses the publishability of a deal based on user balance, estimated cost, and user-defined strategy.
    * Determines whether the deal can be published given the constraints.
-   * 
+   *
    * @param userBalance The balance of the user in the native asset.
    * @param estimatedCostOfExecution The estimated cost of executing the deal.
    * @param userStrategy The user's strategy for publishing deals.
@@ -374,7 +374,7 @@ export class Pricer {
 
   /**
    * Proposes a deal for a set amount of asset, evaluating its profitability and setting a maximum reward.
-   * 
+   *
    * @param balance The balance of the executor in the destination asset.
    * @param costOfExecutionOnDestination The estimated cost of executing the deal in the destination asset.
    * @param strategy The strategy for arbitrage or deal-making.
@@ -492,7 +492,7 @@ export class Pricer {
    * Retrieves the current price of a given asset on a specified network, utilizing a cache to avoid unnecessary API calls.
    * If the price is not available in the cache, it attempts to fetch the price from an external provider and stores it in the cache.
    * If the asset is not found in the predefined map or fetching fails, it logs warnings/errors and may return a fake or zero price as a fallback.
-   * 
+   *
    * @param asset The asset for which the price is being retrieved.
    * @param destinationNetwork The network on which the asset price is to be fetched.
    * @return The price of the asset as a BigNumber. Returns a fake or zero price if the asset is not found or fetching fails.
@@ -510,8 +510,7 @@ export class Pricer {
       (assetObj: AssetAddressOnTarget) => assetObj.asset === asset,
     )
     if (!assetObj) {
-      // See if that's one of the t3rn vendor assets
-      logger.warn(
+      logger.debug(
         {
           asset,
           destinationNetwork,
@@ -555,7 +554,7 @@ export class Pricer {
   /**
    * Calculates the price of one asset in terms of another using their respective USD prices.
    * This method is useful for converting values between two different assets, taking into account their current market prices.
-   * 
+   *
    * @param assetA The first asset, whose price is to be expressed in terms of asset B.
    * @param assetB The second asset, which serves as the base for the price conversion.
    * @param priceA The current price of asset A in USD.
@@ -586,7 +585,7 @@ export class Pricer {
    * Calculates the cost of executing a transaction with a given asset on the blockchain.
    * This method takes into account the estimated gas price and the gas limit for the transaction type (ETH transfer or ERC20 token transfer).
    * It then converts the cost from native currency (e.g., ETH) to the specified asset using the current market prices.
-   * 
+   *
    * @param asset The asset in which the cost is to be calculated.
    * @param priceAsset The current price of the specified asset in USD.
    * @param priceNative The current price of the native currency (e.g., ETH) in USD.

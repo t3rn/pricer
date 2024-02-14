@@ -15,7 +15,7 @@ export class PriceCache {
 
   /**
    * Initializes a new instance of the PriceCache class with configuration settings.
-   * 
+   *
    * @param _config Configuration settings for the price cache, including multichain support and cleanup intervals.
    */
   constructor(_config: Config) {
@@ -24,7 +24,7 @@ export class PriceCache {
 
   /**
    * Retrieves the price of an asset from the cache, considering the network if multichain is enabled.
-   * 
+   *
    * @param asset The asset for which to retrieve the price.
    * @param network The network from which to retrieve the price if multichain is enabled.
    * @return The price of the asset if found, undefined otherwise.
@@ -39,7 +39,7 @@ export class PriceCache {
 
   /**
    * Sets the price of an asset in the cache for a specific network if multichain is enabled, or globally otherwise.
-   * 
+   *
    * @param asset The asset for which to set the price.
    * @param network The network on which the price is set if multichain is enabled.
    * @param price The price to set for the asset.
@@ -68,7 +68,7 @@ export class PriceCache {
 
   /**
    * Retrieves the entire cache. Use cautiously, primarily for debugging or testing.
-   * 
+   *
    * @return The complete cache, either for a single network or multiple networks based on configuration.
    */
   getWholeCache(): PriceCacheSingleNetwork | PriceCacheMultiNetwork {
@@ -93,7 +93,7 @@ export class PriceCache {
 
   /**
    * Retrieves the price of an asset for a single network scenario from the cache.
-   * 
+   *
    * @param asset The asset for which to retrieve the price.
    * @return The price of the asset if found, undefined otherwise.
    */
@@ -103,7 +103,7 @@ export class PriceCache {
 
   /**
    * Retrieves the price of an asset across multiple networks from the cache.
-   * 
+   *
    * @param asset The asset for which to retrieve the price.
    * @param network The network for which to retrieve the price.
    * @return The price of the asset on the specified network if found, undefined otherwise.
@@ -117,7 +117,7 @@ export class PriceCache {
 
   /**
    * Sets the price of an asset in a single network scenario in the cache.
-   * 
+   *
    * @param asset The asset for which to set the price.
    * @param price The price to set for the asset.
    * @return The updated cache for a single network.
@@ -128,7 +128,7 @@ export class PriceCache {
 
   /**
    * Sets the price of an asset across multiple networks in the cache.
-   * 
+   *
    * @param asset The asset for which to set the price.
    * @param network The network on which the price is set.
    * @param price The price to set for the asset.
