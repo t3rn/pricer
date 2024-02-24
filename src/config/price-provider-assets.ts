@@ -215,6 +215,12 @@ const defaultNetworkData = {
   eth_goerli: [],
   optimism_testnet: [],
   t0rn: [],
+  l0rn: [
+    {
+      asset: 'eth',
+      address: '0x0000000000000000000000000000000000000000',
+    },
+  ],
   t2rn: [],
   filecoin: [],
 } as const
