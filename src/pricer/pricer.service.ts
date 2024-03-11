@@ -38,6 +38,7 @@ export const ETH_TRANSFER_GAS_LIMIT = ethers.BigNumber.from(21000)
 export class Pricer {
   private readonly config: Config
   private readonly ankr: AnkrProvider
+  readonly ethersProvider: ethers.providers.Provider;
   readonly priceCache: PriceCache
 
   /**
@@ -48,6 +49,7 @@ export class Pricer {
   constructor(_config: Config) {
     this.config = _config
     this.ankr = new AnkrProvider(this.config.pricer.providerUrl)
+    this.ethersProvider = new ethers.providers.JsonRpcProvider(this.config.pricer.providerUrl);
     this.priceCache = new PriceCache(this.config)
     this.priceCache.initCleanup()
   }
@@ -413,6 +415,49 @@ export class Pricer {
       setAmount: order.amount,
       proposedMaxReward,
     }
+  }
+
+  /**
+   * Estimates the amount of 'toAsset' the user will receive at the end of the transaction.
+   *
+   * @param fromAsset The asset being sent.
+   * @param toAsset The asset to be received.
+   * @param fromChain The network of the 'fromAsset'.
+   * @param toChain The network of the 'toAsset'.
+   * @param maxReward The maximum reward the user is willing to offer.
+   * @return The estimated amount of 'toAsset' the user will receive.
+   */
+  async estimateReceivedAmount(
+    fromAsset: SupportedAssetPriceProvider,
+    toAsset: SupportedAssetPriceProvider,
+    fromChain: NetworkNameOnPriceProvider,
+    toChain: NetworkNameOnPriceProvider,
+    maxReward: BigNumber,
+  ): Promise<BigNumber> {
+    const priceFromAssetUSD = await this.receiveAssetPriceWithCache(fromAsset, fromChain);
+    const priceToAssetUSD = await this.receiveAssetPriceWithCache(toAsset, toChain);
+
+    console.log(`Price of ${fromAsset} (fromChain) in USD: ${priceFromAssetUSD.toString()}`);
+    console.log(`Price of ${toAsset} (toChain) in USD: ${priceToAssetUSD.toString()}`);
+
+    const maxRewardInUSD = maxReward.mul(priceFromAssetUSD).div(BigNumber.from(10).pow(18));
+    console.log(`MaxReward (${fromAsset}) in USD: ${maxRewardInUSD.toString()}`);
+
+    const equivalentToAssetAmount = maxRewardInUSD.mul(BigNumber.from(10).pow(18)).div(priceToAssetUSD);
+    console.log(`Equivalent ${toAsset} amount before subtracting transaction cost: ${equivalentToAssetAmount.toString()}`);
+
+    const estGasPriceOnNativeInWei = await this.ethersProvider.getGasPrice();
+    const transactionCostData = await this.retrieveCostInAsset(fromAsset, fromAsset, fromChain, estGasPriceOnNativeInWei, this.config.tokens.addressZero);
+    const transactionCostInUSD = transactionCostData.costInAsset.mul(priceFromAssetUSD).div(BigNumber.from(10).pow(18));
+    console.log(`Transaction cost in USD: ${transactionCostInUSD.toString()}`);
+
+    const transactionCostInToAsset = transactionCostInUSD.mul(BigNumber.from(10).pow(18)).div(priceToAssetUSD);
+    console.log(`Transaction cost in ${toAsset}: ${transactionCostInToAsset.toString()}`);
+
+    const estimatedReceivedAmount = equivalentToAssetAmount.sub(transactionCostInToAsset);
+    console.log(`Estimated received ${toAsset} amount: ${estimatedReceivedAmount.toString()}`);
+
+    return estimatedReceivedAmount;
   }
 
   /**
