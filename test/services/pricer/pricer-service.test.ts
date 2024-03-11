@@ -890,4 +890,67 @@ describe('Pricer', () => {
       expect(ethers.utils.formatEther(result.proposedMaxReward)).to.equal('0.3')
     })
   })
+
+  describe('estimateReceivedAmount', () => {
+    it('should return the maxReward minus transaction costs for identical assets on the same chain', async () => {
+      const fromAsset = SupportedAssetPriceProvider.ETH;
+      const toAsset = SupportedAssetPriceProvider.ETH;
+      const fromChain = 'eth';
+      const toChain = 'eth';
+      const maxReward = ethers.utils.parseEther('1'); // 1 ETH
+
+      // Mock the price fetch and gas estimation
+      pricer.receiveAssetPriceWithCache = async () => BigNumber.from(ethers.utils.parseUnits('1', 'ether')); // Simplified 1:1 conversion for simplicity
+      pricer.ethersProvider.getGasPrice = async () => ethers.utils.parseUnits('50', 'gwei');
+      pricer.retrieveCostInAsset = async () => ({
+        costInWei: ethers.utils.parseUnits('21000', 'wei'), // Mocked gas used
+        costInEth: '0.00105', // Mocked cost in Eth (50 gwei gas price)
+        costInUsd: 2, // Mocked cost in USD
+        costInAsset: ethers.utils.parseUnits('0.01', 'ether'), // 0.01 ETH transaction cost
+        asset: fromAsset,
+      });
+
+      // Action
+      const estimatedReceivedAmount = await pricer.estimateReceivedAmount(fromAsset, toAsset, fromChain, toChain, maxReward);
+
+      // Assert
+      expect(ethers.utils.formatEther(estimatedReceivedAmount)).to.equal('0.99');
+    })
+
+    it('should correctly estimate the received amount for different assets across chains', async () => {
+      // Setup
+      const fromAsset = SupportedAssetPriceProvider.ETH; // Sending ETH
+      const toAsset = SupportedAssetPriceProvider.BNB; // Receiving BNB
+      const fromChain = 'eth';
+      const toChain = 'bsc';
+      const maxReward = ethers.utils.parseEther('1'); // 1 ETH
+
+      // Mock the price fetch and gas estimation
+      pricer.receiveAssetPriceWithCache = async (asset, chain) => {
+        if (asset === SupportedAssetPriceProvider.ETH && chain === 'eth') {
+          return BigNumber.from(ethers.utils.parseUnits('3000', 'ether')); // ETH price in USD
+        } else if (asset === SupportedAssetPriceProvider.BNB && chain === 'bsc') {
+          return BigNumber.from(ethers.utils.parseUnits('500', 'ether')); // BNB price in USD
+        } else {
+          return BigNumber.from(0)
+        }
+      }
+
+      pricer.ethersProvider.getGasPrice = async () => ethers.utils.parseUnits('50', 'gwei');
+      pricer.retrieveCostInAsset = async () => ({
+        costInWei: ethers.utils.parseUnits('21000', 'wei'), // Mocked gas used
+        costInEth: '0.00105', // Mocked cost in Eth ( 50 gwei gas price)
+        costInUsd: 210, // Mocked cost in USD
+        costInAsset: ethers.utils.parseUnits('0.07', 'ether'), // Simplified transaction cost
+        asset: fromAsset,
+      });
+
+      // Action
+      const estimatedReceivedAmount = await pricer.estimateReceivedAmount(fromAsset, toAsset, fromChain, toChain, maxReward);
+
+      // Assert
+      const expectedBNBAmount = ethers.utils.parseUnits('5.58', 'ether');
+      expect(estimatedReceivedAmount.toString()).to.equal(expectedBNBAmount.toString());
+    })
+  })
 })
