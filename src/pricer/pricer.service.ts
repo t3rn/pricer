@@ -424,15 +424,15 @@ export class Pricer {
    * @param toAsset The asset to be received.
    * @param fromChain The network of the 'fromAsset'.
    * @param toChain The network of the 'toAsset'.
-   * @param maxReward The maximum reward the user is willing to offer.
-   * @return The estimated amount of 'toAsset' the user will receive.
+   * @param maxReward The maximum reward the user is willing to offer, in wei.
+   * @return The estimated amount of 'toAsset' the user will receive, in wei.
    */
   async estimateReceivedAmount(
     fromAsset: SupportedAssetPriceProvider,
     toAsset: SupportedAssetPriceProvider,
     fromChain: NetworkNameOnPriceProvider,
     toChain: NetworkNameOnPriceProvider,
-    maxReward: BigNumber,
+    maxRewardWei: BigNumber,
   ): Promise<BigNumber> {
     const priceFromAssetUSD = await this.receiveAssetPriceWithCache(fromAsset, fromChain);
     const priceToAssetUSD = await this.receiveAssetPriceWithCache(toAsset, toChain);
@@ -440,7 +440,7 @@ export class Pricer {
     console.log(`Price of ${fromAsset} (fromChain) in USD: ${priceFromAssetUSD.toString()}`);
     console.log(`Price of ${toAsset} (toChain) in USD: ${priceToAssetUSD.toString()}`);
 
-    const maxRewardInUSD = maxReward.mul(priceFromAssetUSD).div(BigNumber.from(10).pow(18));
+    const maxRewardInUSD = maxRewardWei.mul(priceFromAssetUSD).div(BigNumber.from(10).pow(18));
     console.log(`MaxReward (${fromAsset}) in USD: ${maxRewardInUSD.toString()}`);
 
     const equivalentToAssetAmount = maxRewardInUSD.mul(BigNumber.from(10).pow(18)).div(priceToAssetUSD);

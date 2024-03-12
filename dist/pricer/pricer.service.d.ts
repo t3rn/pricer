@@ -104,10 +104,10 @@ export declare class Pricer {
      * @param toAsset The asset to be received.
      * @param fromChain The network of the 'fromAsset'.
      * @param toChain The network of the 'toAsset'.
-     * @param maxReward The maximum reward the user is willing to offer.
-     * @return The estimated amount of 'toAsset' the user will receive.
+     * @param maxReward The maximum reward the user is willing to offer, in wei.
+     * @return The estimated amount of 'toAsset' the user will receive, in wei.
      */
-    estimateReceivedAmount(fromAsset: SupportedAssetPriceProvider, toAsset: SupportedAssetPriceProvider, fromChain: NetworkNameOnPriceProvider, toChain: NetworkNameOnPriceProvider, maxReward: BigNumber): Promise<BigNumber>;
+    estimateReceivedAmount(fromAsset: SupportedAssetPriceProvider, toAsset: SupportedAssetPriceProvider, fromChain: NetworkNameOnPriceProvider, toChain: NetworkNameOnPriceProvider, maxRewardWei: BigNumber): Promise<BigNumber>;
     /**
      * Parse the given price string as float with decimal precision
      *

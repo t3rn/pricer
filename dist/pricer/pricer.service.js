@@ -316,16 +316,16 @@ class Pricer {
      * @param toAsset The asset to be received.
      * @param fromChain The network of the 'fromAsset'.
      * @param toChain The network of the 'toAsset'.
-     * @param maxReward The maximum reward the user is willing to offer.
-     * @return The estimated amount of 'toAsset' the user will receive.
+     * @param maxReward The maximum reward the user is willing to offer, in wei.
+     * @return The estimated amount of 'toAsset' the user will receive, in wei.
      */
-    estimateReceivedAmount(fromAsset, toAsset, fromChain, toChain, maxReward) {
+    estimateReceivedAmount(fromAsset, toAsset, fromChain, toChain, maxRewardWei) {
         return __awaiter(this, void 0, void 0, function* () {
             const priceFromAssetUSD = yield this.receiveAssetPriceWithCache(fromAsset, fromChain);
             const priceToAssetUSD = yield this.receiveAssetPriceWithCache(toAsset, toChain);
             console.log(`Price of ${fromAsset} (fromChain) in USD: ${priceFromAssetUSD.toString()}`);
             console.log(`Price of ${toAsset} (toChain) in USD: ${priceToAssetUSD.toString()}`);
-            const maxRewardInUSD = maxReward.mul(priceFromAssetUSD).div(ethers_1.BigNumber.from(10).pow(18));
+            const maxRewardInUSD = maxRewardWei.mul(priceFromAssetUSD).div(ethers_1.BigNumber.from(10).pow(18));
             console.log(`MaxReward (${fromAsset}) in USD: ${maxRewardInUSD.toString()}`);
             const equivalentToAssetAmount = maxRewardInUSD.mul(ethers_1.BigNumber.from(10).pow(18)).div(priceToAssetUSD);
             console.log(`Equivalent ${toAsset} amount before subtracting transaction cost: ${equivalentToAssetAmount.toString()}`);
