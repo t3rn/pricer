@@ -30,6 +30,7 @@ class Pricer {
     constructor(_config) {
         this.config = _config;
         this.ankr = new ankr_js_1.AnkrProvider(this.config.pricer.providerUrl);
+        this.ethersProvider = new ethers_1.ethers.providers.JsonRpcProvider(this.config.pricer.providerUrl);
         this.priceCache = new price_cache_1.PriceCache(this.config);
         this.priceCache.initCleanup();
     }
@@ -307,6 +308,37 @@ class Pricer {
             setAmount: order.amount,
             proposedMaxReward,
         };
+    }
+    /**
+     * Estimates the amount of 'toAsset' the user will receive at the end of the transaction.
+     *
+     * @param fromAsset The asset being sent.
+     * @param toAsset The asset to be received.
+     * @param fromChain The network of the 'fromAsset'.
+     * @param toChain The network of the 'toAsset'.
+     * @param maxReward The maximum reward the user is willing to offer.
+     * @return The estimated amount of 'toAsset' the user will receive.
+     */
+    estimateReceivedAmount(fromAsset, toAsset, fromChain, toChain, maxReward) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const priceFromAssetUSD = yield this.receiveAssetPriceWithCache(fromAsset, fromChain);
+            const priceToAssetUSD = yield this.receiveAssetPriceWithCache(toAsset, toChain);
+            console.log(`Price of ${fromAsset} (fromChain) in USD: ${priceFromAssetUSD.toString()}`);
+            console.log(`Price of ${toAsset} (toChain) in USD: ${priceToAssetUSD.toString()}`);
+            const maxRewardInUSD = maxReward.mul(priceFromAssetUSD).div(ethers_1.BigNumber.from(10).pow(18));
+            console.log(`MaxReward (${fromAsset}) in USD: ${maxRewardInUSD.toString()}`);
+            const equivalentToAssetAmount = maxRewardInUSD.mul(ethers_1.BigNumber.from(10).pow(18)).div(priceToAssetUSD);
+            console.log(`Equivalent ${toAsset} amount before subtracting transaction cost: ${equivalentToAssetAmount.toString()}`);
+            const estGasPriceOnNativeInWei = yield this.ethersProvider.getGasPrice();
+            const transactionCostData = yield this.retrieveCostInAsset(fromAsset, fromAsset, fromChain, estGasPriceOnNativeInWei, this.config.tokens.addressZero);
+            const transactionCostInUSD = transactionCostData.costInAsset.mul(priceFromAssetUSD).div(ethers_1.BigNumber.from(10).pow(18));
+            console.log(`Transaction cost in USD: ${transactionCostInUSD.toString()}`);
+            const transactionCostInToAsset = transactionCostInUSD.mul(ethers_1.BigNumber.from(10).pow(18)).div(priceToAssetUSD);
+            console.log(`Transaction cost in ${toAsset}: ${transactionCostInToAsset.toString()}`);
+            const estimatedReceivedAmount = equivalentToAssetAmount.sub(transactionCostInToAsset);
+            console.log(`Estimated received ${toAsset} amount: ${estimatedReceivedAmount.toString()}`);
+            return estimatedReceivedAmount;
+        });
     }
     /**
      * Parse the given price string as float with decimal precision
