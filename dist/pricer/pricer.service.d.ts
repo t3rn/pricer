@@ -1,4 +1,4 @@
-import { BigNumber, ethers } from 'ethers';
+import { BigNumber } from 'ethers';
 import { AssetAndAddress, NetworkNameOnPriceProvider, SupportedAssetPriceProvider } from '../config/price-provider-assets';
 import { Order } from '../types';
 import { CostResult, DealPublishability, OrderProfitability, OrderProfitabilityProposalForSetAmount, PriceResult, UserPublishStrategy } from './types';
@@ -19,7 +19,7 @@ export declare const ETH_TRANSFER_GAS_LIMIT: BigNumber;
 export declare class Pricer {
     private readonly config;
     private readonly ankr;
-    readonly ethersProvider: ethers.providers.Provider;
+    private ethersProvider;
     readonly priceCache: PriceCache;
     /**
      * Initializes a new instance of the Pricer class with the specified configuration.
@@ -103,11 +103,12 @@ export declare class Pricer {
      * @param fromAsset The asset being sent.
      * @param toAsset The asset to be received.
      * @param fromChain The network of the 'fromAsset'.
+     * @param fromChainProvider The provider url for 'fromChain'.
      * @param toChain The network of the 'toAsset'.
      * @param maxReward The maximum reward the user is willing to offer, in wei.
      * @return The estimated amount of 'toAsset' the user will receive, in wei.
      */
-    estimateReceivedAmount(fromAsset: SupportedAssetPriceProvider, toAsset: SupportedAssetPriceProvider, fromChain: NetworkNameOnPriceProvider, toChain: NetworkNameOnPriceProvider, maxRewardWei: BigNumber): Promise<BigNumber>;
+    estimateReceivedAmount(fromAsset: SupportedAssetPriceProvider, toAsset: SupportedAssetPriceProvider, fromChain: NetworkNameOnPriceProvider, fromChainProvider: string, toChain: NetworkNameOnPriceProvider, maxRewardWei: BigNumber): Promise<BigNumber>;
     /**
      * Parse the given price string as float with decimal precision
      *

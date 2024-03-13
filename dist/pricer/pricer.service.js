@@ -30,7 +30,6 @@ class Pricer {
     constructor(_config) {
         this.config = _config;
         this.ankr = new ankr_js_1.AnkrProvider(this.config.pricer.providerUrl);
-        this.ethersProvider = new ethers_1.ethers.providers.JsonRpcProvider(this.config.pricer.providerUrl);
         this.priceCache = new price_cache_1.PriceCache(this.config);
         this.priceCache.initCleanup();
     }
@@ -315,27 +314,32 @@ class Pricer {
      * @param fromAsset The asset being sent.
      * @param toAsset The asset to be received.
      * @param fromChain The network of the 'fromAsset'.
+     * @param fromChainProvider The provider url for 'fromChain'.
      * @param toChain The network of the 'toAsset'.
      * @param maxReward The maximum reward the user is willing to offer, in wei.
      * @return The estimated amount of 'toAsset' the user will receive, in wei.
      */
-    estimateReceivedAmount(fromAsset, toAsset, fromChain, toChain, maxRewardWei) {
+    estimateReceivedAmount(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei) {
         return __awaiter(this, void 0, void 0, function* () {
-            const priceFromAssetUSD = yield this.receiveAssetPriceWithCache(fromAsset, fromChain);
-            const priceToAssetUSD = yield this.receiveAssetPriceWithCache(toAsset, toChain);
-            console.log(`Price of ${fromAsset} (fromChain) in USD: ${priceFromAssetUSD.toString()}`);
-            console.log(`Price of ${toAsset} (toChain) in USD: ${priceToAssetUSD.toString()}`);
-            const maxRewardInUSD = maxRewardWei.mul(priceFromAssetUSD).div(ethers_1.BigNumber.from(10).pow(18));
-            console.log(`MaxReward (${fromAsset}) in USD: ${maxRewardInUSD.toString()}`);
-            const equivalentToAssetAmount = maxRewardInUSD.mul(ethers_1.BigNumber.from(10).pow(18)).div(priceToAssetUSD);
-            console.log(`Equivalent ${toAsset} amount before subtracting transaction cost: ${equivalentToAssetAmount.toString()}`);
+            if (!fromChainProvider) {
+                throw new Error('No provider URL for the source network was provided.');
+            }
+            // Retrieve the pricing information for converting fromAsset to toAsset.
+            const pricing = yield this.retrieveAssetPricing(fromAsset, toAsset, toChain);
+            console.log(`Price of ${fromAsset} in terms of ${toAsset}: ${pricing.priceAinB.toString()}`);
+            // Convert the maxReward from its Wei representation to the equivalent amount in toAsset, considering the current market price.
+            const maxRewardInToAsset = maxRewardWei.mul(pricing.priceAinB).div(ethers_1.BigNumber.from(10).pow(18));
+            console.log(`Equivalent ${toAsset} amount before subtracting transaction cost: ${maxRewardInToAsset.toString()}`);
+            this.ethersProvider = new ethers_1.ethers.providers.JsonRpcProvider(fromChainProvider);
+            // Estimate the gas price on the source network.
             const estGasPriceOnNativeInWei = yield this.ethersProvider.getGasPrice();
+            // Calculate the transaction cost in the fromAsset.
             const transactionCostData = yield this.retrieveCostInAsset(fromAsset, fromAsset, fromChain, estGasPriceOnNativeInWei, this.config.tokens.addressZero);
-            const transactionCostInUSD = transactionCostData.costInAsset.mul(priceFromAssetUSD).div(ethers_1.BigNumber.from(10).pow(18));
-            console.log(`Transaction cost in USD: ${transactionCostInUSD.toString()}`);
-            const transactionCostInToAsset = transactionCostInUSD.mul(ethers_1.BigNumber.from(10).pow(18)).div(priceToAssetUSD);
+            // Convert the transaction cost to toAsset using the market price.
+            const transactionCostInToAsset = transactionCostData.costInAsset.mul(pricing.priceAinB).div(ethers_1.BigNumber.from(10).pow(18));
             console.log(`Transaction cost in ${toAsset}: ${transactionCostInToAsset.toString()}`);
-            const estimatedReceivedAmount = equivalentToAssetAmount.sub(transactionCostInToAsset);
+            // Subtract the transaction cost in toAsset from the maxReward in toAsset to estimate the amount received.
+            const estimatedReceivedAmount = maxRewardInToAsset.sub(transactionCostInToAsset);
             console.log(`Estimated received ${toAsset} amount: ${estimatedReceivedAmount.toString()}`);
             return estimatedReceivedAmount;
         });
