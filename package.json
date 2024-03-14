@@ -1,6 +1,6 @@
 {
   "name": "@t3rn/pricer",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Retrieve asset prices, evaluate deals, and propose deals for a given set amount.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -23,12 +23,14 @@
     "dotenv": "^16.4.1",
     "env-var": "^7.4.1",
     "ethers": "^5.7.2",
-    "pino": "^8.18.0"
+    "pino": "^8.18.0",
+    "sinon": "^17.0.1"
   },
   "devDependencies": {
     "@types/chai": "^4.3.11",
     "@types/mocha": "^10.0.2",
     "@types/node": "^20.11.16",
+    "@types/sinon": "^17.0.3",
     "chai": "^4.3.10",
     "mocha": "^10.2.0",
     "pino-pretty": "^10.3.0",
