@@ -27,11 +27,12 @@ class Pricer {
      *
      * @param _config Configuration settings including provider URLs and token configurations.
      */
-    constructor(_config) {
+    constructor(_config, _ethersProvider = undefined) {
         this.config = _config;
         this.ankr = new ankr_js_1.AnkrProvider(this.config.pricer.providerUrl);
         this.priceCache = new price_cache_1.PriceCache(this.config);
         this.priceCache.initCleanup();
+        this.ethersProvider = _ethersProvider;
     }
     /**
      * Retrieves the USD value of a specified amount of an asset.
@@ -321,7 +322,7 @@ class Pricer {
      */
     estimateReceivedAmount(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!fromChainProvider) {
+            if (!this.ethersProvider && !fromChainProvider) {
                 throw new Error('No provider URL for the source network was provided.');
             }
             // Retrieve the pricing information for converting fromAsset to toAsset.
@@ -330,7 +331,9 @@ class Pricer {
             // Convert the maxReward from its Wei representation to the equivalent amount in toAsset, considering the current market price.
             const maxRewardInToAsset = maxRewardWei.mul(pricing.priceAinB).div(ethers_1.BigNumber.from(10).pow(18));
             console.log(`Equivalent ${toAsset} amount before subtracting transaction cost: ${maxRewardInToAsset.toString()}`);
-            this.ethersProvider = new ethers_1.ethers.providers.JsonRpcProvider(fromChainProvider);
+            if (!this.ethersProvider) {
+                this.ethersProvider = new ethers_1.ethers.providers.JsonRpcProvider(fromChainProvider);
+            }
             // Estimate the gas price on the source network.
             const estGasPriceOnNativeInWei = yield this.ethersProvider.getGasPrice();
             // Calculate the transaction cost in the fromAsset.
@@ -340,7 +343,7 @@ class Pricer {
             console.log(`Transaction cost in ${toAsset}: ${transactionCostInToAsset.toString()}`);
             // Subtract the transaction cost in toAsset from the maxReward in toAsset to estimate the amount received.
             const estimatedReceivedAmount = maxRewardInToAsset.sub(transactionCostInToAsset);
-            console.log(`Estimated received ${toAsset} amount: ${estimatedReceivedAmount.toString()}`);
+            console.log(`Estimated received ${toAsset} amount in wei: ${estimatedReceivedAmount.toString()}`);
             return estimatedReceivedAmount;
         });
     }
@@ -422,14 +425,18 @@ class Pricer {
      * @return The price of the asset as a BigNumber. Returns a fake or zero price if the asset is not found or fetching fails.
      */
     receiveAssetPriceWithCache(asset, destinationNetwork) {
-        var _a;
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             let price = this.priceCache.get(asset, destinationNetwork);
             if (price) {
                 return this.parsePriceStringToBigNumberOn18Decimals(price);
             }
-            const assetObj = (_a = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) === null || _a === void 0 ? void 0 : _a.find((assetObj) => assetObj.asset === asset);
-            if (!assetObj) {
+            if (!price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) {
+                logger_1.logger.error({ asset, destinationNetwork }, 'Destination network not found in the map.');
+                return ethers_1.BigNumber.from(0);
+            }
+            const assetObj = (_a = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) === null || _a === void 0 ? void 0 : _a.find((assetObj) => (assetObj === null || assetObj === void 0 ? void 0 : assetObj.asset) === asset);
+            if (!assetObj || !assetObj.address || !assetObj.asset) {
                 logger_1.logger.debug({
                     asset,
                     destinationNetwork,
@@ -444,7 +451,29 @@ class Pricer {
                 return ethers_1.BigNumber.from(0);
             }
             try {
-                price = yield this.fetchPriceAndStoreInCache(assetObj, destinationNetwork);
+                let submittedAssetObj = assetObj;
+                let isNativeToken = false;
+                let nativeAsset;
+                if (assetObj.address === '0x0000000000000000000000000000000000000000') {
+                    const usdcAssetObj = (_b = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) === null || _b === void 0 ? void 0 : _b.find(a => a.asset === price_provider_assets_1.SupportedAssetPriceProvider.USDC);
+                    if (!usdcAssetObj) {
+                        logger_1.logger.error({ network: destinationNetwork, asset: price_provider_assets_1.SupportedAssetPriceProvider.USDC }, 'USDC asset not found in the specified network for native token conversion.');
+                        return ethers_1.BigNumber.from(0);
+                    }
+                    logger_1.logger.warn({ address: assetObj.address, asset: assetObj.asset, network: destinationNetwork }, 'Received native token. Using USDC for conversion.');
+                    submittedAssetObj = usdcAssetObj;
+                    isNativeToken = true;
+                    nativeAsset = assetObj.asset;
+                }
+                price = yield this.fetchPriceAndStoreInCache(submittedAssetObj, destinationNetwork);
+                // if (isNativeToken && nativeAsset) {
+                //   const priceOfUSDCInNativeToken = await this.receiveAssetPriceWithCache(SupportedAssetPriceProvider.USDC, destinationNetwork)
+                //   const priceOfUSDCInNativeTokenParsed = this.parsePriceStringToBigNumberOn18Decimals(priceOfUSDCInNativeToken.toString())
+                //   const priceParsed = this.parsePriceStringToBigNumberOn18Decimals(price)
+                //   const priceInNativeToken = priceOfUSDCInNativeTokenParsed.mul(priceParsed).div(BigNumber.from(10).pow(18))
+                //   console.log(priceInNativeToken.toString())
+                //   return priceInNativeToken
+                // }
             }
             catch (err) {
                 logger_1.logger.error({

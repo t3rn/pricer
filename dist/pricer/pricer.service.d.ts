@@ -26,7 +26,7 @@ export declare class Pricer {
      *
      * @param _config Configuration settings including provider URLs and token configurations.
      */
-    constructor(_config: Config);
+    constructor(_config: Config, _ethersProvider?: undefined);
     /**
      * Retrieves the USD value of a specified amount of an asset.
      *
