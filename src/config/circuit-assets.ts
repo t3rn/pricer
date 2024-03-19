@@ -12,6 +12,8 @@ export declare type NetworkNameOnCircuit =
   | 'poly'
   | 't0rn'
   | 'l0rn'
+  | 'l1rn'
+  | 'l3rn'
   | 't2rn'
   | 't3rn'
   | 'line'
@@ -36,7 +38,9 @@ export const networkNameCircuitToPriceProvider = {
   sepl: 'eth',
   poly: 'polygon',
   t0rn: 'polygon',
-  l0rn: 'polygon',
+  l0rn: 'arbitrum',
+  l1rn: 'arbitrum',
+  l3rn: 'arbitrum',
 } as NetworkNameCircuitToPriceProviderMap
 export class AssetMapper {
   public static fakePriceOfAsset(amount: number, asset: SupportedAssetPriceProvider): number {
