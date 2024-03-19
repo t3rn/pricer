@@ -13,7 +13,9 @@ exports.networkNameCircuitToPriceProvider = {
     sepl: 'eth',
     poly: 'polygon',
     t0rn: 'polygon',
-    l0rn: 'polygon',
+    l0rn: 'arbitrum',
+    l1rn: 'arbitrum',
+    l3rn: 'arbitrum',
 };
 class AssetMapper {
     static fakePriceOfAsset(amount, asset) {
