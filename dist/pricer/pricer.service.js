@@ -339,7 +339,9 @@ class Pricer {
             // Calculate the transaction cost in the fromAsset.
             const transactionCostData = yield this.retrieveCostInAsset(fromAsset, fromAsset, fromChain, estGasPriceOnNativeInWei, this.config.tokens.addressZero);
             // Convert the transaction cost to toAsset using the market price.
-            const transactionCostInToAsset = transactionCostData.costInAsset.mul(pricing.priceAinB).div(ethers_1.BigNumber.from(10).pow(18));
+            const transactionCostInToAsset = transactionCostData.costInAsset
+                .mul(pricing.priceAinB)
+                .div(ethers_1.BigNumber.from(10).pow(18));
             console.log(`Transaction cost in ${toAsset}: ${transactionCostInToAsset.toString()}`);
             // Subtract the transaction cost in toAsset from the maxReward in toAsset to estimate the amount received.
             const estimatedReceivedAmount = maxRewardInToAsset.sub(transactionCostInToAsset);
@@ -425,8 +427,8 @@ class Pricer {
      * @return The price of the asset as a BigNumber. Returns a fake or zero price if the asset is not found or fetching fails.
      */
     receiveAssetPriceWithCache(asset, destinationNetwork) {
-        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b;
             let price = this.priceCache.get(asset, destinationNetwork);
             if (price) {
                 return this.parsePriceStringToBigNumberOn18Decimals(price);
@@ -455,7 +457,7 @@ class Pricer {
                 let isNativeToken = false;
                 let nativeAsset;
                 if (assetObj.address === '0x0000000000000000000000000000000000000000') {
-                    const usdcAssetObj = (_b = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) === null || _b === void 0 ? void 0 : _b.find(a => a.asset === price_provider_assets_1.SupportedAssetPriceProvider.USDC);
+                    const usdcAssetObj = (_b = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) === null || _b === void 0 ? void 0 : _b.find((a) => a.asset === price_provider_assets_1.SupportedAssetPriceProvider.USDC);
                     if (!usdcAssetObj) {
                         logger_1.logger.error({ network: destinationNetwork, asset: price_provider_assets_1.SupportedAssetPriceProvider.USDC }, 'USDC asset not found in the specified network for native token conversion.');
                         return ethers_1.BigNumber.from(0);
