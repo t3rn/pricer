@@ -198,20 +198,29 @@ const defaultNetworkData = {
     syscoin: [],
     flare: [],
     gnosis: [],
-    linea: [],
+    linea: [
+        {
+            asset: 'eth',
+            address: '0x0000000000000000000000000000000000000000',
+        },
+        {
+            asset: 'usdt',
+            address: '0x1990bc6dfe2ef605bfc08f5a23564db75642ad73',
+        },
+    ],
     polygon_mumbai: [],
     polygon_zkevm: [],
     rollux: [],
     eth_goerli: [],
     optimism_testnet: [],
     t0rn: [],
+    t2rn: [],
     l0rn: [
         {
             asset: 'eth',
             address: '0x0000000000000000000000000000000000000000',
         },
     ],
-    t2rn: [],
     filecoin: [],
 };
 // @ts-ignore
