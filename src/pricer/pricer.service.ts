@@ -38,7 +38,7 @@ export const ETH_TRANSFER_GAS_LIMIT = ethers.BigNumber.from(21000)
 export class Pricer {
   private readonly config: Config
   private readonly ankr: AnkrProvider
-  private ethersProvider: ethers.providers.Provider | undefined;
+  private ethersProvider: ethers.providers.Provider | undefined
   readonly priceCache: PriceCache
 
   /**
@@ -47,11 +47,11 @@ export class Pricer {
    * @param _config Configuration settings including provider URLs and token configurations.
    */
   constructor(_config: Config, _ethersProvider = undefined) {
-    this.config = _config;
-    this.ankr = new AnkrProvider(this.config.pricer.providerUrl);
-    this.priceCache = new PriceCache(this.config);
-    this.priceCache.initCleanup();
-    this.ethersProvider = _ethersProvider;
+    this.config = _config
+    this.ankr = new AnkrProvider(this.config.pricer.providerUrl)
+    this.priceCache = new PriceCache(this.config)
+    this.priceCache.initCleanup()
+    this.ethersProvider = _ethersProvider
   }
 
   /**
@@ -440,36 +440,44 @@ export class Pricer {
       throw new Error('No provider URL for the source network was provided.')
     }
     // Retrieve the pricing information for converting fromAsset to toAsset.
-    const pricing = await this.retrieveAssetPricing(fromAsset, toAsset, toChain);
+    const pricing = await this.retrieveAssetPricing(fromAsset, toAsset, toChain)
 
-    console.log(`Price of ${fromAsset} in terms of ${toAsset}: ${pricing.priceAinB.toString()}`);
+    console.log(`Price of ${fromAsset} in terms of ${toAsset}: ${pricing.priceAinB.toString()}`)
 
     // Convert the maxReward from its Wei representation to the equivalent amount in toAsset, considering the current market price.
-    const maxRewardInToAsset = maxRewardWei.mul(pricing.priceAinB).div(BigNumber.from(10).pow(18));
+    const maxRewardInToAsset = maxRewardWei.mul(pricing.priceAinB).div(BigNumber.from(10).pow(18))
 
-    console.log(`Equivalent ${toAsset} amount before subtracting transaction cost: ${maxRewardInToAsset.toString()}`);
+    console.log(`Equivalent ${toAsset} amount before subtracting transaction cost: ${maxRewardInToAsset.toString()}`)
 
     if (!this.ethersProvider) {
-      this.ethersProvider = new ethers.providers.JsonRpcProvider(fromChainProvider);
+      this.ethersProvider = new ethers.providers.JsonRpcProvider(fromChainProvider)
     }
 
     // Estimate the gas price on the source network.
-    const estGasPriceOnNativeInWei = await this.ethersProvider.getGasPrice();
+    const estGasPriceOnNativeInWei = await this.ethersProvider.getGasPrice()
 
     // Calculate the transaction cost in the fromAsset.
-    const transactionCostData = await this.retrieveCostInAsset(fromAsset, fromAsset, fromChain, estGasPriceOnNativeInWei, this.config.tokens.addressZero);
+    const transactionCostData = await this.retrieveCostInAsset(
+      fromAsset,
+      fromAsset,
+      fromChain,
+      estGasPriceOnNativeInWei,
+      this.config.tokens.addressZero,
+    )
 
     // Convert the transaction cost to toAsset using the market price.
-    const transactionCostInToAsset = transactionCostData.costInAsset.mul(pricing.priceAinB).div(BigNumber.from(10).pow(18));
+    const transactionCostInToAsset = transactionCostData.costInAsset
+      .mul(pricing.priceAinB)
+      .div(BigNumber.from(10).pow(18))
 
-    console.log(`Transaction cost in ${toAsset}: ${transactionCostInToAsset.toString()}`);
+    console.log(`Transaction cost in ${toAsset}: ${transactionCostInToAsset.toString()}`)
 
     // Subtract the transaction cost in toAsset from the maxReward in toAsset to estimate the amount received.
-    const estimatedReceivedAmount = maxRewardInToAsset.sub(transactionCostInToAsset);
+    const estimatedReceivedAmount = maxRewardInToAsset.sub(transactionCostInToAsset)
 
-    console.log(`Estimated received ${toAsset} amount in wei: ${estimatedReceivedAmount.toString()}`);
+    console.log(`Estimated received ${toAsset} amount in wei: ${estimatedReceivedAmount.toString()}`)
 
-    return estimatedReceivedAmount;
+    return estimatedReceivedAmount
   }
 
   /**
@@ -563,11 +571,8 @@ export class Pricer {
     }
 
     if (!networkToAssetAddressOnPriceProviderMap[destinationNetwork]) {
-      logger.error(
-        { asset, destinationNetwork },
-        'Destination network not found in the map.'
-      );
-      return BigNumber.from(0);
+      logger.error({ asset, destinationNetwork }, 'Destination network not found in the map.')
+      return BigNumber.from(0)
     }
 
     const assetObj = networkToAssetAddressOnPriceProviderMap[destinationNetwork]?.find(
@@ -606,21 +611,24 @@ export class Pricer {
 
       if (assetObj.address === '0x0000000000000000000000000000000000000000') {
         const usdcAssetObj = networkToAssetAddressOnPriceProviderMap[destinationNetwork]?.find(
-          a => a.asset === SupportedAssetPriceProvider.USDC,
-        );
+          (a) => a.asset === SupportedAssetPriceProvider.USDC,
+        )
 
         if (!usdcAssetObj) {
           logger.error(
             { network: destinationNetwork, asset: SupportedAssetPriceProvider.USDC },
-            'USDC asset not found in the specified network for native token conversion.'
-          );
-          return BigNumber.from(0);
+            'USDC asset not found in the specified network for native token conversion.',
+          )
+          return BigNumber.from(0)
         }
 
-        logger.warn({ address: assetObj.address, asset: assetObj.asset, network: destinationNetwork }, 'Received native token. Using USDC for conversion.');
-        submittedAssetObj = usdcAssetObj;
-        isNativeToken = true;
-        nativeAsset = assetObj.asset;
+        logger.warn(
+          { address: assetObj.address, asset: assetObj.asset, network: destinationNetwork },
+          'Received native token. Using USDC for conversion.',
+        )
+        submittedAssetObj = usdcAssetObj
+        isNativeToken = true
+        nativeAsset = assetObj.asset
       }
 
       price = await this.fetchPriceAndStoreInCache(submittedAssetObj, destinationNetwork as NetworkNameOnPriceProvider)

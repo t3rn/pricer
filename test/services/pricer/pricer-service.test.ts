@@ -5,11 +5,14 @@ import { Order } from '../../../src/types'
 import { Pricer } from '../../../src/pricer/pricer.service'
 import { CostResult, PriceResult } from '../../../src/pricer/types'
 import { networkNameCircuitToPriceProvider, NetworkNameOnCircuit } from '../../../src/config/circuit-assets'
-import { SupportedAssetPriceProvider, networkToAssetAddressOnPriceProviderMap } from '../../../src/config/price-provider-assets'
+import {
+  SupportedAssetPriceProvider,
+  networkToAssetAddressOnPriceProviderMap,
+} from '../../../src/config/price-provider-assets'
 import { OrderArbitrageStrategy } from '../../../src/pricer/pricer.service'
 import { Blockchain } from '@ankr.com/ankr.js'
-import { describe, it, beforeEach } from 'mocha';
-import sinon from 'sinon';
+import { describe, it, beforeEach } from 'mocha'
+import sinon from 'sinon'
 
 describe('Pricer', () => {
   const pricer = new Pricer(config)
@@ -896,38 +899,45 @@ describe('Pricer', () => {
 
   describe('estimateReceivedAmount', () => {
     it('should return the maxReward minus transaction costs for identical assets on the same chain', async () => {
-      const fromAsset = SupportedAssetPriceProvider.ETH;
-      const toAsset = SupportedAssetPriceProvider.ETH;
-      const fromChain = 'eth';
-      const toChain = 'eth';
-      const maxReward = ethers.utils.parseEther('1'); // 1 ETH
+      const fromAsset = SupportedAssetPriceProvider.ETH
+      const toAsset = SupportedAssetPriceProvider.ETH
+      const fromChain = 'eth'
+      const toChain = 'eth'
+      const maxReward = ethers.utils.parseEther('1') // 1 ETH
 
       // Mock the price fetch and gas estimation
-      pricer.receiveAssetPriceWithCache = async () => BigNumber.from(ethers.utils.parseUnits('1', 'ether')); // Simplified 1:1 conversion for simplicity
+      pricer.receiveAssetPriceWithCache = async () => BigNumber.from(ethers.utils.parseUnits('1', 'ether')) // Simplified 1:1 conversion for simplicity
       pricer.retrieveCostInAsset = async () => ({
         costInWei: ethers.utils.parseUnits('21000', 'wei'), // Mocked gas used
         costInEth: '0.00105', // Mocked cost in Eth (50 gwei gas price)
         costInUsd: 2, // Mocked cost in USD
         costInAsset: ethers.utils.parseUnits('0.01', 'ether'), // 0.01 ETH transaction cost
         asset: fromAsset,
-      });
+      })
 
       // Action
-      const estimatedReceivedAmount = await pricer.estimateReceivedAmount(fromAsset, toAsset, fromChain, "https://ethereum-sepolia-rpc.publicnode.com", toChain, maxReward);
+      const estimatedReceivedAmount = await pricer.estimateReceivedAmount(
+        fromAsset,
+        toAsset,
+        fromChain,
+        'https://ethereum-sepolia-rpc.publicnode.com',
+        toChain,
+        maxReward,
+      )
 
       // Assert
-      expect(ethers.utils.formatEther(estimatedReceivedAmount)).to.equal('0.99');
+      expect(ethers.utils.formatEther(estimatedReceivedAmount)).to.equal('0.99')
     })
 
     it('should correctly estimate the received amount for different assets across chains', async () => {
       // Setup
-      const fromAsset = SupportedAssetPriceProvider.ETH; // Sending ETH
-      const toAsset = SupportedAssetPriceProvider.DOT; // Receiving DOT
-      const fromChain = 'eth';
-      const toChain = 'base';
-      const maxReward = ethers.utils.parseEther('1'); // 1 ETH
+      const fromAsset = SupportedAssetPriceProvider.ETH // Sending ETH
+      const toAsset = SupportedAssetPriceProvider.DOT // Receiving DOT
+      const fromChain = 'eth'
+      const toChain = 'base'
+      const maxReward = ethers.utils.parseEther('1') // 1 ETH
 
-      pricer.receiveAssetPriceWithCache = async () => BigNumber.from(ethers.utils.parseUnits('1', 'ether')); // Simplified 1:1 conversion for simplicity
+      pricer.receiveAssetPriceWithCache = async () => BigNumber.from(ethers.utils.parseUnits('1', 'ether')) // Simplified 1:1 conversion for simplicity
 
       pricer.retrieveCostInAsset = async () => ({
         costInWei: ethers.utils.parseUnits('21000', 'wei'), // Mocked gas used
@@ -935,61 +945,68 @@ describe('Pricer', () => {
         costInUsd: 2, // Mocked cost in USD
         costInAsset: ethers.utils.parseUnits('0.01', 'ether'), // 0.01 ETH transaction cost
         asset: fromAsset,
-      });
+      })
 
       // Action
-      const estimatedReceivedAmount = await pricer.estimateReceivedAmount(fromAsset, toAsset, fromChain, "https://ethereum-sepolia-rpc.publicnode.com", toChain, maxReward);
+      const estimatedReceivedAmount = await pricer.estimateReceivedAmount(
+        fromAsset,
+        toAsset,
+        fromChain,
+        'https://ethereum-sepolia-rpc.publicnode.com',
+        toChain,
+        maxReward,
+      )
 
       // Assert
-      const expectedAmount = ethers.utils.parseUnits('0.99', 'ether');
-      expect(estimatedReceivedAmount.toString()).to.equal(expectedAmount.toString());
+      const expectedAmount = ethers.utils.parseUnits('0.99', 'ether')
+      expect(estimatedReceivedAmount.toString()).to.equal(expectedAmount.toString())
     })
 
     describe('conversion tests', function () {
-      let pricer: Pricer;
-      let mockJsonRpcProvider: any;
+      let pricer: Pricer
+      let mockJsonRpcProvider: any
 
       beforeEach(() => {
         mockJsonRpcProvider = {
-          getGasPrice: sinon.stub().resolves(BigNumber.from("20000000000")), // 20 Gwei
-        };
+          getGasPrice: sinon.stub().resolves(BigNumber.from('20000000000')), // 20 Gwei
+        }
 
-        pricer = new Pricer(config, mockJsonRpcProvider);
+        pricer = new Pricer(config, mockJsonRpcProvider)
 
         const fakeProvider = {
-          getGasPrice: sinon.stub().resolves(BigNumber.from("20000000000")), // Return a fake gas price
-        };
+          getGasPrice: sinon.stub().resolves(BigNumber.from('20000000000')), // Return a fake gas price
+        }
 
         // mock JsonRpcProvider globally
-        sinon.stub(ethers.providers, 'JsonRpcProvider').callsFake(() => fakeProvider);
-        const fetchPriceStub = sinon.stub(pricer, 'fetchPriceAndStoreInCache');
+        sinon.stub(ethers.providers, 'JsonRpcProvider').callsFake(() => fakeProvider)
+        const fetchPriceStub = sinon.stub(pricer, 'fetchPriceAndStoreInCache')
 
         fetchPriceStub.callsFake((assetObj, network) => {
           // Dynamic response based on asset
           if (assetObj.asset === SupportedAssetPriceProvider.ETH) {
-            return Promise.resolve("3996");
+            return Promise.resolve('3996')
           } else if (assetObj.asset === SupportedAssetPriceProvider.BTC) {
-            return Promise.resolve("30000");
+            return Promise.resolve('30000')
           } else if (assetObj.asset === SupportedAssetPriceProvider.USDC) {
-            return Promise.resolve("1");
+            return Promise.resolve('1')
           }
           // Default response
-          return Promise.resolve("100");
+          return Promise.resolve('100')
         })
       })
 
       afterEach(() => {
-        sinon.restore();
-      });
+        sinon.restore()
+      })
 
       Object.entries(networkToAssetAddressOnPriceProviderMap).forEach(([fromNetwork, fromAssets]) => {
-        fromAssets.forEach(fromAssetConfig => {
+        fromAssets.forEach((fromAssetConfig) => {
           Object.entries(networkToAssetAddressOnPriceProviderMap).forEach(([toNetwork, toAssets]) => {
-            toAssets.forEach(toAssetConfig => {
+            toAssets.forEach((toAssetConfig) => {
               it(`should estimate received amount from ${fromNetwork} (${fromAssetConfig.asset}) to ${toNetwork} (${toAssetConfig.asset})`, async () => {
-                const maxRewardWei = ethers.utils.parseEther('1'); // 1 ETH as a common max reward for all tests
+                const maxRewardWei = ethers.utils.parseEther('1') // 1 ETH as a common max reward for all tests
 
-                const fromRpcUrl = "mockRpcUrlForFromNetwork";
+                const fromRpcUrl = 'mockRpcUrlForFromNetwork'
 
                 const estimatedAmount = await pricer.estimateReceivedAmount(
                   fromAssetConfig.asset,
@@ -997,16 +1014,15 @@ describe('Pricer', () => {
                   fromNetwork as Blockchain,
                   fromRpcUrl,
                   toNetwork as Blockchain,
-                  maxRewardWei
-                );
+                  maxRewardWei,
+                )
 
-                expect(estimatedAmount).to.be.an.instanceOf(BigNumber);
-              });
-            });
-          });
-        });
-      });
-    });
-
+                expect(estimatedAmount).to.be.an.instanceOf(BigNumber)
+              })
+            })
+          })
+        })
+      })
+    })
   })
 })
