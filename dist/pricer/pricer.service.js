@@ -96,7 +96,7 @@ class Pricer {
         return ethers_1.BigNumber.from(this.floatToBigIntString(value));
     }
     getAssetObject(asset, destinationNetwork) {
-        var _a, _b;
+        var _a;
         if (!asset || !destinationNetwork) {
             logger_1.logger.error('Asset and destination network must be specified.');
             return ethers_1.BigNumber.from(0);
@@ -121,22 +121,12 @@ class Pricer {
             logger_1.logger.error({ asset, destinationNetwork }, '🅰️ Asset for given network not found in assetToAddressMap. Return 0 as price.');
             return ethers_1.BigNumber.from(0);
         }
-        // If asset address is nullish attempt to default to USDC
         if (assetObj.address === '0x0000000000000000000000000000000000000000') {
             logger_1.logger.warn({
                 address: assetObj.address,
                 asset: assetObj.asset,
                 network: destinationNetwork,
-            }, 'Received native token. Using USDC for conversion.');
-            const usdcAssetObj = (_b = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) === null || _b === void 0 ? void 0 : _b.find((a) => a.asset === price_provider_assets_1.SupportedAssetPriceProvider.USDC);
-            if (!usdcAssetObj) {
-                logger_1.logger.error({
-                    network: destinationNetwork,
-                    asset: price_provider_assets_1.SupportedAssetPriceProvider.USDC,
-                }, 'USDC asset not found in the specified network for native token conversion.');
-                return ethers_1.BigNumber.from(0);
-            }
-            assetObj = usdcAssetObj;
+            }, 'Received native token');
         }
         return assetObj;
     }
