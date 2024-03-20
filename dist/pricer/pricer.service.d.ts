@@ -163,7 +163,7 @@ export declare class Pricer {
      * @param destinationNetwork The network relevant to the price information, used for fetching price details from the cache.
      * @return An object containing the price of asset A in terms of asset B, along with their USD prices for reference.
      */
-    calculatePricingAssetAinB(assetA: SupportedAssetPriceProvider, assetB: SupportedAssetPriceProvider, priceA: BigNumber, priceB: BigNumber, destinationNetwork: NetworkNameOnPriceProvider): PriceResult;
+    calculatePricingAssetAinB(assetA: SupportedAssetPriceProvider, assetB: SupportedAssetPriceProvider, priceA: BigNumber, priceB: BigNumber, destinationNetwork: NetworkNameOnPriceProvider): Promise<PriceResult>;
     /**
      * Calculates the cost of executing a transaction with a given asset on the blockchain.
      * This method takes into account the estimated gas price and the gas limit for the transaction type (ETH transfer or ERC20 token transfer).

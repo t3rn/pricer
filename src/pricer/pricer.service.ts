@@ -88,7 +88,7 @@ export class Pricer {
   ): Promise<PriceResult> {
     const priceA = await this.receiveAssetPriceWithCache(assetA, destinationNetwork)
     const priceB = await this.receiveAssetPriceWithCache(assetB, destinationNetwork)
-    return this.calculatePricingAssetAinB(assetA, assetB, priceA, priceB, destinationNetwork)
+    return await this.calculatePricingAssetAinB(assetA, assetB, priceA, priceB, destinationNetwork)
   }
 
   /**
@@ -565,11 +565,6 @@ export class Pricer {
     asset: SupportedAssetPriceProvider,
     destinationNetwork: NetworkNameOnPriceProvider,
   ): Promise<BigNumber> {
-    let price = this.priceCache.get(asset, destinationNetwork)
-    if (price) {
-      return this.parsePriceStringToBigNumberOn18Decimals(price)
-    }
-
     if (!networkToAssetAddressOnPriceProviderMap[destinationNetwork]) {
       logger.error({ asset, destinationNetwork }, 'Destination network not found in the map.')
       return BigNumber.from(0)
@@ -604,43 +599,42 @@ export class Pricer {
       return BigNumber.from(0)
     }
 
-    try {
-      let submittedAssetObj = assetObj
-      let isNativeToken = false
-      let nativeAsset: SupportedAssetPriceProvider | undefined
+    let submittedAssetObj = assetObj
 
-      if (assetObj.address === '0x0000000000000000000000000000000000000000') {
-        const usdcAssetObj = networkToAssetAddressOnPriceProviderMap[destinationNetwork]?.find(
-          (a) => a.asset === SupportedAssetPriceProvider.USDC,
+    if (assetObj.address === '0x0000000000000000000000000000000000000000') {
+      const usdcAssetObj = networkToAssetAddressOnPriceProviderMap[destinationNetwork]?.find(
+        (a) => a.asset === SupportedAssetPriceProvider.USDC,
+      )
+
+      if (!usdcAssetObj) {
+        logger.error(
+          {
+            network: destinationNetwork,
+            asset: SupportedAssetPriceProvider.USDC,
+          },
+          'USDC asset not found in the specified network for native token conversion.',
         )
-
-        if (!usdcAssetObj) {
-          logger.error(
-            { network: destinationNetwork, asset: SupportedAssetPriceProvider.USDC },
-            'USDC asset not found in the specified network for native token conversion.',
-          )
-          return BigNumber.from(0)
-        }
-
-        logger.warn(
-          { address: assetObj.address, asset: assetObj.asset, network: destinationNetwork },
-          'Received native token. Using USDC for conversion.',
-        )
-        submittedAssetObj = usdcAssetObj
-        isNativeToken = true
-        nativeAsset = assetObj.asset
+        return BigNumber.from(0)
       }
 
-      price = await this.fetchPriceAndStoreInCache(submittedAssetObj, destinationNetwork as NetworkNameOnPriceProvider)
+      logger.warn(
+        {
+          address: assetObj.address,
+          asset: assetObj.asset,
+          network: destinationNetwork,
+        },
+        'Received native token. Using USDC for conversion.',
+      )
+      submittedAssetObj = usdcAssetObj
+    }
 
-      // if (isNativeToken && nativeAsset) {
-      //   const priceOfUSDCInNativeToken = await this.receiveAssetPriceWithCache(SupportedAssetPriceProvider.USDC, destinationNetwork)
-      //   const priceOfUSDCInNativeTokenParsed = this.parsePriceStringToBigNumberOn18Decimals(priceOfUSDCInNativeToken.toString())
-      //   const priceParsed = this.parsePriceStringToBigNumberOn18Decimals(price)
-      //   const priceInNativeToken = priceOfUSDCInNativeTokenParsed.mul(priceParsed).div(BigNumber.from(10).pow(18))
-      //   console.log(priceInNativeToken.toString())
-      //   return priceInNativeToken
-      // }
+    let price = await this.priceCache.get(asset, destinationNetwork, submittedAssetObj)
+    if (price) {
+      return this.parsePriceStringToBigNumberOn18Decimals(price)
+    }
+
+    try {
+      price = await this.fetchPriceAndStoreInCache(submittedAssetObj, destinationNetwork as NetworkNameOnPriceProvider)
     } catch (err: any) {
       logger.error(
         {
@@ -667,16 +661,16 @@ export class Pricer {
    * @param destinationNetwork The network relevant to the price information, used for fetching price details from the cache.
    * @return An object containing the price of asset A in terms of asset B, along with their USD prices for reference.
    */
-  calculatePricingAssetAinB(
+  async calculatePricingAssetAinB(
     assetA: SupportedAssetPriceProvider,
     assetB: SupportedAssetPriceProvider,
     priceA: BigNumber,
     priceB: BigNumber,
     destinationNetwork: NetworkNameOnPriceProvider,
-  ): PriceResult {
+  ): Promise<PriceResult> {
     const priceAinB = this.calculatePriceAinBOn18Decimals(priceA, priceB)
-    const priceAInUsd = this.priceCache.get(assetA, destinationNetwork) || '0'
-    const priceBInUsd = this.priceCache.get(assetB, destinationNetwork) || '0'
+    const priceAInUsd = (await this.priceCache.get(assetA, destinationNetwork)) || '0'
+    const priceBInUsd = (await this.priceCache.get(assetB, destinationNetwork)) || '0'
     return {
       assetA,
       assetB,
