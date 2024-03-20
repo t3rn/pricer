@@ -1,6 +1,23 @@
-import { Blockchain } from '@ankr.com/ankr.js'
-
-export type NetworkNameOnPriceProvider = Blockchain
+export type NetworkNameOnPriceProvider =
+  | 'arbitrum'
+  | 'avalanche'
+  | 'avalanche_fuji'
+  | 'base'
+  | 'bsc'
+  | 'eth'
+  | 'eth_goerli'
+  | 'fantom'
+  | 'flare'
+  | 'gnosis'
+  | 'linea'
+  | 'optimism'
+  | 'optimism_testnet'
+  | 'polygon'
+  | 'polygon_mumbai'
+  | 'polygon_zkevm'
+  | 'rollux'
+  | 'scroll'
+  | 'syscoin'
 
 export interface AssetAndAddress {
   asset: SupportedAssetPriceProvider
@@ -33,6 +50,7 @@ export enum SupportedAssetPriceProvider {
   UNKNOWN = 'unknown',
 }
 
+// TODO: populate with addresses as much as possible
 const defaultNetworkData = {
   eth: [
     {

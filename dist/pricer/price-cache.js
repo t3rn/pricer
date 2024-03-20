@@ -36,11 +36,12 @@ class PriceCache {
      * @return The price of the asset if found, undefined otherwise.
      */
     get(asset, network, assetObj) {
-        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            const redisPrice = yield this.getPriceRedis(asset, network, (_a = assetObj === null || assetObj === void 0 ? void 0 : assetObj.address) !== null && _a !== void 0 ? _a : '');
-            if (redisPrice !== undefined) {
-                return redisPrice;
+            if (assetObj && assetObj.address) {
+                const redisPrice = yield this.getPriceRedis(asset, network, assetObj.address);
+                if (redisPrice !== undefined) {
+                    return redisPrice;
+                }
             }
             if (this.config.pricer.useMultichain) {
                 return this.getPriceMultiNetwork(asset, network);
@@ -76,11 +77,11 @@ class PriceCache {
     getPriceRedis(asset, network, address) {
         return __awaiter(this, void 0, void 0, function* () {
             if (!this.config.pricer.proxyServerUrl) {
-                console.debug('No Redis cache server URL is set. Defaulting to local cache.');
+                console.warn('[Redis Cache]: No Redis cache server URL is set. Defaulting to local cache.');
                 return undefined;
             }
             if (!address) {
-                console.debug('No token address was passed. Defaulting to local cache.');
+                console.warn('[Redis Cache]: No token address was passed. Defaulting to local cache.');
                 return undefined;
             }
             try {
@@ -93,23 +94,23 @@ class PriceCache {
                 });
                 const price = response.data.price;
                 if (price) {
-                    console.log(`Successfully fetched price from Redis cache for asset: ${asset} on network: ${network}`);
+                    console.log(`[Redis Cache]: Fetched price: ${price} for asset: ${asset} on network: ${network}`);
                     return price;
                 }
-                console.log('Request sent but price not found in Redis cache for asset:', asset, 'on network:', network);
+                console.warn('[Redis Cache]: Request sent but price not found in Redis cache for asset:', asset, 'on network:', network);
                 return undefined;
             }
             catch (error) {
                 if (axios_1.default.isAxiosError(error) && error.response) {
                     if (error.response.status === 404) {
-                        console.log('Price not found in Redis cache for asset:', asset, 'on network:', network);
+                        console.log('[Redis Cache]: Price not found in Redis cache for asset:', asset, 'on network:', network);
                     }
                     else {
-                        console.error('Error fetching from Redis cache', error);
+                        console.error('[Redis Cache]: Error fetching from Redis cache', error);
                     }
                 }
                 else {
-                    console.error('An unexpected error occurred', error);
+                    console.error('[Redis Cache]: An unexpected error occurred', error);
                 }
                 return undefined;
             }

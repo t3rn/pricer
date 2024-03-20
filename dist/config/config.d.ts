@@ -4,10 +4,9 @@ interface TokensConfig {
     maxDecimals18: number;
 }
 interface PricerConfig {
-    providerUrl: string;
     useMultichain: boolean;
     cleanupIntervalSec: number;
-    proxyServerUrl?: string;
+    proxyServerUrl: string;
 }
 interface AppConfig {
     tokens: TokensConfig;

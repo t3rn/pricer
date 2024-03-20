@@ -11,7 +11,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Pricer = exports.ETH_TRANSFER_GAS_LIMIT = exports.ERC20_GAS_LIMIT = void 0;
 const ethers_1 = require("ethers");
-const ankr_js_1 = require("@ankr.com/ankr.js");
 const price_provider_assets_1 = require("../config/price-provider-assets");
 const logger_1 = require("../utils/logger");
 const price_cache_1 = require("./price-cache");
@@ -29,7 +28,6 @@ class Pricer {
      */
     constructor(_config, _ethersProvider = undefined) {
         this.config = _config;
-        this.ankr = new ankr_js_1.AnkrProvider(this.config.pricer.providerUrl);
         this.priceCache = new price_cache_1.PriceCache(this.config);
         this.priceCache.initCleanup();
         this.ethersProvider = _ethersProvider;
@@ -96,6 +94,51 @@ class Pricer {
     // Converts a floating-point number to a BigNumber.
     floatToBigNum(value) {
         return ethers_1.BigNumber.from(this.floatToBigIntString(value));
+    }
+    getAssetObject(asset, destinationNetwork) {
+        var _a, _b;
+        if (!asset || !destinationNetwork) {
+            logger_1.logger.error('Asset and destination network must be specified.');
+            return ethers_1.BigNumber.from(0);
+        }
+        if (!price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) {
+            const error = new Error(`Destination network not found in the map.`);
+            logger_1.logger.error({ asset, destinationNetwork }, error.message);
+            return ethers_1.BigNumber.from(0);
+        }
+        let assetObj = (_a = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) === null || _a === void 0 ? void 0 : _a.find((a) => a.asset === asset);
+        if (!assetObj || !assetObj.address || !assetObj.asset) {
+            logger_1.logger.warn({
+                asset,
+                destinationNetwork,
+            }, '🍐 Asset not found in assetToAddressMap. Defaulting to fake price.');
+            const maybeFakePrice = circuit_assets_1.AssetMapper.fakePriceOfAsset(this.config.tokens.oneOn18Decimals, asset);
+            if (maybeFakePrice > 0) {
+                const maybeFakePriceInNominal = maybeFakePrice / this.config.tokens.oneOn18Decimals;
+                const fakePriceParsed = this.parsePriceStringToBigNumberOn18Decimals(maybeFakePriceInNominal.toString());
+                return fakePriceParsed;
+            }
+            logger_1.logger.error({ asset, destinationNetwork }, '🅰️ Asset for given network not found in assetToAddressMap. Return 0 as price.');
+            return ethers_1.BigNumber.from(0);
+        }
+        // If asset address is nullish attempt to default to USDC
+        if (assetObj.address === '0x0000000000000000000000000000000000000000') {
+            logger_1.logger.warn({
+                address: assetObj.address,
+                asset: assetObj.asset,
+                network: destinationNetwork,
+            }, 'Received native token. Using USDC for conversion.');
+            const usdcAssetObj = (_b = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) === null || _b === void 0 ? void 0 : _b.find((a) => a.asset === price_provider_assets_1.SupportedAssetPriceProvider.USDC);
+            if (!usdcAssetObj) {
+                logger_1.logger.error({
+                    network: destinationNetwork,
+                    asset: price_provider_assets_1.SupportedAssetPriceProvider.USDC,
+                }, 'USDC asset not found in the specified network for native token conversion.');
+                return ethers_1.BigNumber.from(0);
+            }
+            assetObj = usdcAssetObj;
+        }
+        return assetObj;
     }
     /**
      * Evaluates the profitability of an order based on a given strategy.
@@ -409,12 +452,12 @@ class Pricer {
      */
     fetchPriceAndStoreInCache(assetObj, network) {
         return __awaiter(this, void 0, void 0, function* () {
-            const response = yield this.ankr.getTokenPrice({
-                blockchain: network,
-                contractAddress: assetObj.address,
-            });
-            this.priceCache.set(assetObj.asset, network, response.usdPrice);
-            return response.usdPrice;
+            const usdPrice = yield this.priceCache.getPriceRedis(assetObj.asset, network, assetObj.address);
+            if (!usdPrice) {
+                throw new Error('Failed to fetch price for asset from proxy server');
+            }
+            this.priceCache.set(assetObj.asset, network, usdPrice);
+            return usdPrice;
         });
     }
     /**
@@ -427,50 +470,17 @@ class Pricer {
      * @return The price of the asset as a BigNumber. Returns a fake or zero price if the asset is not found or fetching fails.
      */
     receiveAssetPriceWithCache(asset, destinationNetwork) {
-        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
-            if (!price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) {
-                logger_1.logger.error({ asset, destinationNetwork }, 'Destination network not found in the map.');
-                return ethers_1.BigNumber.from(0);
+            const assetObj = this.getAssetObject(asset, destinationNetwork);
+            if (assetObj instanceof ethers_1.BigNumber) {
+                return assetObj;
             }
-            const assetObj = (_a = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) === null || _a === void 0 ? void 0 : _a.find((assetObj) => (assetObj === null || assetObj === void 0 ? void 0 : assetObj.asset) === asset);
-            if (!assetObj || !assetObj.address || !assetObj.asset) {
-                logger_1.logger.debug({
-                    asset,
-                    destinationNetwork,
-                }, '🍐 Asset not found in assetToAddressMap. Defaulting to fake price.');
-                const maybeFakePrice = circuit_assets_1.AssetMapper.fakePriceOfAsset(this.config.tokens.oneOn18Decimals, asset);
-                if (maybeFakePrice > 0) {
-                    const maybeFakePriceInNominal = maybeFakePrice / this.config.tokens.oneOn18Decimals;
-                    const fakePriceParsed = this.parsePriceStringToBigNumberOn18Decimals(maybeFakePriceInNominal.toString());
-                    return fakePriceParsed;
-                }
-                logger_1.logger.error({ asset, destinationNetwork }, '🅰️ Asset for given network not found in assetToAddressMap. Return 0 as price.');
-                return ethers_1.BigNumber.from(0);
-            }
-            let submittedAssetObj = assetObj;
-            if (assetObj.address === '0x0000000000000000000000000000000000000000') {
-                const usdcAssetObj = (_b = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) === null || _b === void 0 ? void 0 : _b.find((a) => a.asset === price_provider_assets_1.SupportedAssetPriceProvider.USDC);
-                if (!usdcAssetObj) {
-                    logger_1.logger.error({
-                        network: destinationNetwork,
-                        asset: price_provider_assets_1.SupportedAssetPriceProvider.USDC,
-                    }, 'USDC asset not found in the specified network for native token conversion.');
-                    return ethers_1.BigNumber.from(0);
-                }
-                logger_1.logger.warn({
-                    address: assetObj.address,
-                    asset: assetObj.asset,
-                    network: destinationNetwork,
-                }, 'Received native token. Using USDC for conversion.');
-                submittedAssetObj = usdcAssetObj;
-            }
-            let price = yield this.priceCache.get(asset, destinationNetwork, submittedAssetObj);
+            let price = yield this.priceCache.get(asset, destinationNetwork, assetObj);
             if (price) {
                 return this.parsePriceStringToBigNumberOn18Decimals(price);
             }
             try {
-                price = yield this.fetchPriceAndStoreInCache(submittedAssetObj, destinationNetwork);
+                price = yield this.fetchPriceAndStoreInCache(assetObj, destinationNetwork);
             }
             catch (err) {
                 logger_1.logger.error({
@@ -497,9 +507,23 @@ class Pricer {
      */
     calculatePricingAssetAinB(assetA, assetB, priceA, priceB, destinationNetwork) {
         return __awaiter(this, void 0, void 0, function* () {
+            let priceAInUsd;
+            let priceBInUsd;
             const priceAinB = this.calculatePriceAinBOn18Decimals(priceA, priceB);
-            const priceAInUsd = (yield this.priceCache.get(assetA, destinationNetwork)) || '0';
-            const priceBInUsd = (yield this.priceCache.get(assetB, destinationNetwork)) || '0';
+            const assetObjA = this.getAssetObject(assetA, destinationNetwork);
+            const assetObjB = this.getAssetObject(assetB, destinationNetwork);
+            if (assetObjA instanceof ethers_1.BigNumber) {
+                priceAInUsd = assetObjA.toString();
+            }
+            else {
+                priceAInUsd = (yield this.priceCache.get(assetA, destinationNetwork, assetObjA)) || '0';
+            }
+            if (assetObjB instanceof ethers_1.BigNumber) {
+                priceBInUsd = assetObjB.toString();
+            }
+            else {
+                priceBInUsd = (yield this.priceCache.get(assetB, destinationNetwork, assetObjB)) || '0';
+            }
             return {
                 assetA,
                 assetB,
