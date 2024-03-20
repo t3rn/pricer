@@ -173,7 +173,6 @@ export class Pricer {
       return BigNumber.from(0)
     }
 
-    // If asset address is nullish attempt to default to USDC
     if (assetObj.address === '0x0000000000000000000000000000000000000000') {
       logger.warn(
         {
@@ -181,24 +180,8 @@ export class Pricer {
           asset: assetObj.asset,
           network: destinationNetwork,
         },
-        'Received native token. Using USDC for conversion.',
+        'Received native token',
       )
-
-      const usdcAssetObj = networkToAssetAddressOnPriceProviderMap[destinationNetwork]?.find(
-        (a) => a.asset === SupportedAssetPriceProvider.USDC,
-      )
-      if (!usdcAssetObj) {
-        logger.error(
-          {
-            network: destinationNetwork,
-            asset: SupportedAssetPriceProvider.USDC,
-          },
-          'USDC asset not found in the specified network for native token conversion.',
-        )
-        return BigNumber.from(0)
-      }
-
-      assetObj = usdcAssetObj
     }
 
     return assetObj
