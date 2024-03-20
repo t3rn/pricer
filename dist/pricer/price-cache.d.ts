@@ -1,5 +1,5 @@
 import { Config } from '../config/config';
-import { NetworkNameOnPriceProvider, SupportedAssetPriceProvider } from '../config/price-provider-assets';
+import { AssetAndAddress, NetworkNameOnPriceProvider, SupportedAssetPriceProvider } from '../config/price-provider-assets';
 export type PriceCacheSingleNetwork = Map<SupportedAssetPriceProvider, string>;
 export type NetworkToPriceMap = Map<NetworkNameOnPriceProvider, string>;
 export type PriceCacheMultiNetwork = Map<SupportedAssetPriceProvider, NetworkToPriceMap>;
@@ -23,7 +23,7 @@ export declare class PriceCache {
      * @param network The network from which to retrieve the price if multichain is enabled.
      * @return The price of the asset if found, undefined otherwise.
      */
-    get(asset: SupportedAssetPriceProvider, network: NetworkNameOnPriceProvider): string | undefined;
+    get(asset: SupportedAssetPriceProvider, network: NetworkNameOnPriceProvider, assetObj?: AssetAndAddress): Promise<string | undefined>;
     /**
      * Sets the price of an asset in the cache for a specific network if multichain is enabled, or globally otherwise.
      *
@@ -32,7 +32,15 @@ export declare class PriceCache {
      * @param price The price to set for the asset.
      * @return The updated cache object.
      */
-    set(asset: SupportedAssetPriceProvider, network: NetworkNameOnPriceProvider, price: string): PriceCacheSingleNetwork | NetworkToPriceMap;
+    set(asset: SupportedAssetPriceProvider, network: NetworkNameOnPriceProvider, price: string): NetworkToPriceMap | PriceCacheSingleNetwork;
+    /**
+     * Get price from Redis cache
+     *
+     * @param asset
+     * @param network
+     * @return The price of the asset if found, undefined otherwise.
+     */
+    getPriceRedis(asset: SupportedAssetPriceProvider, network: NetworkNameOnPriceProvider, address: string): Promise<string | undefined>;
     /**
      * Periodically clean the local price cache
      */

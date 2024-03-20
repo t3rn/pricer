@@ -61,7 +61,7 @@ class Pricer {
         return __awaiter(this, void 0, void 0, function* () {
             const priceA = yield this.receiveAssetPriceWithCache(assetA, destinationNetwork);
             const priceB = yield this.receiveAssetPriceWithCache(assetB, destinationNetwork);
-            return this.calculatePricingAssetAinB(assetA, assetB, priceA, priceB, destinationNetwork);
+            return yield this.calculatePricingAssetAinB(assetA, assetB, priceA, priceB, destinationNetwork);
         });
     }
     /**
@@ -427,12 +427,8 @@ class Pricer {
      * @return The price of the asset as a BigNumber. Returns a fake or zero price if the asset is not found or fetching fails.
      */
     receiveAssetPriceWithCache(asset, destinationNetwork) {
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b;
-            let price = this.priceCache.get(asset, destinationNetwork);
-            if (price) {
-                return this.parsePriceStringToBigNumberOn18Decimals(price);
-            }
             if (!price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) {
                 logger_1.logger.error({ asset, destinationNetwork }, 'Destination network not found in the map.');
                 return ethers_1.BigNumber.from(0);
@@ -452,30 +448,29 @@ class Pricer {
                 logger_1.logger.error({ asset, destinationNetwork }, '🅰️ Asset for given network not found in assetToAddressMap. Return 0 as price.');
                 return ethers_1.BigNumber.from(0);
             }
-            try {
-                let submittedAssetObj = assetObj;
-                let isNativeToken = false;
-                let nativeAsset;
-                if (assetObj.address === '0x0000000000000000000000000000000000000000') {
-                    const usdcAssetObj = (_b = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) === null || _b === void 0 ? void 0 : _b.find((a) => a.asset === price_provider_assets_1.SupportedAssetPriceProvider.USDC);
-                    if (!usdcAssetObj) {
-                        logger_1.logger.error({ network: destinationNetwork, asset: price_provider_assets_1.SupportedAssetPriceProvider.USDC }, 'USDC asset not found in the specified network for native token conversion.');
-                        return ethers_1.BigNumber.from(0);
-                    }
-                    logger_1.logger.warn({ address: assetObj.address, asset: assetObj.asset, network: destinationNetwork }, 'Received native token. Using USDC for conversion.');
-                    submittedAssetObj = usdcAssetObj;
-                    isNativeToken = true;
-                    nativeAsset = assetObj.asset;
+            let submittedAssetObj = assetObj;
+            if (assetObj.address === '0x0000000000000000000000000000000000000000') {
+                const usdcAssetObj = (_b = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) === null || _b === void 0 ? void 0 : _b.find((a) => a.asset === price_provider_assets_1.SupportedAssetPriceProvider.USDC);
+                if (!usdcAssetObj) {
+                    logger_1.logger.error({
+                        network: destinationNetwork,
+                        asset: price_provider_assets_1.SupportedAssetPriceProvider.USDC,
+                    }, 'USDC asset not found in the specified network for native token conversion.');
+                    return ethers_1.BigNumber.from(0);
                 }
+                logger_1.logger.warn({
+                    address: assetObj.address,
+                    asset: assetObj.asset,
+                    network: destinationNetwork,
+                }, 'Received native token. Using USDC for conversion.');
+                submittedAssetObj = usdcAssetObj;
+            }
+            let price = yield this.priceCache.get(asset, destinationNetwork, submittedAssetObj);
+            if (price) {
+                return this.parsePriceStringToBigNumberOn18Decimals(price);
+            }
+            try {
                 price = yield this.fetchPriceAndStoreInCache(submittedAssetObj, destinationNetwork);
-                // if (isNativeToken && nativeAsset) {
-                //   const priceOfUSDCInNativeToken = await this.receiveAssetPriceWithCache(SupportedAssetPriceProvider.USDC, destinationNetwork)
-                //   const priceOfUSDCInNativeTokenParsed = this.parsePriceStringToBigNumberOn18Decimals(priceOfUSDCInNativeToken.toString())
-                //   const priceParsed = this.parsePriceStringToBigNumberOn18Decimals(price)
-                //   const priceInNativeToken = priceOfUSDCInNativeTokenParsed.mul(priceParsed).div(BigNumber.from(10).pow(18))
-                //   console.log(priceInNativeToken.toString())
-                //   return priceInNativeToken
-                // }
             }
             catch (err) {
                 logger_1.logger.error({
@@ -501,16 +496,18 @@ class Pricer {
      * @return An object containing the price of asset A in terms of asset B, along with their USD prices for reference.
      */
     calculatePricingAssetAinB(assetA, assetB, priceA, priceB, destinationNetwork) {
-        const priceAinB = this.calculatePriceAinBOn18Decimals(priceA, priceB);
-        const priceAInUsd = this.priceCache.get(assetA, destinationNetwork) || '0';
-        const priceBInUsd = this.priceCache.get(assetB, destinationNetwork) || '0';
-        return {
-            assetA,
-            assetB,
-            priceAinB,
-            priceAInUsd,
-            priceBInUsd,
-        };
+        return __awaiter(this, void 0, void 0, function* () {
+            const priceAinB = this.calculatePriceAinBOn18Decimals(priceA, priceB);
+            const priceAInUsd = (yield this.priceCache.get(assetA, destinationNetwork)) || '0';
+            const priceBInUsd = (yield this.priceCache.get(assetB, destinationNetwork)) || '0';
+            return {
+                assetA,
+                assetB,
+                priceAinB,
+                priceAInUsd,
+                priceBInUsd,
+            };
+        });
     }
     /**
      * Calculates the cost of executing a transaction with a given asset on the blockchain.
