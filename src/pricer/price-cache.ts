@@ -4,7 +4,6 @@ import {
   NetworkNameOnPriceProvider,
   SupportedAssetPriceProvider,
 } from '../config/price-provider-assets'
-import axios from 'axios'
 
 export type PriceCacheSingleNetwork = Map<SupportedAssetPriceProvider, string>
 export type NetworkToPriceMap = Map<NetworkNameOnPriceProvider, string>
@@ -96,36 +95,37 @@ export class PriceCache {
     }
 
     try {
-      const response = await axios.get(`${this.config.pricer.proxyServerUrl}/pricer`, {
-        params: {
-          network,
-          asset,
-          address,
-        },
-      })
-      const price = response.data.price
+      const url = new URL(`${this.config.pricer.proxyServerUrl}/pricer`)
+      url.searchParams.append('network', network)
+      url.searchParams.append('asset', asset)
+      url.searchParams.append('address', address)
+
+      const response = await fetch(url.toString())
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log('[Redis Cache]: Price not found in Redis cache for asset:', asset, 'on network:', network)
+        } else {
+          console.error('[Redis Cache]: Error fetching from Redis cache', response.statusText)
+        }
+        return undefined
+      }
+
+      const data: any = await response.json()
+      const price = data.price
       if (price) {
         console.log(`[Redis Cache]: Fetched price: ${price} for asset: ${asset} on network: ${network}`)
         return price
-      }
-
-      console.warn(
-        '[Redis Cache]: Request sent but price not found in Redis cache for asset:',
-        asset,
-        'on network:',
-        network,
-      )
-      return undefined
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        if (error.response.status === 404) {
-          console.log('[Redis Cache]: Price not found in Redis cache for asset:', asset, 'on network:', network)
-        } else {
-          console.error('[Redis Cache]: Error fetching from Redis cache', error)
-        }
       } else {
-        console.error('[Redis Cache]: An unexpected error occurred', error)
+        console.warn(
+          '[Redis Cache]: Request sent but price not found in Redis cache for asset:',
+          asset,
+          'on network:',
+          network,
+        )
+        return undefined
       }
+    } catch (error) {
+      console.error('[Redis Cache]: An unexpected error occurred', error)
       return undefined
     }
   }
