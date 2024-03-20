@@ -23,6 +23,7 @@ var SupportedAssetPriceProvider;
     SupportedAssetPriceProvider["DOT"] = "dot";
     SupportedAssetPriceProvider["UNKNOWN"] = "unknown";
 })(SupportedAssetPriceProvider || (exports.SupportedAssetPriceProvider = SupportedAssetPriceProvider = {}));
+// TODO: populate with addresses as much as possible
 const defaultNetworkData = {
     eth: [
         {
