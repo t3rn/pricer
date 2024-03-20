@@ -33,36 +33,36 @@ describe('PriceCache', () => {
       expectedResult = new Map<SupportedAssetPriceProvider, string>()
     })
 
-    it('should get "undefined" from cache', () => {
-      const result = priceCache.get(asset, network)
+    it('should get "undefined" from cache', async () => {
+      const result = await priceCache.get(asset, network)
       expect(result).to.equal(undefined)
     })
 
-    it('should set price in cache', () => {
+    it('should set price in cache', async () => {
       const result = priceCache.set(asset, network, ethPrice)
       expectedResult.set(asset, ethPrice)
 
       expect(result).to.deep.equal(expectedResult)
     })
 
-    it('should get price from cache', () => {
+    it('should get price from cache', async () => {
       priceCache.set(asset, network, ethPrice)
-      const result = priceCache.get(asset, network)
+      const result = await priceCache.get(asset, network)
 
       expect(result).to.equal(ethPrice)
     })
 
-    it('should update price in cache', () => {
-      const emptyPrice = priceCache.get(asset, network)
+    it('should update price in cache', async () => {
+      const emptyPrice = await priceCache.get(asset, network)
       expect(emptyPrice).to.equal(undefined)
 
       priceCache.set(asset, network, ethPrice)
-      const firstPrice = priceCache.get(asset, network)
+      const firstPrice = await priceCache.get(asset, network)
       expect(firstPrice).to.equal(ethPrice)
 
       const newEthPrice = '2180.000083676755965'
       priceCache.set(asset, network, newEthPrice)
-      const resultUpdated = priceCache.get(asset, network)
+      const resultUpdated = await priceCache.get(asset, network)
 
       expect(resultUpdated).to.equal(newEthPrice)
     })
@@ -100,36 +100,36 @@ describe('PriceCache', () => {
       expectedInnerMap = new Map<NetworkNameOnPriceProvider, string>()
     })
 
-    it('should get "undefined" from cache', () => {
-      const result = priceCache.get(asset, network)
+    it('should get "undefined" from cache', async () => {
+      const result = await priceCache.get(asset, network)
       expect(result).to.equal(undefined)
     })
 
-    it('should set price in cache', () => {
+    it('should set price in cache', async () => {
       const result = priceCache.set(asset, network, ethPrice)
       expectedInnerMap.set(network, ethPrice)
 
       expect(result).to.deep.equal(expectedInnerMap)
     })
 
-    it('should get price from cache', () => {
+    it('should get price from cache', async () => {
       priceCache.set(asset, network, ethPrice)
-      const result = priceCache.get(asset, network)
+      const result = await priceCache.get(asset, network)
 
       expect(result).to.equal(ethPrice)
     })
 
-    it('should update price in cache', () => {
-      const emptyPrice = priceCache.get(asset, network)
+    it('should update price in cache', async () => {
+      const emptyPrice = await priceCache.get(asset, network)
       expect(emptyPrice).to.equal(undefined)
 
       priceCache.set(asset, network, ethPrice)
-      const firstPrice = priceCache.get(asset, network)
+      const firstPrice = await priceCache.get(asset, network)
       expect(firstPrice).to.equal(ethPrice)
 
       const newEthPrice = '2180.000083676755965'
       priceCache.set(asset, network, newEthPrice)
-      const updatedPrice = priceCache.get(asset, network)
+      const updatedPrice = await priceCache.get(asset, network)
 
       expect(updatedPrice).to.equal(newEthPrice)
     })

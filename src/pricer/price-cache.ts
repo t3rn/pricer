@@ -1,5 +1,10 @@
 import { Config } from '../config/config'
-import { NetworkNameOnPriceProvider, SupportedAssetPriceProvider } from '../config/price-provider-assets'
+import {
+  AssetAndAddress,
+  NetworkNameOnPriceProvider,
+  SupportedAssetPriceProvider,
+} from '../config/price-provider-assets'
+import axios from 'axios'
 
 export type PriceCacheSingleNetwork = Map<SupportedAssetPriceProvider, string>
 export type NetworkToPriceMap = Map<NetworkNameOnPriceProvider, string>
@@ -29,7 +34,16 @@ export class PriceCache {
    * @param network The network from which to retrieve the price if multichain is enabled.
    * @return The price of the asset if found, undefined otherwise.
    */
-  get(asset: SupportedAssetPriceProvider, network: NetworkNameOnPriceProvider): string | undefined {
+  async get(
+    asset: SupportedAssetPriceProvider,
+    network: NetworkNameOnPriceProvider,
+    assetObj?: AssetAndAddress,
+  ): Promise<string | undefined> {
+    const redisPrice = await this.getPriceRedis(asset, network, assetObj?.address ?? '')
+    if (redisPrice !== undefined) {
+      return redisPrice
+    }
+
     if (this.config.pricer.useMultichain) {
       return this.getPriceMultiNetwork(asset, network)
     } else {
@@ -49,11 +63,63 @@ export class PriceCache {
     asset: SupportedAssetPriceProvider,
     network: NetworkNameOnPriceProvider,
     price: string,
-  ): PriceCacheSingleNetwork | NetworkToPriceMap {
+  ): NetworkToPriceMap | PriceCacheSingleNetwork {
     if (this.config.pricer.useMultichain) {
       return this.setPriceMultiNetwork(asset, network, price)
     } else {
       return this.setPriceSingleNetwork(asset, price)
+    }
+  }
+
+  /**
+   * Get price from Redis cache
+   *
+   * @param asset
+   * @param network
+   * @return The price of the asset if found, undefined otherwise.
+   */
+  async getPriceRedis(
+    asset: SupportedAssetPriceProvider,
+    network: NetworkNameOnPriceProvider,
+    address: string,
+  ): Promise<string | undefined> {
+    if (!this.config.pricer.proxyServerUrl) {
+      console.debug('No Redis cache server URL is set. Defaulting to local cache.')
+      return undefined
+    }
+
+    if (!address) {
+      console.debug('No token address was passed. Defaulting to local cache.')
+      return undefined
+    }
+
+    try {
+      const response = await axios.get(`${this.config.pricer.proxyServerUrl}/pricer`, {
+        params: {
+          network,
+          asset,
+          address,
+        },
+      })
+      const price = response.data.price
+      if (price) {
+        console.log(`Successfully fetched price from Redis cache for asset: ${asset} on network: ${network}`)
+        return price
+      }
+
+      console.log('Request sent but price not found in Redis cache for asset:', asset, 'on network:', network)
+      return undefined
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        if (error.response.status === 404) {
+          console.log('Price not found in Redis cache for asset:', asset, 'on network:', network)
+        } else {
+          console.error('Error fetching from Redis cache', error)
+        }
+      } else {
+        console.error('An unexpected error occurred', error)
+      }
+      return undefined
     }
   }
 

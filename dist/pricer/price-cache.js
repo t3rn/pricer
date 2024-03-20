@@ -1,6 +1,19 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PriceCache = void 0;
+const axios_1 = __importDefault(require("axios"));
 /**
  * Manages the caching of asset prices for single or multiple networks to optimize performance and reduce API calls.
  */
@@ -22,13 +35,20 @@ class PriceCache {
      * @param network The network from which to retrieve the price if multichain is enabled.
      * @return The price of the asset if found, undefined otherwise.
      */
-    get(asset, network) {
-        if (this.config.pricer.useMultichain) {
-            return this.getPriceMultiNetwork(asset, network);
-        }
-        else {
-            return this.getPriceSingleNetwork(asset);
-        }
+    get(asset, network, assetObj) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            const redisPrice = yield this.getPriceRedis(asset, network, (_a = assetObj === null || assetObj === void 0 ? void 0 : assetObj.address) !== null && _a !== void 0 ? _a : '');
+            if (redisPrice !== undefined) {
+                return redisPrice;
+            }
+            if (this.config.pricer.useMultichain) {
+                return this.getPriceMultiNetwork(asset, network);
+            }
+            else {
+                return this.getPriceSingleNetwork(asset);
+            }
+        });
     }
     /**
      * Sets the price of an asset in the cache for a specific network if multichain is enabled, or globally otherwise.
@@ -45,6 +65,55 @@ class PriceCache {
         else {
             return this.setPriceSingleNetwork(asset, price);
         }
+    }
+    /**
+     * Get price from Redis cache
+     *
+     * @param asset
+     * @param network
+     * @return The price of the asset if found, undefined otherwise.
+     */
+    getPriceRedis(asset, network, address) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!this.config.pricer.proxyServerUrl) {
+                console.debug('No Redis cache server URL is set. Defaulting to local cache.');
+                return undefined;
+            }
+            if (!address) {
+                console.debug('No token address was passed. Defaulting to local cache.');
+                return undefined;
+            }
+            try {
+                const response = yield axios_1.default.get(`${this.config.pricer.proxyServerUrl}/pricer`, {
+                    params: {
+                        network,
+                        asset,
+                        address,
+                    },
+                });
+                const price = response.data.price;
+                if (price) {
+                    console.log(`Successfully fetched price from Redis cache for asset: ${asset} on network: ${network}`);
+                    return price;
+                }
+                console.log('Request sent but price not found in Redis cache for asset:', asset, 'on network:', network);
+                return undefined;
+            }
+            catch (error) {
+                if (axios_1.default.isAxiosError(error) && error.response) {
+                    if (error.response.status === 404) {
+                        console.log('Price not found in Redis cache for asset:', asset, 'on network:', network);
+                    }
+                    else {
+                        console.error('Error fetching from Redis cache', error);
+                    }
+                }
+                else {
+                    console.error('An unexpected error occurred', error);
+                }
+                return undefined;
+            }
+        });
     }
     /**
      * Periodically clean the local price cache

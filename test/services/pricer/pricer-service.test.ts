@@ -15,7 +15,18 @@ import { describe, it, beforeEach } from 'mocha'
 import sinon from 'sinon'
 
 describe('Pricer', () => {
-  const pricer = new Pricer(config)
+  const pricer = new Pricer({
+    tokens: {
+      addressZero: '0x0000000000000000000000000000000000000000',
+      oneOn18Decimals: parseInt('1000000000000000000'),
+      maxDecimals18: 18,
+    },
+    pricer: {
+      providerUrl: 'mocked',
+      useMultichain: true,
+      cleanupIntervalSec: 60,
+    },
+  })
 
   it('should correctly evaluate value of assets in USD out of cache', async () => {
     const asset = SupportedAssetPriceProvider.ETH
@@ -136,7 +147,7 @@ describe('Pricer', () => {
     expect(Pricer.priceAsFloat(costResult.costInAsset)).to.equal(0.7544612847720448)
   })
 
-  it('should correctly evaluate non-profitable deal based on example cost and pricing', () => {
+  it('should correctly evaluate non-profitable deal based on example cost and pricing', async () => {
     const destination: NetworkNameOnCircuit = 'bscp'
     const priceAssetCache = '1.102723238337682431'
     const asset = SupportedAssetPriceProvider.OPTIMISM
@@ -181,7 +192,7 @@ describe('Pricer', () => {
     expect(costResult.costInUsd).to.equal(0.8319619911442375)
     expect(costResult.asset).to.equal(asset)
     expect(costResult.costInAsset.toString()).to.equal('754461284772044771')
-    const pricingResult = pricer.calculatePricingAssetAinB(
+    const pricingResult = await pricer.calculatePricingAssetAinB(
       SupportedAssetPriceProvider.ETH,
       asset,
       priceAsset,
@@ -198,7 +209,7 @@ describe('Pricer', () => {
     expect(evalDealResult.profit.toString()).to.equal('0')
   })
 
-  it('should correctly evaluate deal as profitable based on todays optimism gas cost and pricing on big 1mln wallet', () => {
+  it('should correctly evaluate deal as profitable based on todays optimism gas cost and pricing on big 1mln wallet', async () => {
     const destination: NetworkNameOnCircuit = 'bscp'
     const priceAssetCache = '233.238337682431'
     const asset = SupportedAssetPriceProvider.BSC
@@ -216,7 +227,7 @@ describe('Pricer', () => {
     expect(costResult.costInUsd).to.equal(1.4546273536978662)
     expect(costResult.asset).to.equal(asset)
     expect(costResult.costInAsset.toString()).to.equal('6236656323963494')
-    const pricingResult = pricer.calculatePricingAssetAinB(
+    const pricingResult = await pricer.calculatePricingAssetAinB(
       SupportedAssetPriceProvider.ETH,
       asset,
       priceAsset,
@@ -268,7 +279,7 @@ describe('Pricer', () => {
     expect(evalDealResult.profit.toString()).to.equal('13763343676036492')
   })
 
-  it('should correctly evaluate deal as profitable based on todays optimism gas cost and pricing', () => {
+  it('should correctly evaluate deal as profitable based on todays optimism gas cost and pricing', async () => {
     const destination: NetworkNameOnCircuit = 'bscp'
     const priceAssetCache = '233.238337682431'
     const asset = SupportedAssetPriceProvider.BSC
@@ -286,7 +297,7 @@ describe('Pricer', () => {
     expect(costResult.costInUsd).to.equal(1.4546273536978662)
     expect(costResult.asset).to.equal(asset)
     expect(costResult.costInAsset.toString()).to.equal('6236656323963494')
-    const pricingResult = pricer.calculatePricingAssetAinB(
+    const pricingResult = await pricer.calculatePricingAssetAinB(
       SupportedAssetPriceProvider.ETH,
       asset,
       priceAsset,
@@ -971,7 +982,21 @@ describe('Pricer', () => {
           getGasPrice: sinon.stub().resolves(BigNumber.from('20000000000')), // 20 Gwei
         }
 
-        pricer = new Pricer(config, mockJsonRpcProvider)
+        pricer = new Pricer(
+          {
+            tokens: {
+              addressZero: '0x0000000000000000000000000000000000000000',
+              oneOn18Decimals: parseInt('1000000000000000000'),
+              maxDecimals18: 18,
+            },
+            pricer: {
+              providerUrl: 'mocked',
+              useMultichain: true,
+              cleanupIntervalSec: 60,
+            },
+          },
+          mockJsonRpcProvider,
+        )
 
         const fakeProvider = {
           getGasPrice: sinon.stub().resolves(BigNumber.from('20000000000')), // Return a fake gas price
