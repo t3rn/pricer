@@ -6,7 +6,11 @@ import {
   PriceCacheMultiNetwork,
   PriceCacheSingleNetwork,
 } from '../../../src/pricer/price-cache'
-import { NetworkNameOnPriceProvider, SupportedAssetPriceProvider } from '../../../src/config/price-provider-assets'
+import {
+  AssetAndAddress,
+  NetworkNameOnPriceProvider,
+  SupportedAssetPriceProvider,
+} from '../../../src/config/price-provider-assets'
 import { BigNumber } from 'ethers'
 
 describe('PriceCache', () => {
@@ -34,7 +38,7 @@ describe('PriceCache', () => {
     })
 
     it('should get "undefined" from cache', async () => {
-      const result = await priceCache.get(asset, network)
+      const result = await priceCache.get(asset, network, {} as AssetAndAddress)
       expect(result).to.equal(undefined)
     })
 
@@ -47,22 +51,22 @@ describe('PriceCache', () => {
 
     it('should get price from cache', async () => {
       priceCache.set(asset, network, ethPrice)
-      const result = await priceCache.get(asset, network)
+      const result = await priceCache.get(asset, network, {} as AssetAndAddress)
 
       expect(result).to.equal(ethPrice)
     })
 
     it('should update price in cache', async () => {
-      const emptyPrice = await priceCache.get(asset, network)
+      const emptyPrice = await priceCache.get(asset, network, {} as AssetAndAddress)
       expect(emptyPrice).to.equal(undefined)
 
       priceCache.set(asset, network, ethPrice)
-      const firstPrice = await priceCache.get(asset, network)
+      const firstPrice = await priceCache.get(asset, network, {} as AssetAndAddress)
       expect(firstPrice).to.equal(ethPrice)
 
       const newEthPrice = '2180.000083676755965'
       priceCache.set(asset, network, newEthPrice)
-      const resultUpdated = await priceCache.get(asset, network)
+      const resultUpdated = await priceCache.get(asset, network, {} as AssetAndAddress)
 
       expect(resultUpdated).to.equal(newEthPrice)
     })
@@ -101,7 +105,7 @@ describe('PriceCache', () => {
     })
 
     it('should get "undefined" from cache', async () => {
-      const result = await priceCache.get(asset, network)
+      const result = await priceCache.get(asset, network, {} as AssetAndAddress)
       expect(result).to.equal(undefined)
     })
 
@@ -114,22 +118,22 @@ describe('PriceCache', () => {
 
     it('should get price from cache', async () => {
       priceCache.set(asset, network, ethPrice)
-      const result = await priceCache.get(asset, network)
+      const result = await priceCache.get(asset, network, {} as AssetAndAddress)
 
       expect(result).to.equal(ethPrice)
     })
 
     it('should update price in cache', async () => {
-      const emptyPrice = await priceCache.get(asset, network)
+      const emptyPrice = await priceCache.get(asset, network, {} as AssetAndAddress)
       expect(emptyPrice).to.equal(undefined)
 
       priceCache.set(asset, network, ethPrice)
-      const firstPrice = await priceCache.get(asset, network)
+      const firstPrice = await priceCache.get(asset, network, {} as AssetAndAddress)
       expect(firstPrice).to.equal(ethPrice)
 
       const newEthPrice = '2180.000083676755965'
       priceCache.set(asset, network, newEthPrice)
-      const updatedPrice = await priceCache.get(asset, network)
+      const updatedPrice = await priceCache.get(asset, network, {} as AssetAndAddress)
 
       expect(updatedPrice).to.equal(newEthPrice)
     })

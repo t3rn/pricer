@@ -18,7 +18,6 @@ export declare const ETH_TRANSFER_GAS_LIMIT: BigNumber;
  */
 export declare class Pricer {
     private readonly config;
-    private readonly ankr;
     private ethersProvider;
     readonly priceCache: PriceCache;
     /**
@@ -58,6 +57,7 @@ export declare class Pricer {
     retrieveCostInAsset(asset: SupportedAssetPriceProvider, destinationAsset: SupportedAssetPriceProvider, destinationNetwork: NetworkNameOnPriceProvider, estGasPriceOnNativeInWei: BigNumber, ofTokenTransfer: string): Promise<CostResult>;
     floatToBigIntString(value: number): string;
     floatToBigNum(value: number): BigNumber;
+    getAssetObject(asset: SupportedAssetPriceProvider, destinationNetwork: NetworkNameOnPriceProvider): AssetAndAddress | BigNumber;
     /**
      * Evaluates the profitability of an order based on a given strategy.
      * Determines whether executing the order would result in a profit or loss.

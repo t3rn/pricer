@@ -12,10 +12,9 @@ interface TokensConfig {
 }
 
 interface PricerConfig {
-  providerUrl: string
   useMultichain: boolean
   cleanupIntervalSec: number
-  proxyServerUrl?: string
+  proxyServerUrl: string
 }
 
 interface AppConfig {
@@ -30,10 +29,12 @@ const config = (): AppConfig => ({
     maxDecimals18: get('MAX_DECIMALS_18').required().default(18).asIntPositive(),
   },
   pricer: {
-    providerUrl: get('PRICER_PROVIDER_URL').required().asString(),
     useMultichain: get('PRICER_USE_MULTICHAIN').required().default('false').asBoolStrict(),
     cleanupIntervalSec: get('PRICER_CLEANUP_INTERVAL_SEC').required().default(60).asInt(),
-    proxyServerUrl: get('PRICER_PROXY_SERVER_URL').asString(),
+    proxyServerUrl: get('PRICER_PROXY_SERVER_URL')
+      .required()
+      .default(process.env.NODE_ENV === 'production' ? 'https://t0rn-explorer.fly.dev/v1' : 'http://127.0.0.1:8080/v1')
+      .asString(),
   },
 })
 

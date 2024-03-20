@@ -23,7 +23,7 @@ export declare class PriceCache {
      * @param network The network from which to retrieve the price if multichain is enabled.
      * @return The price of the asset if found, undefined otherwise.
      */
-    get(asset: SupportedAssetPriceProvider, network: NetworkNameOnPriceProvider, assetObj?: AssetAndAddress): Promise<string | undefined>;
+    get(asset: SupportedAssetPriceProvider, network: NetworkNameOnPriceProvider, assetObj: AssetAndAddress): Promise<string | undefined>;
     /**
      * Sets the price of an asset in the cache for a specific network if multichain is enabled, or globally otherwise.
      *
