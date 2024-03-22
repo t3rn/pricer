@@ -1,5 +1,5 @@
 import { BigNumber } from 'ethers';
-import { AssetAndAddress, NetworkNameOnPriceProvider, SupportedAssetPriceProvider } from '../config/price-provider-assets';
+import { AssetAndAddress, AssetAndAddressExtended, NetworkNameOnPriceProvider, SupportedAssetPriceProvider } from '../config/price-provider-assets';
 import { Order } from '../types';
 import { CostResult, DealPublishability, OrderProfitability, OrderProfitabilityProposalForSetAmount, PriceResult, UserPublishStrategy } from './types';
 import { Config } from '../config/config';
@@ -43,7 +43,7 @@ export declare class Pricer {
      * @param destinationNetwork The network on which the assets are located.
      * @return An object containing the price of assetA in terms of assetB.
      */
-    retrieveAssetPricing(assetA: SupportedAssetPriceProvider, assetB: SupportedAssetPriceProvider, destinationNetwork: NetworkNameOnPriceProvider): Promise<PriceResult>;
+    retrieveAssetPricing(assetA: SupportedAssetPriceProvider, assetB: SupportedAssetPriceProvider, sourceNetwork: NetworkNameOnPriceProvider, destinationNetwork: NetworkNameOnPriceProvider): Promise<PriceResult>;
     /**
      * Calculates the cost of executing a transaction in terms of a specified asset.
      *
@@ -54,10 +54,10 @@ export declare class Pricer {
      * @param ofTokenTransfer The address of the token being transferred, used to determine gas limits.
      * @return The cost of the transaction in the specified asset.
      */
-    retrieveCostInAsset(asset: SupportedAssetPriceProvider, destinationAsset: SupportedAssetPriceProvider, destinationNetwork: NetworkNameOnPriceProvider, estGasPriceOnNativeInWei: BigNumber, ofTokenTransfer: string): Promise<CostResult>;
+    retrieveCostInAsset(asset: SupportedAssetPriceProvider, sourceNetwork: NetworkNameOnPriceProvider, destinationAsset: SupportedAssetPriceProvider, destinationNetwork: NetworkNameOnPriceProvider, estGasPriceOnNativeInWei: BigNumber, ofTokenTransfer: string): Promise<CostResult>;
     floatToBigIntString(value: number): string;
     floatToBigNum(value: number): BigNumber;
-    getAssetObject(asset: SupportedAssetPriceProvider, destinationNetwork: NetworkNameOnPriceProvider): AssetAndAddress | BigNumber;
+    getAssetObject(asset: SupportedAssetPriceProvider, destinationNetwork: NetworkNameOnPriceProvider): AssetAndAddressExtended;
     /**
      * Evaluates the profitability of an order based on a given strategy.
      * Determines whether executing the order would result in a profit or loss.
