@@ -290,9 +290,10 @@ const defaultNetworkData = {
   flare: [],
   gnosis: [],
   linea: [
+    // TODO: this is wrapped ETH
     {
       asset: 'eth',
-      address: '0x0000000000000000000000000000000000000000',
+      address: '0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f',
     },
     {
       asset: 'usdt',
