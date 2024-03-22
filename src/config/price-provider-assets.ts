@@ -1,3 +1,5 @@
+import { BigNumber } from 'ethers'
+
 export type NetworkNameOnPriceProvider =
   | 'arbitrum'
   | 'avalanche'
@@ -22,6 +24,14 @@ export type NetworkNameOnPriceProvider =
 export interface AssetAndAddress {
   asset: SupportedAssetPriceProvider
   address: string
+  network: NetworkNameOnPriceProvider
+}
+
+export interface AssetAndAddressExtended {
+  assetObject: AssetAndAddress | BigNumber
+  isFakePrice: boolean
+  foundInRequestedNetwork?: boolean
+  foundNetwork?: NetworkNameOnPriceProvider
 }
 
 export type NetworkToAssetAddressOnPriceProviderMap = {
@@ -44,13 +54,59 @@ export enum SupportedAssetPriceProvider {
   ARBITRUM = 'arbitrum',
   BSC = 'bsc',
   BNB = 'bsc',
-  TRN = 't3rn',
-  BRN = 't1rn',
+  TRN = 'trn',
+  BRN = 'brn',
   DOT = 'dot',
   UNKNOWN = 'unknown',
 }
 
-// TODO: populate with addresses as much as possible
+export enum t3rnVendorAsset {
+  BTC = 't3BTC',
+  SOL = 't3SOL',
+  DOT = 't3DOT',
+  USD = 't3USD',
+  TRN = 'TRN',
+  BRN = 'BRN',
+}
+
+export const mapSupportedAssetPriceProviderToT3rnVendorAssets = (
+  assetName: SupportedAssetPriceProvider,
+): t3rnVendorAsset => {
+  switch (assetName) {
+    case SupportedAssetPriceProvider.BTC:
+      return t3rnVendorAsset.BTC
+    case SupportedAssetPriceProvider.SOL:
+      return t3rnVendorAsset.SOL
+    case SupportedAssetPriceProvider.DOT:
+      return t3rnVendorAsset.DOT
+    case SupportedAssetPriceProvider.T3USD:
+      return t3rnVendorAsset.USD
+    case SupportedAssetPriceProvider.TRN:
+      return t3rnVendorAsset.TRN
+    case SupportedAssetPriceProvider.BRN:
+      return t3rnVendorAsset.BRN
+    default:
+      throw new Error(`Asset ${assetName} not supported`)
+  }
+}
+
+export const mapT3rnVendorAssetsToSupportedAssetPrice = (tokenName: string): SupportedAssetPriceProvider => {
+  switch (tokenName.toLowerCase()) {
+    case t3rnVendorAsset.BTC.toLowerCase():
+      return SupportedAssetPriceProvider.BTC
+    case t3rnVendorAsset.DOT.toLowerCase():
+      return SupportedAssetPriceProvider.DOT
+    case t3rnVendorAsset.SOL.toLowerCase():
+      return SupportedAssetPriceProvider.SOL
+    case t3rnVendorAsset.USD.toLowerCase():
+    case t3rnVendorAsset.TRN.toLowerCase():
+    case t3rnVendorAsset.BRN.toLowerCase():
+      return SupportedAssetPriceProvider.USDT
+    default:
+      throw new Error(`Asset ${tokenName} not supported`)
+  }
+}
+
 const defaultNetworkData = {
   eth: [
     {
@@ -157,6 +213,12 @@ const defaultNetworkData = {
       asset: 'matic',
       address: '0xcc42724c6683b7e57334c4e856f4c9965ed682bd',
     },
+    // TODO: this is wrapped DOT
+    // check this out: https://support.polkadot.network/support/solutions/articles/65000169207-what-is-the-contract-address-of-polkadot-
+    {
+      asset: 'dot',
+      address: '0x7083609fCE4d1d8Dc0C979AAb8c869Ea2C873402',
+    },
   ],
   polygon: [
     {
@@ -245,18 +307,6 @@ const defaultNetworkData = {
   t0rn: [],
   t2rn: [],
   l0rn: [
-    {
-      asset: 'eth',
-      address: '0x0000000000000000000000000000000000000000',
-    },
-  ],
-  l1rn: [
-    {
-      asset: 'eth',
-      address: '0x0000000000000000000000000000000000000000',
-    },
-  ],
-  l3rn: [
     {
       asset: 'eth',
       address: '0x0000000000000000000000000000000000000000',

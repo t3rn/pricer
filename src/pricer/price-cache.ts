@@ -38,18 +38,26 @@ export class PriceCache {
     network: NetworkNameOnPriceProvider,
     assetObj: AssetAndAddress,
   ): Promise<string | undefined> {
+    // check local cache first
+    const localPrice = this.config.pricer.useMultichain
+      ? this.getPriceMultiNetwork(asset, network)
+      : this.getPriceSingleNetwork(asset)
+
+    if (localPrice !== undefined) {
+      return localPrice
+    }
+
+    // if not found in local cache, check the Redis cache
     if (assetObj && assetObj.address) {
       const redisPrice = await this.getPriceRedis(asset, network, assetObj.address)
       if (redisPrice !== undefined) {
+        this.set(asset, network, redisPrice) // also set price in local cache
         return redisPrice
       }
     }
 
-    if (this.config.pricer.useMultichain) {
-      return this.getPriceMultiNetwork(asset, network)
-    } else {
-      return this.getPriceSingleNetwork(asset)
-    }
+    // neither cache has the price
+    return undefined
   }
 
   /**
@@ -103,7 +111,7 @@ export class PriceCache {
       const response = await fetch(url.toString())
       if (!response.ok) {
         if (response.status === 404) {
-          console.log('[Redis Cache]: Price not found in Redis cache for asset:', asset, 'on network:', network)
+          console.warn('[Redis Cache]: Price not found in Redis cache for asset:', asset, 'on network:', network)
         } else {
           console.error('[Redis Cache]: Error fetching from Redis cache', response.statusText)
         }
@@ -113,7 +121,6 @@ export class PriceCache {
       const data: any = await response.json()
       const price = data.price
       if (price) {
-        console.log(`[Redis Cache]: Fetched price: ${price} for asset: ${asset} on network: ${network}`)
         return price
       } else {
         console.warn(
