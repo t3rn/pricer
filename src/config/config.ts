@@ -1,5 +1,6 @@
 import * as dotenv from 'dotenv'
 import envVar from 'env-var'
+import { NetworkConfig } from './types'
 
 dotenv.config()
 
@@ -7,8 +8,14 @@ const get = envVar.get
 
 interface TokensConfig {
   addressZero: string
+  addressNonZero?: string
+  bytes32Zero?: string
   oneOn18Decimals: number
+  maxPrecision?: number
   maxDecimals18: number
+  commitGmpByte?: string
+  revertGmpByte?: string
+  supportTokens?: boolean
 }
 
 interface PricerConfig {
@@ -20,9 +27,10 @@ interface PricerConfig {
 interface AppConfig {
   tokens: TokensConfig
   pricer: PricerConfig
+  networks?: Record<string, NetworkConfig & { privateKey: string | undefined }>
 }
 
-const config = (): AppConfig => ({
+const config = () => ({
   tokens: {
     addressZero: get('ADDRESS_ZERO').required().default('0x0000000000000000000000000000000000000000').asString(),
     oneOn18Decimals: get('ONE_ON_18_DECIMALS').required().default(1000000000000000000).asIntPositive(),

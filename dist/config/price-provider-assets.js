@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.networkToAssetAddressOnPriceProviderMap = exports.SupportedAssetPriceProvider = void 0;
+exports.networkToAssetAddressOnPriceProviderMap = exports.mapT3rnVendorAssetsToSupportedAssetPrice = exports.mapSupportedAssetPriceProviderToT3rnVendorAssets = exports.t3rnVendorAsset = exports.SupportedAssetPriceProvider = void 0;
 var SupportedAssetPriceProvider;
 (function (SupportedAssetPriceProvider) {
     SupportedAssetPriceProvider["ETH"] = "eth";
@@ -18,12 +18,56 @@ var SupportedAssetPriceProvider;
     SupportedAssetPriceProvider["ARBITRUM"] = "arbitrum";
     SupportedAssetPriceProvider["BSC"] = "bsc";
     SupportedAssetPriceProvider["BNB"] = "bsc";
-    SupportedAssetPriceProvider["TRN"] = "t3rn";
-    SupportedAssetPriceProvider["BRN"] = "t1rn";
+    SupportedAssetPriceProvider["TRN"] = "trn";
+    SupportedAssetPriceProvider["BRN"] = "brn";
     SupportedAssetPriceProvider["DOT"] = "dot";
     SupportedAssetPriceProvider["UNKNOWN"] = "unknown";
 })(SupportedAssetPriceProvider || (exports.SupportedAssetPriceProvider = SupportedAssetPriceProvider = {}));
-// TODO: populate with addresses as much as possible
+var t3rnVendorAsset;
+(function (t3rnVendorAsset) {
+    t3rnVendorAsset["BTC"] = "t3BTC";
+    t3rnVendorAsset["SOL"] = "t3SOL";
+    t3rnVendorAsset["DOT"] = "t3DOT";
+    t3rnVendorAsset["USD"] = "t3USD";
+    t3rnVendorAsset["TRN"] = "TRN";
+    t3rnVendorAsset["BRN"] = "BRN";
+})(t3rnVendorAsset || (exports.t3rnVendorAsset = t3rnVendorAsset = {}));
+const mapSupportedAssetPriceProviderToT3rnVendorAssets = (assetName) => {
+    switch (assetName) {
+        case SupportedAssetPriceProvider.BTC:
+            return t3rnVendorAsset.BTC;
+        case SupportedAssetPriceProvider.SOL:
+            return t3rnVendorAsset.SOL;
+        case SupportedAssetPriceProvider.DOT:
+            return t3rnVendorAsset.DOT;
+        case SupportedAssetPriceProvider.T3USD:
+            return t3rnVendorAsset.USD;
+        case SupportedAssetPriceProvider.TRN:
+            return t3rnVendorAsset.TRN;
+        case SupportedAssetPriceProvider.BRN:
+            return t3rnVendorAsset.BRN;
+        default:
+            throw new Error(`Asset ${assetName} not supported`);
+    }
+};
+exports.mapSupportedAssetPriceProviderToT3rnVendorAssets = mapSupportedAssetPriceProviderToT3rnVendorAssets;
+const mapT3rnVendorAssetsToSupportedAssetPrice = (tokenName) => {
+    switch (tokenName.toLowerCase()) {
+        case t3rnVendorAsset.BTC.toLowerCase():
+            return SupportedAssetPriceProvider.BTC;
+        case t3rnVendorAsset.DOT.toLowerCase():
+            return SupportedAssetPriceProvider.DOT;
+        case t3rnVendorAsset.SOL.toLowerCase():
+            return SupportedAssetPriceProvider.SOL;
+        case t3rnVendorAsset.USD.toLowerCase():
+        case t3rnVendorAsset.TRN.toLowerCase():
+        case t3rnVendorAsset.BRN.toLowerCase():
+            return SupportedAssetPriceProvider.USDT;
+        default:
+            throw new Error(`Asset ${tokenName} not supported`);
+    }
+};
+exports.mapT3rnVendorAssetsToSupportedAssetPrice = mapT3rnVendorAssetsToSupportedAssetPrice;
 const defaultNetworkData = {
     eth: [
         {
@@ -130,6 +174,12 @@ const defaultNetworkData = {
             asset: 'matic',
             address: '0xcc42724c6683b7e57334c4e856f4c9965ed682bd',
         },
+        // TODO: this is wrapped DOT
+        // check this out: https://support.polkadot.network/support/solutions/articles/65000169207-what-is-the-contract-address-of-polkadot-
+        {
+            asset: 'dot',
+            address: '0x7083609fCE4d1d8Dc0C979AAb8c869Ea2C873402',
+        },
     ],
     polygon: [
         {
@@ -218,18 +268,6 @@ const defaultNetworkData = {
     t0rn: [],
     t2rn: [],
     l0rn: [
-        {
-            asset: 'eth',
-            address: '0x0000000000000000000000000000000000000000',
-        },
-    ],
-    l1rn: [
-        {
-            asset: 'eth',
-            address: '0x0000000000000000000000000000000000000000',
-        },
-    ],
-    l3rn: [
         {
             asset: 'eth',
             address: '0x0000000000000000000000000000000000000000',
