@@ -1049,5 +1049,102 @@ describe('Pricer', () => {
     //     })
     //   })
     // })
+
+    describe('estimateReceivedAmountWithOptions', function () {
+      let sandbox: sinon.SinonSandbox
+
+      beforeEach(() => {
+        sandbox = sinon.createSandbox()
+
+        sandbox.stub(pricer, 'estimateReceivedAmount').resolves(BigNumber.from('990000000000000000')) // 0.99 ETH
+        sandbox.stub(pricer, 'receiveAssetPriceWithCache').resolves(BigNumber.from('2000')) // $2000 per ETH
+        sandbox.stub(pricer, 'retrieveCostInAsset').resolves({
+          costInWei: BigNumber.from('10000000000000000'), // 0.01 ETH
+          costInEth: '0.01',
+          costInUsd: 20,
+          costInAsset: BigNumber.from('10000000000000000'), // 0.01 ETH
+          asset: 'ETH',
+        })
+      })
+
+      afterEach(() => {
+        sandbox.restore()
+      })
+
+      it('should accurately estimate received amount with fast modifiers', async function () {
+        const estimatedAmount = await pricer.estimateReceivedAmountWithOptions(
+          SupportedAssetPriceProvider.ETH,
+          SupportedAssetPriceProvider.ETH,
+          'arbitrum',
+          'http://localhost:8545',
+          'optimism',
+          ethers.utils.parseEther('1'),
+          'high',
+          'fast',
+          'high',
+        )
+
+        const expectedAmount = BigNumber.from('1039500000000000000')
+        expect(estimatedAmount.toString()).to.equal(expectedAmount.toString())
+      })
+
+      it('should accurately estimate received amount with slow modifiers', async function () {
+        const estimatedAmount = await pricer.estimateReceivedAmountWithOptions(
+          SupportedAssetPriceProvider.ETH,
+          SupportedAssetPriceProvider.ETH,
+          'arbitrum',
+          'http://localhost:8545',
+          'optimism',
+          ethers.utils.parseEther('1'),
+          'low',
+          'slow',
+          'zero',
+        )
+
+        const expectedAmount = BigNumber.from('990000000000000000')
+        expect(estimatedAmount.toString()).to.equal(expectedAmount.toString())
+      })
+
+      it('should accurately estimate received amount with custom executor tip percentage', async function () {
+        const estimatedAmount = await pricer.estimateReceivedAmountWithOptions(
+          SupportedAssetPriceProvider.ETH,
+          SupportedAssetPriceProvider.ETH,
+          'arbitrum',
+          'http://localhost:8545',
+          'optimism',
+          ethers.utils.parseEther('1'),
+          'custom',
+          'fast',
+          'high',
+          10, // Custom executor tip percentage of 10%
+          undefined, // No fixed tip value provided
+          undefined, // No custom overpay ratio
+          undefined, // No custom slippage
+        )
+
+        const expectedAmount = BigNumber.from('1039500000000000000')
+        expect(estimatedAmount.toString()).to.equal(expectedAmount.toString())
+      })
+
+      it('should accurately estimate received amount with custom executor tip value', async function () {
+        const customTipValue = ethers.utils.parseEther('0.05') // 0.05 ETH fixed tip value
+        const estimatedAmount = await pricer.estimateReceivedAmountWithOptions(
+          SupportedAssetPriceProvider.ETH,
+          SupportedAssetPriceProvider.ETH,
+          'arbitrum',
+          'http://localhost:8545',
+          'optimism',
+          ethers.utils.parseEther('1'),
+          'custom',
+          'slow',
+          'zero',
+          undefined, // No percentage tip
+          customTipValue, // Custom tip value provided
+        )
+
+        const expectedAmount = BigNumber.from('990000000000000000')
+        expect(estimatedAmount.toString()).to.equal(expectedAmount.toString())
+      })
+    })
   })
 })
