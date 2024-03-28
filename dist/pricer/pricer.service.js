@@ -394,6 +394,95 @@ class Pricer {
         });
     }
     /**
+     * Estimates the amount of 'toAsset' the user will receive at the end of the transaction,
+     * taking into account executor tip, overpay, and slippage.
+     *
+     * @param fromAsset The asset being sent.
+     * @param toAsset The asset to be received.
+     * @param fromChain The network of the 'fromAsset'.
+     * @param fromChainProvider The provider url for 'fromChain'.
+     * @param toChain The network of the 'toAsset'.
+     * @param maxRewardWei The maximum reward the user is willing to offer, in wei.
+     * @param executorTipOption The value of the executor tip: 'low', 'regular', 'high', 'custom'.
+     * @param overpayOption User's preference for overpaying to expedite the deal: 'slow', 'regular', 'fast', 'custom'.
+     * @param slippageOption User's tolerance for price slippage in the deal: 'zero', 'regular', 'high', 'custom'.
+     * @param customExecutorTipPercentage Custom executor tip in percentage if the 'custom' option is selected.
+     * @param customExecutorTipValue Custom executor tip in wei if the 'custom' option is selected.
+     * @param customOverpayRatio Custom overpay ratio if the 'custom' option is selected.
+     * @param customSlippage Custom slippage tolerance if the 'custom' option is selected.
+     * @return The estimated amount of 'toAsset' the user will receive, in wei.
+     */
+    estimateReceivedAmountWithOptions(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei, executorTipOption, overpayOption, slippageOption, customExecutorTipPercentage, customExecutorTipValue, customOverpayRatio, customSlippage) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (executorTipOption === 'custom' && !customExecutorTipValue && !customExecutorTipPercentage) {
+                throw new Error('Received custom executor tip option but missing customExecutorTipValue or customExecutorTipPercentage.');
+            }
+            if (overpayOption === 'custom' && !customOverpayRatio) {
+                throw new Error('Received custom overpay option but missing customOverpayRatio.');
+            }
+            if (slippageOption === 'custom' && !customSlippage) {
+                throw new Error('Received custom slippage option but missing customSlippage.');
+            }
+            if (executorTipOption === 'custom' && customExecutorTipValue) {
+                maxRewardWei = maxRewardWei.sub(customExecutorTipValue);
+            }
+            else {
+                let executorTipMultiplier = 1;
+                switch (executorTipOption) {
+                    case 'low':
+                        executorTipMultiplier = 0.95; // 5% less reward
+                        break;
+                    case 'regular':
+                        executorTipMultiplier = 1; // No change
+                        break;
+                    case 'high':
+                        executorTipMultiplier = 1.05; // 5% more reward
+                        break;
+                    case 'custom':
+                        executorTipMultiplier = customExecutorTipPercentage !== null && customExecutorTipPercentage !== void 0 ? customExecutorTipPercentage : 1;
+                        break;
+                }
+                maxRewardWei = maxRewardWei.mul(Math.floor(executorTipMultiplier * 100)).div(100);
+            }
+            // Process overpay option
+            let overpayMultiplier = 1;
+            switch (overpayOption) {
+                case 'slow':
+                    overpayMultiplier = 1.05; // 5% overpay
+                    break;
+                case 'regular':
+                    overpayMultiplier = 1.1; // 10% overpay
+                    break;
+                case 'fast':
+                    overpayMultiplier = 1.2; // 20% overpay
+                    break;
+                case 'custom':
+                    overpayMultiplier = customOverpayRatio || 1.0;
+                    break;
+            }
+            maxRewardWei = maxRewardWei.mul(Math.floor(overpayMultiplier * 100)).div(100);
+            // Process slippage option
+            let slippageMultiplier = 1;
+            switch (slippageOption) {
+                case 'zero':
+                    slippageMultiplier = 1.0; // No slippage
+                    break;
+                case 'regular':
+                    slippageMultiplier = 1.02; // 2% slippage
+                    break;
+                case 'high':
+                    slippageMultiplier = 1.05; // 5% slippage
+                    break;
+                case 'custom':
+                    slippageMultiplier = customSlippage || 1.0;
+                    break;
+            }
+            const estimatedReceivedAmount = yield this.estimateReceivedAmount(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei);
+            const finalAmount = estimatedReceivedAmount.mul(Math.floor(slippageMultiplier * 100)).div(100);
+            return finalAmount;
+        });
+    }
+    /**
      * Parse the given price string as float with decimal precision
      *
      * @param {BigNumber} price

@@ -110,6 +110,26 @@ export declare class Pricer {
      */
     estimateReceivedAmount(fromAsset: SupportedAssetPriceProvider, toAsset: SupportedAssetPriceProvider, fromChain: NetworkNameOnPriceProvider, fromChainProvider: string, toChain: NetworkNameOnPriceProvider, maxRewardWei: BigNumber): Promise<BigNumber>;
     /**
+     * Estimates the amount of 'toAsset' the user will receive at the end of the transaction,
+     * taking into account executor tip, overpay, and slippage.
+     *
+     * @param fromAsset The asset being sent.
+     * @param toAsset The asset to be received.
+     * @param fromChain The network of the 'fromAsset'.
+     * @param fromChainProvider The provider url for 'fromChain'.
+     * @param toChain The network of the 'toAsset'.
+     * @param maxRewardWei The maximum reward the user is willing to offer, in wei.
+     * @param executorTipOption The value of the executor tip: 'low', 'regular', 'high', 'custom'.
+     * @param overpayOption User's preference for overpaying to expedite the deal: 'slow', 'regular', 'fast', 'custom'.
+     * @param slippageOption User's tolerance for price slippage in the deal: 'zero', 'regular', 'high', 'custom'.
+     * @param customExecutorTipPercentage Custom executor tip in percentage if the 'custom' option is selected.
+     * @param customExecutorTipValue Custom executor tip in wei if the 'custom' option is selected.
+     * @param customOverpayRatio Custom overpay ratio if the 'custom' option is selected.
+     * @param customSlippage Custom slippage tolerance if the 'custom' option is selected.
+     * @return The estimated amount of 'toAsset' the user will receive, in wei.
+     */
+    estimateReceivedAmountWithOptions(fromAsset: SupportedAssetPriceProvider, toAsset: SupportedAssetPriceProvider, fromChain: NetworkNameOnPriceProvider, fromChainProvider: string, toChain: NetworkNameOnPriceProvider, maxRewardWei: BigNumber, executorTipOption: 'low' | 'regular' | 'high' | 'custom', overpayOption: 'slow' | 'regular' | 'fast' | 'custom', slippageOption: 'zero' | 'regular' | 'high' | 'custom', customExecutorTipPercentage?: number, customExecutorTipValue?: BigNumber, customOverpayRatio?: number, customSlippage?: number): Promise<BigNumber>;
+    /**
      * Parse the given price string as float with decimal precision
      *
      * @param {BigNumber} price
