@@ -29,6 +29,12 @@ var SupportedAssetCircuit;
     SupportedAssetCircuit[SupportedAssetCircuit["BRN"] = 3343] = "BRN";
 })(SupportedAssetCircuit || (exports.SupportedAssetCircuit = SupportedAssetCircuit = {}));
 exports.networkNameCircuitToPriceProvider = {
+    ethm: 'eth',
+    base: 'base',
+    arbm: 'arbitrum',
+    bscm: 'bsc',
+    opti: 'optimism',
+    linm: 'linea',
     bsct: 'bsc',
     opsp: 'optimism',
     bsgr: 'base',
