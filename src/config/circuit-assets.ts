@@ -12,6 +12,12 @@ import { NetworkConfigWithPrivKey } from './types'
 import { BigNumber, Wallet, Contract } from 'ethers'
 
 export declare type NetworkNameOnCircuit =
+  | 'base'
+  | 'arbm'
+  | 'bscm'
+  | 'opti'
+  | 'linm'
+  | 'ethm'
   | 'bsct'
   | 'opsp'
   | 'bsgr'
@@ -54,6 +60,12 @@ export type AssetNameCircuitToPriceProvider = {
 }
 
 export const networkNameCircuitToPriceProvider = {
+  ethm: 'eth',
+  base: 'base',
+  arbm: 'arbitrum',
+  bscm: 'bsc',
+  opti: 'optimism',
+  linm: 'linea',
   bsct: 'bsc',
   opsp: 'optimism',
   bsgr: 'base',

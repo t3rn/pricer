@@ -1,7 +1,7 @@
 import { NetworkNameOnPriceProvider, SupportedAssetPriceProvider } from './price-provider-assets';
 import { Config } from './config';
 import { BigNumber, Wallet, Contract } from 'ethers';
-export declare type NetworkNameOnCircuit = 'bsct' | 'opsp' | 'bsgr' | 'bscp' | 'bssp' | 'scrt' | 'arbt' | 'sepl' | 'poly' | 'l0rn' | 'l1rn' | 'l3rn' | 't0rn' | 't2rn' | 't3rn' | 'line' | 'file';
+export declare type NetworkNameOnCircuit = 'base' | 'arbm' | 'bscm' | 'opti' | 'linm' | 'ethm' | 'bsct' | 'opsp' | 'bsgr' | 'bscp' | 'bssp' | 'scrt' | 'arbt' | 'sepl' | 'poly' | 'l0rn' | 'l1rn' | 'l3rn' | 't0rn' | 't2rn' | 't3rn' | 'line' | 'file';
 export type NetworkNameCircuitToPriceProviderMap = {
     [key in NetworkNameOnCircuit]: NetworkNameOnPriceProvider;
 };

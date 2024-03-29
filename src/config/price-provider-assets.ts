@@ -147,6 +147,14 @@ const defaultNetworkData = {
       asset: 'usdc',
       address: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
     },
+    {
+      asset: 'usdt',
+      address: '0xf19d560eB8d2ADf07BD6D13ed03e1D11215721F9',
+    },
+    {
+      asset: 'dai',
+      address: '0x591e79239a7d679378eC8c847e5038150364C78F',
+    },
   ],
   scroll: [
     {
