@@ -10,7 +10,6 @@ import {
 import { logger } from '../utils/logger'
 import { Order } from '../types'
 import {
-  AssetAddressOnTarget,
   CostResult,
   DealPublishability,
   OrderProfitability,
@@ -152,7 +151,7 @@ export class Pricer {
     let normalizedAsset = asset
     if (['t3btc', 't3dot', 't3sol', 't3usd', 'trn', 'brn'].includes(asset.toLowerCase())) {
       normalizedAsset = mapT3rnVendorAssetsToSupportedAssetPrice(asset)
-      logger.warn(
+      logger.info(
         { asset, normalizedAsset, destinationNetwork },
         '🍐 Asset is a t3 token. Normalizing to supported asset.',
       )
@@ -200,7 +199,7 @@ export class Pricer {
       }
     }
 
-    if (assetDetails.address === '0x0000000000000000000000000000000000000000') {
+    if (assetDetails.address === this.config.tokens.addressZero) {
       logger.warn(
         { address: assetDetails.address, asset: assetDetails.asset, network: destinationNetwork },
         'Received native token',
