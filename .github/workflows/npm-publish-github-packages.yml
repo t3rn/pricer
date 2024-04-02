@@ -14,7 +14,6 @@ jobs:
         with:
           node-version: '20' # or another version
           registry-url: 'https://registry.npmjs.org/'
-          scope: '@t3rn' # if you're publishing scoped packages
           always-auth: true
     
       - name: Checkout code
