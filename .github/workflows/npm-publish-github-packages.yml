@@ -10,6 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '20' # or another version
+          registry-url: 'https://registry.npmjs.org/'
+          scope: '@t3rn' # if you're publishing scoped packages
+          always-auth: true
+    
       - name: Checkout code
         uses: actions/checkout@v2
 
