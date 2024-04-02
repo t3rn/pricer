@@ -108,7 +108,7 @@ class Pricer {
         let normalizedAsset = asset;
         if (['t3btc', 't3dot', 't3sol', 't3usd', 'trn', 'brn'].includes(asset.toLowerCase())) {
             normalizedAsset = (0, price_provider_assets_1.mapT3rnVendorAssetsToSupportedAssetPrice)(asset);
-            logger_1.logger.warn({ asset, normalizedAsset, destinationNetwork }, '🍐 Asset is a t3 token. Normalizing to supported asset.');
+            logger_1.logger.info({ asset, normalizedAsset, destinationNetwork }, '🍐 Asset is a t3 token. Normalizing to supported asset.');
         }
         let foundInRequestedNetwork = true;
         let assetDetails = (_a = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) === null || _a === void 0 ? void 0 : _a.find((a) => a.asset === normalizedAsset);
@@ -141,7 +141,7 @@ class Pricer {
                 return { assetObject: ethers_1.BigNumber.from(0), isFakePrice: true };
             }
         }
-        if (assetDetails.address === '0x0000000000000000000000000000000000000000') {
+        if (assetDetails.address === this.config.tokens.addressZero) {
             logger_1.logger.warn({ address: assetDetails.address, asset: assetDetails.asset, network: destinationNetwork }, 'Received native token');
         }
         return {
