@@ -24,7 +24,10 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .
-          git commit -m "Version ${{ steps.version.outputs.version }}: Description of changes"
+          git commit -m "Version ${{ steps.version.outputs.version }}: Description of changes" || echo "No changes to commit"
+      
+      - name: Pull latest changes from main
+        run: git pull origin main
 
       - name: Push changes
         uses: ad-m/github-push-action@master
