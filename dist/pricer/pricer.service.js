@@ -154,6 +154,7 @@ class Pricer {
     /**
      * Evaluates the profitability of an order based on a given strategy.
      * Determines whether executing the order would result in a profit or loss.
+     * Takes in wei and returns wei.
      *
      * @param {BigNumber} balance Balance of the executor designated in destination asset
      * @param {CostResult}  costOfExecutionOnDestination  Cost designated in destination asset
@@ -167,7 +168,12 @@ class Pricer {
         const rewardInDestinationAsset = order.maxReward
             .mul(pricing.priceAinB)
             .div(ethers_1.BigNumber.from(10).pow(this.config.tokens.maxDecimals18));
-        const potentialProfit = rewardInDestinationAsset.sub(costOfExecutionOnDestination.costInAsset).sub(order.amount);
+        const orderAmountInAsset = order.amount.div(ethers_1.BigNumber.from(10).pow(this.config.tokens.maxDecimals18));
+        const potentialProfit = rewardInDestinationAsset
+            .sub(costOfExecutionOnDestination.costInAsset)
+            .sub(orderAmountInAsset);
+        // used only at returning to avoid returning negative numbers
+        const potentialLoss = potentialProfit.abs();
         logger_1.logger.debug({
             id: order.id,
             balance: ethers_1.utils.formatEther(balance),
@@ -182,7 +188,7 @@ class Pricer {
             return {
                 isProfitable: false,
                 profit: ethers_1.BigNumber.from(0),
-                loss: potentialProfit,
+                loss: potentialLoss,
             };
         }
         let minProfitRateBaseline;
@@ -215,7 +221,7 @@ class Pricer {
             return {
                 isProfitable: false,
                 profit: ethers_1.BigNumber.from(0),
-                loss: potentialProfit,
+                loss: potentialLoss,
             };
         }
         const isProfitAboveMinProfitRate = potentialProfit.gte(minProfitRateBaselineBN);
@@ -242,7 +248,7 @@ class Pricer {
         return {
             isProfitable,
             profit: isProfitable ? potentialProfit : ethers_1.BigNumber.from(0),
-            loss: isProfitable ? ethers_1.BigNumber.from(0) : potentialProfit,
+            loss: isProfitable ? ethers_1.BigNumber.from(0) : potentialLoss,
         };
     }
     /**

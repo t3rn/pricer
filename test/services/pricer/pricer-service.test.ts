@@ -204,8 +204,8 @@ describe('Pricer', () => {
     const evalDealResult = pricer.evaluateDeal(myBalance1Eth, costResult, strategy, order, pricingResult)
 
     expect(evalDealResult.isProfitable).to.equal(false)
-    expect(evalDealResult.loss.toString()).to.equal('-754461284772044871')
-    expect(Pricer.priceAsFloat(evalDealResult.loss)).to.equal(-0.7544612847720449)
+    expect(evalDealResult.loss.toString()).to.equal('754461284772044771')
+    expect(Pricer.priceAsFloat(evalDealResult.loss)).to.equal(0.7544612847720448)
     expect(evalDealResult.profit.toString()).to.equal('0')
   })
 
@@ -275,8 +275,8 @@ describe('Pricer', () => {
 
     expect(evalDealResult.isProfitable).to.equal(true)
     expect(evalDealResult.loss.toString()).to.equal('0')
-    expect(Pricer.priceAsFloat(evalDealResult.profit)).to.equal(0.013763343676036491)
-    expect(evalDealResult.profit.toString()).to.equal('13763343676036492')
+    expect(Pricer.priceAsFloat(evalDealResult.profit)).to.equal(0.1137633436760365)
+    expect(evalDealResult.profit.toString()).to.equal('113763343676036492')
   })
 
   it('should correctly evaluate deal as profitable based on todays optimism gas cost and pricing', async () => {
@@ -346,8 +346,8 @@ describe('Pricer', () => {
 
     expect(evalDealResult.isProfitable).to.equal(true)
     expect(evalDealResult.loss.toString()).to.equal('0')
-    expect(Pricer.priceAsFloat(evalDealResult.profit)).to.equal(0.001247331264792597)
-    expect(evalDealResult.profit.toString()).to.equal('1247331264792597')
+    expect(Pricer.priceAsFloat(evalDealResult.profit)).to.equal(0.001247331264792697)
+    expect(evalDealResult.profit.toString()).to.equal('1247331264792697')
   })
 
   it('should correctly calculate gas costs of native transfer in for same assets pricing', () => {
@@ -415,11 +415,11 @@ describe('Pricer', () => {
     const result = pricer.evaluateDeal(myBalance, costOfExecutionOnTarget, strategy, order, pricing)
     // Assertions
     expect(result.isProfitable).to.be.true
-    expect(result.profit.toString()).to.equal('8')
+    expect(result.profit.toString()).to.equal('108')
     expect(result.loss.toString()).to.equal('0')
   })
 
-  it('should correctly evaluate the non-profitable order', () => {
+  it('should correctly evaluate the profitable order', () => {
     // Mock data setup
     const myBalance: BigNumber = BigNumber.from('1000')
 
@@ -466,8 +466,8 @@ describe('Pricer', () => {
     // Evaluate the deal
     const result = pricer.evaluateDeal(myBalance, costOfExecutionOnTarget, strategy, order, pricing)
     // Assertions
-    expect(result.isProfitable).to.be.false
-    expect(result.profit.toString()).to.equal('0')
+    expect(result.isProfitable).to.be.true
+    expect(result.profit.toString()).to.equal('100')
     expect(result.loss.toString()).to.equal('0')
   })
 
@@ -520,7 +520,7 @@ describe('Pricer', () => {
     // Assertions
     expect(result.isProfitable).to.be.false
     expect(result.profit.toString()).to.equal('0')
-    expect(result.loss.toString()).to.equal('-3')
+    expect(result.loss.toString()).to.equal('97')
   })
 
   describe('assessDealForPublication', () => {
@@ -738,7 +738,7 @@ describe('Pricer', () => {
 
       expect(result.profitability.isProfitable).to.equal(false)
       expect(result.profitability.profit.toString()).to.equal('0')
-      expect(ethers.utils.formatEther(result.profitability.loss.toString())).to.equal('-1.837728')
+      expect(ethers.utils.formatEther(result.profitability.loss.toString())).to.equal('1.737728')
       expect(result.assumedCost).to.equal(costOfExecutionOnDestination)
       expect(result.assumedPrice).to.equal(pricing)
       expect(result.rewardAsset).to.equal(order.rewardAsset)
@@ -791,7 +791,7 @@ describe('Pricer', () => {
 
       expect(result.profitability.isProfitable).to.equal(false)
       expect(result.profitability.profit.toString()).to.equal('0')
-      expect(ethers.utils.formatEther(result.profitability.loss)).to.equal('5.36687604806143')
+      expect(ethers.utils.formatEther(result.profitability.loss)).to.equal('5.56687604806143')
       expect(result.assumedCost).to.equal(costOfExecutionOnDestination)
       expect(result.assumedPrice).to.equal(pricing)
       expect(result.rewardAsset).to.equal(order.rewardAsset)
@@ -844,7 +844,7 @@ describe('Pricer', () => {
 
       expect(result.profitability.isProfitable).to.equal(false)
       expect(result.profitability.profit.toString()).to.equal('0')
-      expect(ethers.utils.formatEther(result.profitability.loss)).to.equal('-2.932155459728300341')
+      expect(ethers.utils.formatEther(result.profitability.loss)).to.equal('2.632155459728300341')
       expect(result.assumedCost).to.equal(costOfExecutionOnDestination)
       expect(result.assumedPrice).to.equal(pricing)
       expect(result.rewardAsset).to.equal(order.rewardAsset)
@@ -896,7 +896,7 @@ describe('Pricer', () => {
       const result = pricer.proposeDealForSetAmount(balance, costOfExecutionOnDestination, strategy, order, pricing)
 
       expect(result.profitability.isProfitable).to.equal(true)
-      expect(ethers.utils.formatEther(result.profitability.profit)).to.equal('0.099') // expected profit of 0.099 ETH
+      expect(ethers.utils.formatEther(result.profitability.profit)).to.equal('0.299') // expected profit of 0.299 ETH
       expect(result.profitability.loss.toString()).to.equal('0')
       expect(result.assumedCost).to.equal(costOfExecutionOnDestination)
       expect(result.assumedPrice).to.equal(pricing)
@@ -904,7 +904,7 @@ describe('Pricer', () => {
       expect(result.orderAsset).to.equal(order.assetAddress)
       expect(result.costOverpaymentPercent).to.equal(0)
       expect(result.setAmount).to.equal(order.amount)
-      expect(ethers.utils.formatEther(result.proposedMaxReward)).to.equal('0.3')
+      expect(ethers.utils.formatEther(result.proposedMaxReward)).to.equal('0.5')
     })
   })
 
