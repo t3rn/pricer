@@ -61,6 +61,7 @@ export declare class Pricer {
     /**
      * Evaluates the profitability of an order based on a given strategy.
      * Determines whether executing the order would result in a profit or loss.
+     * Takes in wei and returns wei.
      *
      * @param {BigNumber} balance Balance of the executor designated in destination asset
      * @param {CostResult}  costOfExecutionOnDestination  Cost designated in destination asset
