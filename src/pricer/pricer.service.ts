@@ -217,6 +217,7 @@ export class Pricer {
   /**
    * Evaluates the profitability of an order based on a given strategy.
    * Determines whether executing the order would result in a profit or loss.
+   * Takes in wei and returns wei.
    *
    * @param {BigNumber} balance Balance of the executor designated in destination asset
    * @param {CostResult}  costOfExecutionOnDestination  Cost designated in destination asset
@@ -236,7 +237,12 @@ export class Pricer {
     const rewardInDestinationAsset = order.maxReward
       .mul(pricing.priceAinB)
       .div(BigNumber.from(10).pow(this.config.tokens.maxDecimals18))
-    const potentialProfit = rewardInDestinationAsset.sub(costOfExecutionOnDestination.costInAsset).sub(order.amount)
+    const orderAmountInAsset = order.amount.div(BigNumber.from(10).pow(this.config.tokens.maxDecimals18))
+    const potentialProfit = rewardInDestinationAsset
+      .sub(costOfExecutionOnDestination.costInAsset)
+      .sub(orderAmountInAsset)
+    // used only at returning to avoid returning negative numbers
+    const potentialLoss = potentialProfit.abs()
 
     logger.debug(
       {
@@ -256,7 +262,7 @@ export class Pricer {
       return {
         isProfitable: false,
         profit: BigNumber.from(0),
-        loss: potentialProfit,
+        loss: potentialLoss,
       }
     }
 
@@ -295,7 +301,7 @@ export class Pricer {
       return {
         isProfitable: false,
         profit: BigNumber.from(0),
-        loss: potentialProfit,
+        loss: potentialLoss,
       }
     }
 
@@ -330,7 +336,7 @@ export class Pricer {
     return {
       isProfitable,
       profit: isProfitable ? potentialProfit : BigNumber.from(0),
-      loss: isProfitable ? BigNumber.from(0) : potentialProfit,
+      loss: isProfitable ? BigNumber.from(0) : potentialLoss,
     }
   }
 
