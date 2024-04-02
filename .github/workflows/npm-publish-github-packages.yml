@@ -19,6 +19,10 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Configure npm for publishing
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}" > .npmrc
+
+
       - name: Commit version change
         run: |
           git config --local user.email "action@github.com"
