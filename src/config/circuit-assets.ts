@@ -9,7 +9,7 @@ import {
 import { logger } from '../utils/logger'
 import { Config } from './config'
 import { NetworkConfigWithPrivKey } from './types'
-import { BigNumber, Wallet, Contract } from 'ethers'
+import { BigNumber, Wallet, Contract, ethers } from 'ethers'
 
 export declare type NetworkNameOnCircuit =
   | 'base'
@@ -173,14 +173,13 @@ export class AssetMapper {
   }
 
   public async checkAssetBalance<T>(
-    wallet: Wallet,
+    walletAddress: string,
     asset: number,
     networkId: NetworkNameOnCircuit,
-    initContract: (contractName: any, address: string, signer: any) => Contract,
-    ContractName: any,
+    assetContract: Contract,
   ): Promise<BigNumber> {
     const assetName = assetNameCircuitToPriceProvider[asset]
-    const defaultAddress = this.config.tokens.addressZero
+    const defaultAddress = ethers.constants.AddressZero
 
     if (!assetName) {
       logger.error(
@@ -207,9 +206,7 @@ export class AssetMapper {
       return BigNumber.from(0)
     }
 
-    // FIXME: this is slow and bad practice. We shouldn't load ABI and init contract dynamically at each call.
-    const assetContract = initContract(ContractName.ERC20Mock, assetAddress, wallet)
-    return (await assetContract.balanceOf(wallet.address)) as BigNumber
+    return (await assetContract.balanceOf(walletAddress)) as BigNumber
   }
 
   public mapAssetByAddress(targetNetworkId: NetworkNameOnCircuit, assetAddress: string): SupportedAssetPriceProvider {
