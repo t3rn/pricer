@@ -37,7 +37,6 @@ export const ETH_TRANSFER_GAS_LIMIT = ethers.BigNumber.from(21000)
  */
 export class Pricer {
   private readonly config: Config
-  private ethersProvider: ethers.providers.Provider | undefined
   readonly priceCache: PriceCache
 
   /**
@@ -45,11 +44,10 @@ export class Pricer {
    *
    * @param _config Configuration settings including provider URLs and token configurations.
    */
-  constructor(_config: Config, _ethersProvider = undefined) {
+  constructor(_config: Config) {
     this.config = _config
     this.priceCache = new PriceCache(this.config)
     this.priceCache.initCleanup()
-    this.ethersProvider = _ethersProvider
   }
 
   /**
@@ -507,21 +505,20 @@ export class Pricer {
     toChain: NetworkNameOnPriceProvider,
     maxRewardWei: BigNumber,
   ): Promise<BigNumber> {
-    if (!this.ethersProvider && !fromChainProvider) {
-      throw new Error('No provider URL for the source network was provided.')
+    if (!fromAsset || !toAsset || !fromChain || !fromChainProvider || !toChain || !maxRewardWei) {
+      throw new Error('Missing one or more required arguments.')
     }
+
+    const provider = new ethers.providers.JsonRpcProvider(fromChainProvider)
+
     // Retrieve the pricing information for converting fromAsset to toAsset.
     const pricing = await this.retrieveAssetPricing(fromAsset, toAsset, fromChain, toChain)
 
     // Convert the maxReward from its Wei representation to the equivalent amount in toAsset, considering the current market price.
     const maxRewardInToAsset = maxRewardWei.mul(pricing.priceAinB).div(BigNumber.from(10).pow(18))
 
-    if (!this.ethersProvider) {
-      this.ethersProvider = new ethers.providers.JsonRpcProvider(fromChainProvider)
-    }
-
     // Estimate the gas price on the source network.
-    const estGasPriceOnNativeInWei = await this.ethersProvider.getGasPrice()
+    const estGasPriceOnNativeInWei = await provider.getGasPrice()
 
     // Calculate the transaction cost in the fromAsset.
     const transactionCostData = await this.retrieveCostInAsset(
@@ -657,6 +654,73 @@ export class Pricer {
 
     const finalAmount = estimatedReceivedAmount.mul(Math.floor(slippageMultiplier * 100)).div(100)
     return finalAmount
+  }
+
+  /**
+   * Calculates the required amount to send, including transaction fees, so that the recipient receives the exact desired amount.
+   *
+   * @param fromAsset The asset being sent.
+   * @param toAsset The asset to be received.
+   * @param fromChain The source network.
+   * @param fromChainProvider The provider URL for the source network.
+   * @param toChain The destination network.
+   * @param desiredReceivedAmount The exact amount the recipient should receive in the destination asset.
+   * @returns The final amount that needs to be sent in the source asset, including fees.
+   */
+  async calculateTotalSendAmountIncludingFees(
+    fromAsset: SupportedAssetPriceProvider,
+    toAsset: SupportedAssetPriceProvider,
+    fromChain: NetworkNameOnPriceProvider,
+    fromChainProvider: string,
+    toChain: NetworkNameOnPriceProvider,
+    desiredReceivedAmount: BigNumber,
+  ): Promise<BigNumber> {
+    if (!fromAsset || !toAsset || !fromChain || !fromChainProvider || !toChain || !desiredReceivedAmount) {
+      throw new Error('Missing one or more required arguments.')
+    }
+
+    const provider = new ethers.providers.JsonRpcProvider(fromChainProvider)
+
+    // Retrieve the current conversion rate from fromAsset to toAsset
+    const pricing = await this.retrieveAssetPricing(fromAsset, toAsset, fromChain, toChain)
+
+    // Calculate the amount in fromAsset that corresponds to the desiredReceivedAmount in toAsset
+    const amountInFromAsset = desiredReceivedAmount.mul(BigNumber.from(10).pow(18)).div(pricing.priceAinB)
+
+    // Estimate the transaction cost on the source network in fromAsset
+    const estGasPriceOnNativeInWei = await provider.getGasPrice()
+    const transactionCostData = await this.retrieveCostInAsset(
+      fromAsset,
+      fromChain,
+      fromAsset,
+      fromChain,
+      estGasPriceOnNativeInWei,
+      this.config.tokens.addressZero,
+    )
+
+    // Add the transaction cost to the amountInFromAsset
+    const totalAmountToSendBeforeConversionCost = amountInFromAsset.add(transactionCostData.costInAsset)
+
+    // Optional: If fromAsset and toAsset are different, account for conversion cost in toChain
+    let totalAmountToSend = totalAmountToSendBeforeConversionCost
+    if (fromAsset !== toAsset) {
+      const conversionCostOnDestination = await this.retrieveCostInAsset(
+        toAsset,
+        toChain,
+        toAsset,
+        toChain,
+        estGasPriceOnNativeInWei,
+        this.config.tokens.addressZero,
+      )
+
+      // Adjust the totalAmountToSend to account for conversion cost on destination
+      const conversionCostInFromAsset = conversionCostOnDestination.costInAsset
+        .mul(pricing.priceAinB)
+        .div(BigNumber.from(10).pow(18))
+      totalAmountToSend = totalAmountToSend.add(conversionCostInFromAsset)
+    }
+
+    return totalAmountToSend
   }
 
   /**
