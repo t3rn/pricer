@@ -127,10 +127,10 @@ class AssetMapper {
         const assetPriceB = AssetMapper.fakePriceOfAsset(amount, assetNameB);
         return (assetPriceA / assetPriceB) * amount;
     }
-    checkAssetBalance(wallet, asset, networkId, initContract, ContractName) {
+    checkAssetBalance(walletAddress, asset, networkId, assetContract) {
         return __awaiter(this, void 0, void 0, function* () {
             const assetName = exports.assetNameCircuitToPriceProvider[asset];
-            const defaultAddress = this.config.tokens.addressZero;
+            const defaultAddress = ethers_1.ethers.constants.AddressZero;
             if (!assetName) {
                 logger_1.logger.error({
                     asset,
@@ -148,9 +148,7 @@ class AssetMapper {
                 }, `🍑 Asset not found on network. Return zero as balance`);
                 return ethers_1.BigNumber.from(0);
             }
-            // FIXME: this is slow and bad practice. We shouldn't load ABI and init contract dynamically at each call.
-            const assetContract = initContract(ContractName.ERC20Mock, assetAddress, wallet);
-            return (yield assetContract.balanceOf(wallet.address));
+            return (yield assetContract.balanceOf(walletAddress));
         });
     }
     mapAssetByAddress(targetNetworkId, assetAddress) {

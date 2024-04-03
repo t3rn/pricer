@@ -1,6 +1,6 @@
 import { NetworkNameOnPriceProvider, SupportedAssetPriceProvider } from './price-provider-assets';
 import { Config } from './config';
-import { BigNumber, Wallet, Contract } from 'ethers';
+import { BigNumber, Contract } from 'ethers';
 export declare type NetworkNameOnCircuit = 'base' | 'arbm' | 'bscm' | 'opti' | 'linm' | 'ethm' | 'bsct' | 'opsp' | 'bsgr' | 'bscp' | 'bssp' | 'scrt' | 'arbt' | 'sepl' | 'poly' | 'l0rn' | 'l1rn' | 'l3rn' | 't0rn' | 't2rn' | 't3rn' | 'line' | 'file';
 export type NetworkNameCircuitToPriceProviderMap = {
     [key in NetworkNameOnCircuit]: NetworkNameOnPriceProvider;
@@ -33,7 +33,7 @@ export declare class AssetMapper {
     static getAssetId(asset: SupportedAssetPriceProvider): number;
     static fakePriceOfAsset(amount: number, asset: SupportedAssetPriceProvider): number;
     static fakePriceOfVendorAsset(amount: number, assetA: number, assetB: number): number;
-    checkAssetBalance<T>(wallet: Wallet, asset: number, networkId: NetworkNameOnCircuit, initContract: (contractName: any, address: string, signer: any) => Contract, ContractName: any): Promise<BigNumber>;
+    checkAssetBalance<T>(walletAddress: string, asset: number, networkId: NetworkNameOnCircuit, assetContract: Contract): Promise<BigNumber>;
     mapAssetByAddress(targetNetworkId: NetworkNameOnCircuit, assetAddress: string): SupportedAssetPriceProvider;
     getAddressOnTarget4BByCircuitAssetNumber(targetNetworkId: NetworkNameOnCircuit, asset: number): string;
 }
