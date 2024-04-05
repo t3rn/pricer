@@ -49,6 +49,8 @@ exports.networkNameCircuitToPriceProvider = {
     l1rn: 'arbitrum',
     l3rn: 'arbitrum',
     line: 'linea',
+    blss: 'blast',
+    blst: 'blast',
 };
 exports.assetNameCircuitToPriceProvider = {
     0: price_provider_assets_1.SupportedAssetPriceProvider.ETH,
