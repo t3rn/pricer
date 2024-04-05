@@ -5,7 +5,7 @@
 
 ## Installation
 ```bash
-npm i @t3rn/pricer
+npm i @t3rn/pricer --save
 ```
 
 or
