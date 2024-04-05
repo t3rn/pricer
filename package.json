@@ -1,6 +1,6 @@
 {
   "name": "@t3rn/pricer",
-  "version": "1.6.5",
+  "version": "1.6.0",
   "description": "Retrieve asset prices, evaluate deals, and propose deals for a given set amount.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,6 +8,7 @@
     "dist/"
   ],
   "scripts": {
+    "precommit": "npm run fmt && npm run build",
     "build": "tsc",
     "test": "NODE_ENV=test mocha -r ts-node/register --exit test/**/**/*.ts",
     "fmt": "prettier --write src test"

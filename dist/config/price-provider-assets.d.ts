@@ -1,5 +1,5 @@
 import { BigNumber } from 'ethers';
-export type NetworkNameOnPriceProvider = 'arbitrum' | 'avalanche' | 'avalanche_fuji' | 'base' | 'bsc' | 'eth' | 'eth_goerli' | 'fantom' | 'flare' | 'gnosis' | 'linea' | 'optimism' | 'optimism_testnet' | 'polygon' | 'polygon_mumbai' | 'polygon_zkevm' | 'rollux' | 'scroll' | 'syscoin';
+export type NetworkNameOnPriceProvider = 'arbitrum' | 'avalanche' | 'avalanche_fuji' | 'base' | 'bsc' | 'eth' | 'eth_goerli' | 'fantom' | 'flare' | 'gnosis' | 'linea' | 'optimism' | 'optimism_testnet' | 'polygon' | 'polygon_mumbai' | 'polygon_zkevm' | 'rollux' | 'scroll' | 'syscoin' | 'blast';
 export interface AssetAndAddress {
     asset: SupportedAssetPriceProvider;
     address: string;

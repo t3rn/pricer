@@ -20,6 +20,7 @@ export type NetworkNameOnPriceProvider =
   | 'rollux'
   | 'scroll'
   | 'syscoin'
+  | 'blast'
 
 export interface AssetAndAddress {
   asset: SupportedAssetPriceProvider
@@ -132,6 +133,12 @@ const defaultNetworkData = {
     {
       asset: 'optimism',
       address: '0x4200000000000000000000000000000000000042',
+    },
+  ],
+  blast: [
+    {
+      asset: 'eth',
+      address: '0x0000000000000000000000000000000000000000',
     },
   ],
   base: [

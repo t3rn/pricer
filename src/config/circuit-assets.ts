@@ -35,6 +35,8 @@ export declare type NetworkNameOnCircuit =
   | 't3rn'
   | 'line'
   | 'file'
+  | 'blss'
+  | 'blst'
 
 export type NetworkNameCircuitToPriceProviderMap = {
   [key in NetworkNameOnCircuit]: NetworkNameOnPriceProvider
@@ -80,6 +82,8 @@ export const networkNameCircuitToPriceProvider = {
   l1rn: 'arbitrum',
   l3rn: 'arbitrum',
   line: 'linea',
+  blss: 'blast',
+  blst: 'blast',
 } as NetworkNameCircuitToPriceProviderMap
 
 export const assetNameCircuitToPriceProvider = {
