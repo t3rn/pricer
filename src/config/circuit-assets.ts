@@ -123,6 +123,18 @@ export class AssetMapper {
     return this.instance
   }
 
+  public getSupportedAssetsForNetwork(networkId: NetworkNameOnCircuit): SupportedAssetPriceProvider[] {
+    const networkName = networkNameCircuitToPriceProvider[networkId]
+    const assetsAndAddresses = networkToAssetAddressOnPriceProviderMap[networkName]
+
+    if (!assetsAndAddresses) {
+      logger.warn(`No assets configured for network: ${networkName}`)
+      return []
+    }
+
+    return assetsAndAddresses.map((assetAndAddress) => assetAndAddress.asset)
+  }
+
   public static getAssetId(asset: SupportedAssetPriceProvider): number {
     for (const [assetIdString, _asset] of Object.entries(assetNameCircuitToPriceProvider)) {
       if (_asset == asset) {

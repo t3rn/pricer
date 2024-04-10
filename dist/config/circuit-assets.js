@@ -81,6 +81,15 @@ class AssetMapper {
         }
         return this.instance;
     }
+    getSupportedAssetsForNetwork(networkId) {
+        const networkName = exports.networkNameCircuitToPriceProvider[networkId];
+        const assetsAndAddresses = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[networkName];
+        if (!assetsAndAddresses) {
+            logger_1.logger.warn(`No assets configured for network: ${networkName}`);
+            return [];
+        }
+        return assetsAndAddresses.map((assetAndAddress) => assetAndAddress.asset);
+    }
     static getAssetId(asset) {
         for (const [assetIdString, _asset] of Object.entries(exports.assetNameCircuitToPriceProvider)) {
             if (_asset == asset) {
