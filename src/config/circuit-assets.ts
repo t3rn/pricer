@@ -125,7 +125,7 @@ export class AssetMapper {
 
   public static getAssetId(asset: SupportedAssetPriceProvider): number {
     for (const [assetIdString, _asset] of Object.entries(assetNameCircuitToPriceProvider)) {
-      if (_asset == asset) {
+      if (_asset === asset) {
         return parseInt(assetIdString)
       }
     }
@@ -216,7 +216,8 @@ export class AssetMapper {
   public mapAssetByAddress(targetNetworkId: NetworkNameOnCircuit, assetAddress: string): SupportedAssetPriceProvider {
     const networkName = networkNameCircuitToPriceProvider[targetNetworkId]
 
-    if (!Array.isArray(networkToAssetAddressOnPriceProviderMap[networkName as NetworkNameOnPriceProvider])) {
+    const assetsForNetwork = networkToAssetAddressOnPriceProviderMap[networkName as NetworkNameOnPriceProvider]
+    if (!Array.isArray(assetsForNetwork)) {
       logger.error(
         {
           assetAddress,
@@ -227,11 +228,9 @@ export class AssetMapper {
       )
       return SupportedAssetPriceProvider.UNKNOWN
     }
-    const assetName = networkToAssetAddressOnPriceProviderMap[networkName as NetworkNameOnPriceProvider].find(
-      (assetAndAddress: AssetAndAddress) => {
-        return assetAndAddress.address.toLowerCase() == assetAddress.toLowerCase()
-      },
-    )?.asset
+    const assetName = assetsForNetwork.find((assetAndAddress: AssetAndAddress) => {
+      return assetAndAddress.address.toLowerCase() === assetAddress.toLowerCase()
+    })?.asset
 
     if (assetName) {
       return assetName
@@ -254,9 +253,9 @@ export class AssetMapper {
     //@ts-ignore - config keeps getting updated in multiple repos and cannot keep up with changes
     // must move config to a single repo
     for (const [name, network] of Object.entries(this.config.networks) as [string, NetworkConfigWithPrivKey][]) {
-      if (network.id == targetNetworkId) {
+      if (network.id === targetNetworkId) {
         for (const [tokenName, tokenAddress] of Object.entries(network.tokens)) {
-          if (tokenAddress.toLowerCase() == assetAddress.toLowerCase()) {
+          if (tokenAddress.toLowerCase() === assetAddress.toLowerCase()) {
             try {
               return mapT3rnVendorAssetsToSupportedAssetPrice(tokenName)
             } catch (err) {

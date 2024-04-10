@@ -83,7 +83,7 @@ class AssetMapper {
     }
     static getAssetId(asset) {
         for (const [assetIdString, _asset] of Object.entries(exports.assetNameCircuitToPriceProvider)) {
-            if (_asset == asset) {
+            if (_asset === asset) {
                 return parseInt(assetIdString);
             }
         }
@@ -156,7 +156,8 @@ class AssetMapper {
     mapAssetByAddress(targetNetworkId, assetAddress) {
         var _a;
         const networkName = exports.networkNameCircuitToPriceProvider[targetNetworkId];
-        if (!Array.isArray(price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[networkName])) {
+        const assetsForNetwork = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[networkName];
+        if (!Array.isArray(assetsForNetwork)) {
             logger_1.logger.error({
                 assetAddress,
                 target: targetNetworkId,
@@ -164,8 +165,8 @@ class AssetMapper {
             }, `🍑🚨 Network name on Circuit not mapped to price provider. Return UNKNOWN`);
             return price_provider_assets_1.SupportedAssetPriceProvider.UNKNOWN;
         }
-        const assetName = (_a = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[networkName].find((assetAndAddress) => {
-            return assetAndAddress.address.toLowerCase() == assetAddress.toLowerCase();
+        const assetName = (_a = assetsForNetwork.find((assetAndAddress) => {
+            return assetAndAddress.address.toLowerCase() === assetAddress.toLowerCase();
         })) === null || _a === void 0 ? void 0 : _a.asset;
         if (assetName) {
             return assetName;
@@ -183,9 +184,9 @@ class AssetMapper {
         //@ts-ignore - config keeps getting updated in multiple repos and cannot keep up with changes
         // must move config to a single repo
         for (const [name, network] of Object.entries(this.config.networks)) {
-            if (network.id == targetNetworkId) {
+            if (network.id === targetNetworkId) {
                 for (const [tokenName, tokenAddress] of Object.entries(network.tokens)) {
-                    if (tokenAddress.toLowerCase() == assetAddress.toLowerCase()) {
+                    if (tokenAddress.toLowerCase() === assetAddress.toLowerCase()) {
                         try {
                             return (0, price_provider_assets_1.mapT3rnVendorAssetsToSupportedAssetPrice)(tokenName);
                         }
