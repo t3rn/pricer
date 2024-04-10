@@ -30,6 +30,7 @@ export declare class AssetMapper {
     private readonly config;
     private constructor();
     static getInstance(_config: Config): AssetMapper;
+    getSupportedAssetsForNetwork(networkId: NetworkNameOnCircuit): SupportedAssetPriceProvider[];
     static getAssetId(asset: SupportedAssetPriceProvider): number;
     static fakePriceOfAsset(amount: number, asset: SupportedAssetPriceProvider): number;
     static fakePriceOfVendorAsset(amount: number, assetA: number, assetB: number): number;
