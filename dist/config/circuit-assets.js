@@ -92,7 +92,7 @@ class AssetMapper {
     }
     static getAssetId(asset) {
         for (const [assetIdString, _asset] of Object.entries(exports.assetNameCircuitToPriceProvider)) {
-            if (_asset == asset) {
+            if (_asset === asset) {
                 return parseInt(assetIdString);
             }
         }
@@ -175,16 +175,19 @@ class AssetMapper {
     mapAssetByAddress(targetNetworkId, assetAddress) {
         var _a;
         const networkName = exports.networkNameCircuitToPriceProvider[targetNetworkId];
-        if (!Array.isArray(price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[networkName])) {
-            const errorMessage = 'Network name on Circuit not mapped to price provider.';
+        const assetsForNetwork = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[networkName];
+        if (!Array.isArray(assetsForNetwork)) {
+            const errorMessage = '🍑🚨 Network name on Circuit not mapped to price provider.';
             logger_1.logger.error({
                 assetAddress,
                 target: targetNetworkId,
                 network: networkName,
-            }, `🍑🚨 ${errorMessage}`);
+            }, errorMessage);
             throw new Error(errorMessage);
         }
-        const assetName = (_a = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[networkName].find((assetAndAddress) => assetAndAddress.address.toLowerCase() === assetAddress.toLowerCase())) === null || _a === void 0 ? void 0 : _a.asset;
+        const assetName = (_a = assetsForNetwork.find((assetAndAddress) => {
+            return assetAndAddress.address.toLowerCase() === assetAddress.toLowerCase();
+        })) === null || _a === void 0 ? void 0 : _a.asset;
         if (assetName) {
             return assetName;
         }
@@ -210,8 +213,8 @@ class AssetMapper {
             throw new Error(errorMessage);
         }
         if (!Array.isArray(price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[networkName])) {
-            const errorMessage = 'NetworkToAssetAddressOnPriceProviderMap is not an array.';
-            logger_1.logger.error({ targetNetworkId, networkName }, `🍑🚨 ${errorMessage}`);
+            const errorMessage = '🍑🚨 NetworkToAssetAddressOnPriceProviderMap is not an array.';
+            logger_1.logger.error({ targetNetworkId, networkName }, errorMessage);
             throw new Error(errorMessage);
         }
         const assetAddressMapping = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[networkName].find((assetAndAddress) => assetAndAddress.asset === assetName);
@@ -219,8 +222,8 @@ class AssetMapper {
             return assetAddressMapping.address;
         }
         else {
-            const errorMessage = 'Address not found in NetworkToAssetAddressOnPriceProviderMap mapping.';
-            logger_1.logger.error({ asset, assetName, targetNetworkId, networkName }, `🍑🚨 ${errorMessage}`);
+            const errorMessage = '🍑🚨 Address not found in NetworkToAssetAddressOnPriceProviderMap mapping.';
+            logger_1.logger.error({ asset, assetName, targetNetworkId, networkName }, errorMessage);
             throw new Error(errorMessage);
         }
     }

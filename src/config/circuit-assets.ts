@@ -1,15 +1,12 @@
 import {
   AssetAndAddress,
-  mapSupportedAssetPriceProviderToT3rnVendorAssets,
-  mapT3rnVendorAssetsToSupportedAssetPrice,
   NetworkNameOnPriceProvider,
   networkToAssetAddressOnPriceProviderMap,
   SupportedAssetPriceProvider,
 } from './price-provider-assets'
 import { logger } from '../utils/logger'
 import { Config } from './config'
-import { NetworkConfigWithPrivKey } from './types'
-import { BigNumber, Wallet, Contract, ethers } from 'ethers'
+import { BigNumber, Contract, ethers } from 'ethers'
 
 export declare type NetworkNameOnCircuit =
   | 'base'
@@ -137,7 +134,7 @@ export class AssetMapper {
 
   public static getAssetId(asset: SupportedAssetPriceProvider): number {
     for (const [assetIdString, _asset] of Object.entries(assetNameCircuitToPriceProvider)) {
-      if (_asset == asset) {
+      if (_asset === asset) {
         return parseInt(assetIdString)
       }
     }
@@ -240,22 +237,22 @@ export class AssetMapper {
   public mapAssetByAddress(targetNetworkId: NetworkNameOnCircuit, assetAddress: string): SupportedAssetPriceProvider {
     const networkName = networkNameCircuitToPriceProvider[targetNetworkId]
 
-    if (!Array.isArray(networkToAssetAddressOnPriceProviderMap[networkName as NetworkNameOnPriceProvider])) {
-      const errorMessage = 'Network name on Circuit not mapped to price provider.'
+    const assetsForNetwork = networkToAssetAddressOnPriceProviderMap[networkName as NetworkNameOnPriceProvider]
+    if (!Array.isArray(assetsForNetwork)) {
+      const errorMessage = '🍑🚨 Network name on Circuit not mapped to price provider.'
       logger.error(
         {
           assetAddress,
           target: targetNetworkId,
           network: networkName,
         },
-        `🍑🚨 ${errorMessage}`,
+        errorMessage,
       )
       throw new Error(errorMessage)
     }
-
-    const assetName = networkToAssetAddressOnPriceProviderMap[networkName as NetworkNameOnPriceProvider].find(
-      (assetAndAddress: AssetAndAddress) => assetAndAddress.address.toLowerCase() === assetAddress.toLowerCase(),
-    )?.asset
+    const assetName = assetsForNetwork.find((assetAndAddress: AssetAndAddress) => {
+      return assetAndAddress.address.toLowerCase() === assetAddress.toLowerCase()
+    })?.asset
 
     if (assetName) {
       return assetName
@@ -290,8 +287,8 @@ export class AssetMapper {
     }
 
     if (!Array.isArray(networkToAssetAddressOnPriceProviderMap[networkName as NetworkNameOnPriceProvider])) {
-      const errorMessage = 'NetworkToAssetAddressOnPriceProviderMap is not an array.'
-      logger.error({ targetNetworkId, networkName }, `🍑🚨 ${errorMessage}`)
+      const errorMessage = '🍑🚨 NetworkToAssetAddressOnPriceProviderMap is not an array.'
+      logger.error({ targetNetworkId, networkName }, errorMessage)
       throw new Error(errorMessage)
     }
 
@@ -302,8 +299,8 @@ export class AssetMapper {
     if (assetAddressMapping && assetAddressMapping.address) {
       return assetAddressMapping.address
     } else {
-      const errorMessage = 'Address not found in NetworkToAssetAddressOnPriceProviderMap mapping.'
-      logger.error({ asset, assetName, targetNetworkId, networkName }, `🍑🚨 ${errorMessage}`)
+      const errorMessage = '🍑🚨 Address not found in NetworkToAssetAddressOnPriceProviderMap mapping.'
+      logger.error({ asset, assetName, targetNetworkId, networkName }, errorMessage)
       throw new Error(errorMessage)
     }
   }
