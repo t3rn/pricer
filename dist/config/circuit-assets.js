@@ -201,20 +201,17 @@ class AssetMapper {
             throw new Error(errorMessage);
         }
     }
-    getAddressOnTarget4BByCircuitAssetNumber(targetNetworkId, asset) {
-        const networkName = exports.networkNameCircuitToPriceProvider[targetNetworkId];
+    getAddressOnTarget4BByCircuitAssetNumber(networkId, asset) {
+        const networkName = exports.networkNameCircuitToPriceProvider[networkId];
         const assetName = exports.assetNameCircuitToPriceProvider[asset];
         if (!assetName) {
-            const errorMessage = 'Asset not mapped to a known asset name.';
-            logger_1.logger.error({
-                asset,
-                targetNetworkId,
-            }, `🍑🚨 ${errorMessage}`);
+            const errorMessage = '🍑🚨 Asset not mapped to a known asset name.';
+            logger_1.logger.error({ asset, networkId }, errorMessage);
             throw new Error(errorMessage);
         }
         if (!Array.isArray(price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[networkName])) {
             const errorMessage = '🍑🚨 NetworkToAssetAddressOnPriceProviderMap is not an array.';
-            logger_1.logger.error({ targetNetworkId, networkName }, errorMessage);
+            logger_1.logger.error({ networkId, networkName }, errorMessage);
             throw new Error(errorMessage);
         }
         const assetAddressMapping = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[networkName].find((assetAndAddress) => assetAndAddress.asset === assetName);
@@ -223,7 +220,7 @@ class AssetMapper {
         }
         else {
             const errorMessage = '🍑🚨 Address not found in NetworkToAssetAddressOnPriceProviderMap mapping.';
-            logger_1.logger.error({ asset, assetName, targetNetworkId, networkName }, errorMessage);
+            logger_1.logger.error({ asset, assetName, networkId, networkName }, errorMessage);
             throw new Error(errorMessage);
         }
     }

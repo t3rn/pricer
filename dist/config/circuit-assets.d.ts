@@ -36,5 +36,5 @@ export declare class AssetMapper {
     static fakePriceOfVendorAsset(amount: number, assetA: number, assetB: number): number;
     checkAssetBalance<T>(walletAddress: string, asset: number, networkId: NetworkNameOnCircuit, assetContract: Contract): Promise<BigNumber>;
     mapAssetByAddress(targetNetworkId: NetworkNameOnCircuit, assetAddress: string): SupportedAssetPriceProvider;
-    getAddressOnTarget4BByCircuitAssetNumber(targetNetworkId: NetworkNameOnCircuit, asset: number): string;
+    getAddressOnTarget4BByCircuitAssetNumber(networkId: NetworkNameOnCircuit, asset: number): string;
 }
