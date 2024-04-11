@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.networkToAssetAddressOnPriceProviderMap = exports.mapT3rnVendorAssetsToSupportedAssetPrice = exports.mapSupportedAssetPriceProviderToT3rnVendorAssets = exports.t3rnVendorAsset = exports.SupportedAssetPriceProvider = void 0;
+const ethers_1 = require("ethers");
 var SupportedAssetPriceProvider;
 (function (SupportedAssetPriceProvider) {
     SupportedAssetPriceProvider["ETH"] = "eth";
@@ -72,7 +73,7 @@ const defaultNetworkData = {
     eth: [
         {
             asset: 'eth',
-            address: '0x0000000000000000000000000000000000000000',
+            address: ethers_1.ethers.constants.AddressZero,
         },
         {
             asset: 'usdc',
@@ -98,7 +99,7 @@ const defaultNetworkData = {
     blast: [
         {
             asset: 'eth',
-            address: '0x0000000000000000000000000000000000000000',
+            address: ethers_1.ethers.constants.AddressZero,
         },
     ],
     base: [
@@ -108,7 +109,7 @@ const defaultNetworkData = {
         },
         {
             asset: 'eth',
-            address: '0x0000000000000000000000000000000000000000',
+            address: ethers_1.ethers.constants.AddressZero,
         },
         {
             asset: 'usdc',
@@ -125,12 +126,8 @@ const defaultNetworkData = {
     ],
     scroll: [
         {
-            asset: 'scroll',
-            address: '0x0000000000000000000000000000000000000000',
-        },
-        {
             asset: 'eth',
-            address: '0x0000000000000000000000000000000000000000',
+            address: ethers_1.ethers.constants.AddressZero,
         },
         {
             asset: 'usdc',
@@ -148,7 +145,7 @@ const defaultNetworkData = {
         },
         {
             asset: 'eth',
-            address: '0x0000000000000000000000000000000000000000',
+            address: ethers_1.ethers.constants.AddressZero,
         },
         {
             asset: 'usdc',
@@ -161,9 +158,9 @@ const defaultNetworkData = {
     ],
     bsc: [
         {
-            // asset: 'bsc',
+            // asset: 'bnb',
             asset: 'eth',
-            address: '0x0000000000000000000000000000000000000000',
+            address: ethers_1.ethers.constants.AddressZero,
         },
         // {
         //   asset: 'eth',
@@ -203,7 +200,7 @@ const defaultNetworkData = {
         },
         {
             asset: 'eth',
-            address: '0x0000000000000000000000000000000000000000',
+            address: ethers_1.ethers.constants.AddressZero,
         },
         {
             asset: 'usdc',
@@ -226,7 +223,7 @@ const defaultNetworkData = {
         // },
         {
             asset: 'eth',
-            address: '0x0000000000000000000000000000000000000000',
+            address: ethers_1.ethers.constants.AddressZero,
         },
         {
             asset: 'usdc',
@@ -248,7 +245,7 @@ const defaultNetworkData = {
         },
         {
             asset: 'eth',
-            address: '0x0000000000000000000000000000000000000000',
+            address: ethers_1.ethers.constants.AddressZero,
         },
         {
             asset: 'usdc',
@@ -277,7 +274,7 @@ const defaultNetworkData = {
         // },
         {
             asset: 'eth',
-            address: '0x0000000000000000000000000000000000000000',
+            address: ethers_1.ethers.constants.AddressZero,
         },
         {
             asset: 'usdt',
@@ -294,7 +291,7 @@ const defaultNetworkData = {
     l0rn: [
         {
             asset: 'eth',
-            address: '0x0000000000000000000000000000000000000000',
+            address: ethers_1.ethers.constants.AddressZero,
         },
     ],
     filecoin: [],

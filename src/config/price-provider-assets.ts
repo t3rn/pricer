@@ -1,4 +1,4 @@
-import { BigNumber } from 'ethers'
+import { BigNumber, ethers } from 'ethers'
 
 export type NetworkNameOnPriceProvider =
   | 'arbitrum'
@@ -112,7 +112,7 @@ const defaultNetworkData = {
   eth: [
     {
       asset: 'eth',
-      address: '0x0000000000000000000000000000000000000000',
+      address: ethers.constants.AddressZero,
     },
     {
       asset: 'usdc',
@@ -138,7 +138,7 @@ const defaultNetworkData = {
   blast: [
     {
       asset: 'eth',
-      address: '0x0000000000000000000000000000000000000000',
+      address: ethers.constants.AddressZero,
     },
   ],
   base: [
@@ -148,7 +148,7 @@ const defaultNetworkData = {
     },
     {
       asset: 'eth',
-      address: '0x0000000000000000000000000000000000000000',
+      address: ethers.constants.AddressZero,
     },
     {
       asset: 'usdc',
@@ -165,12 +165,8 @@ const defaultNetworkData = {
   ],
   scroll: [
     {
-      asset: 'scroll',
-      address: '0x0000000000000000000000000000000000000000',
-    },
-    {
       asset: 'eth',
-      address: '0x0000000000000000000000000000000000000000',
+      address: ethers.constants.AddressZero,
     },
     {
       asset: 'usdc',
@@ -188,7 +184,7 @@ const defaultNetworkData = {
     },
     {
       asset: 'eth',
-      address: '0x0000000000000000000000000000000000000000',
+      address: ethers.constants.AddressZero,
     },
     {
       asset: 'usdc',
@@ -201,9 +197,9 @@ const defaultNetworkData = {
   ],
   bsc: [
     {
-      // asset: 'bsc',
+      // asset: 'bnb',
       asset: 'eth',
-      address: '0x0000000000000000000000000000000000000000',
+      address: ethers.constants.AddressZero,
     },
     // {
     //   asset: 'eth',
@@ -243,7 +239,7 @@ const defaultNetworkData = {
     },
     {
       asset: 'eth',
-      address: '0x0000000000000000000000000000000000000000',
+      address: ethers.constants.AddressZero,
     },
     {
       asset: 'usdc',
@@ -266,7 +262,7 @@ const defaultNetworkData = {
     // },
     {
       asset: 'eth',
-      address: '0x0000000000000000000000000000000000000000',
+      address: ethers.constants.AddressZero,
     },
     {
       asset: 'usdc',
@@ -288,7 +284,7 @@ const defaultNetworkData = {
     },
     {
       asset: 'eth',
-      address: '0x0000000000000000000000000000000000000000',
+      address: ethers.constants.AddressZero,
     },
     {
       asset: 'usdc',
@@ -317,7 +313,7 @@ const defaultNetworkData = {
     // },
     {
       asset: 'eth',
-      address: '0x0000000000000000000000000000000000000000',
+      address: ethers.constants.AddressZero,
     },
     {
       asset: 'usdt',
@@ -334,7 +330,7 @@ const defaultNetworkData = {
   l0rn: [
     {
       asset: 'eth',
-      address: '0x0000000000000000000000000000000000000000',
+      address: ethers.constants.AddressZero,
     },
   ],
   filecoin: [],
