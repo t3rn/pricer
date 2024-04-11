@@ -95,6 +95,10 @@ const defaultNetworkData = {
             asset: 'optimism',
             address: '0x4200000000000000000000000000000000000042',
         },
+        {
+            asset: 'dot',
+            address: '0xe56AC558178c4a71AEa3E542Ff4bDD131B5fCE54',
+        },
     ],
     blast: [
         {
@@ -123,6 +127,10 @@ const defaultNetworkData = {
             asset: 'dai',
             address: '0x591e79239a7d679378eC8c847e5038150364C78F',
         },
+        {
+            asset: 'dot',
+            address: '0xb85BCF4d3A2eE1DA17F684F9f890Cd5807Bbe5A3',
+        },
     ],
     scroll: [
         {
@@ -136,6 +144,10 @@ const defaultNetworkData = {
         {
             asset: 'usdt',
             address: '0xf55bec9cafdbe8730f096aa55dad6d22d44099df',
+        },
+        {
+            asset: 'dot',
+            address: '0x39c36E69BC4fA97a7380de21d6EF88377F7822ad',
         },
     ],
     arbitrum: [
@@ -154,6 +166,10 @@ const defaultNetworkData = {
         {
             asset: 'usdt',
             address: '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9',
+        },
+        {
+            asset: 'dot',
+            address: '0x4909C938CD2ce2A31adDbee9b469694549D8d0e1',
         },
     ],
     bsc: [
@@ -237,6 +253,10 @@ const defaultNetworkData = {
             asset: 'matic',
             address: '0xe211233fe8b6964208cfc7ca66df9c0340088670',
         },
+        {
+            asset: 'dot',
+            address: '0xd36ba3dfd846eFF512Ac3712a92500Ae665689b2',
+        },
     ],
     file: [
         {
@@ -259,6 +279,10 @@ const defaultNetworkData = {
             asset: 'matic',
             address: '0xe211233fe8b6964208cfc7ca66df9c0340088670',
         },
+        {
+            asset: 'dot',
+            address: '0x31c7baa3025FbF3b177f26b6Cd2bF972Cfa5893F',
+        },
     ],
     avalanche_fuji: [],
     avalanche: [],
@@ -280,18 +304,31 @@ const defaultNetworkData = {
             asset: 'usdt',
             address: '0x1990bc6dfe2ef605bfc08f5a23564db75642ad73',
         },
+        {
+            asset: 'dot',
+            address: '0x4b227b3c6AE905D97CdfB765afe8b23D5154b81c',
+        },
     ],
     polygon_mumbai: [],
     polygon_zkevm: [],
     rollux: [],
     eth_goerli: [],
     optimism_testnet: [],
-    t0rn: [],
+    t0rn: [
+        {
+            asset: 'dot',
+            address: '0x9D0685F859782B4bC3f0E4403bEeF11eDA8AC2E8',
+        },
+    ],
     t2rn: [],
     l0rn: [
         {
             asset: 'eth',
             address: ethers_1.ethers.constants.AddressZero,
+        },
+        {
+            asset: 'dot',
+            address: '0x4b227b3c6AE905D97CdfB765afe8b23D5154b81c',
         },
     ],
     filecoin: [],
