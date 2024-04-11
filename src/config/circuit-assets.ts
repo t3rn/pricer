@@ -1,15 +1,12 @@
 import {
   AssetAndAddress,
-  mapSupportedAssetPriceProviderToT3rnVendorAssets,
-  mapT3rnVendorAssetsToSupportedAssetPrice,
   NetworkNameOnPriceProvider,
   networkToAssetAddressOnPriceProviderMap,
   SupportedAssetPriceProvider,
 } from './price-provider-assets'
 import { logger } from '../utils/logger'
 import { Config } from './config'
-import { NetworkConfigWithPrivKey } from './types'
-import { BigNumber, Wallet, Contract, ethers } from 'ethers'
+import { BigNumber, Contract, ethers } from 'ethers'
 
 export declare type NetworkNameOnCircuit =
   | 'base'
@@ -123,6 +120,18 @@ export class AssetMapper {
     return this.instance
   }
 
+  public getSupportedAssetsForNetwork(networkId: NetworkNameOnCircuit): SupportedAssetPriceProvider[] {
+    const networkName = networkNameCircuitToPriceProvider[networkId]
+    const assetsAndAddresses = networkToAssetAddressOnPriceProviderMap[networkName]
+
+    if (!assetsAndAddresses) {
+      logger.warn(`No assets configured for network: ${networkName}`)
+      return []
+    }
+
+    return assetsAndAddresses.map((assetAndAddress) => assetAndAddress.asset)
+  }
+
   public static getAssetId(asset: SupportedAssetPriceProvider): number {
     for (const [assetIdString, _asset] of Object.entries(assetNameCircuitToPriceProvider)) {
       if (_asset === asset) {
@@ -197,20 +206,32 @@ export class AssetMapper {
       return BigNumber.from(0)
     }
 
-    const assetAddress = this.getAddressOnTarget4BByCircuitAssetNumber(networkId, asset)
-    if (assetAddress === defaultAddress) {
-      logger.warn(
+    try {
+      const assetAddress = this.getAddressOnTarget4BByCircuitAssetNumber(networkId, asset)
+      if (assetAddress === defaultAddress) {
+        logger.warn(
+          {
+            asset,
+            assetName,
+            sourceNetwork: networkId,
+          },
+          `🍑 Asset not found on network. Return zero as balance`,
+        )
+        return BigNumber.from(0)
+      }
+
+      return (await assetContract.balanceOf(walletAddress)) as BigNumber
+    } catch (e) {
+      logger.error(
         {
           asset,
-          assetName,
           sourceNetwork: networkId,
+          defaultAddress,
         },
-        `🍑 Asset not found on network. Return zero as balance`,
+        `🍑🚨 Asset address not found in config. Return zero as balance`,
       )
       return BigNumber.from(0)
     }
-
-    return (await assetContract.balanceOf(walletAddress)) as BigNumber
   }
 
   public mapAssetByAddress(targetNetworkId: NetworkNameOnCircuit, assetAddress: string): SupportedAssetPriceProvider {
@@ -218,15 +239,16 @@ export class AssetMapper {
 
     const assetsForNetwork = networkToAssetAddressOnPriceProviderMap[networkName as NetworkNameOnPriceProvider]
     if (!Array.isArray(assetsForNetwork)) {
+      const errorMessage = '🍑🚨 Network name on Circuit not mapped to price provider.'
       logger.error(
         {
           assetAddress,
           target: targetNetworkId,
           network: networkName,
         },
-        `🍑🚨 Network name on Circuit not mapped to price provider. Return UNKNOWN`,
+        errorMessage,
       )
-      return SupportedAssetPriceProvider.UNKNOWN
+      throw new Error(errorMessage)
     }
     const assetName = assetsForNetwork.find((assetAndAddress: AssetAndAddress) => {
       return assetAndAddress.address.toLowerCase() === assetAddress.toLowerCase()
@@ -234,139 +256,52 @@ export class AssetMapper {
 
     if (assetName) {
       return assetName
-    }
-
-    //@ts-ignore - config keeps getting updated in multiple repos and cannot keep up with changes
-    // must move config to a single repo
-    if (!this.config.networks) {
+    } else {
+      const errorMessage = 'Asset address does not match any addresses in the provided mapping.'
       logger.error(
         {
           assetAddress,
           target: targetNetworkId,
-          sourceNetwork: networkName,
+          network: networkName,
         },
-        `🚨 Networks required but not set in config. Return UNKNOWN`,
+        `🍑🚨 ${errorMessage}`,
       )
-      return SupportedAssetPriceProvider.UNKNOWN
+      throw new Error(errorMessage)
     }
-
-    //@ts-ignore - config keeps getting updated in multiple repos and cannot keep up with changes
-    // must move config to a single repo
-    for (const [name, network] of Object.entries(this.config.networks) as [string, NetworkConfigWithPrivKey][]) {
-      if (network.id === targetNetworkId) {
-        for (const [tokenName, tokenAddress] of Object.entries(network.tokens)) {
-          if (tokenAddress.toLowerCase() === assetAddress.toLowerCase()) {
-            try {
-              return mapT3rnVendorAssetsToSupportedAssetPrice(tokenName)
-            } catch (err) {
-              logger.error(
-                {
-                  assetAddress,
-                  tokenName,
-                  target: targetNetworkId,
-                  sourceNetwork: networkName,
-                },
-                `🍑🚨 Token does not map on t3rn vendor tokens. Return UNKNOWN`,
-              )
-              return SupportedAssetPriceProvider.UNKNOWN
-            }
-          }
-        }
-        break
-      }
-    }
-
-    logger.error(
-      {
-        assetAddress,
-        target: targetNetworkId,
-        sourceNetwork: networkName,
-      },
-      `🍑 Asset address does not match any addresses from config. Return UNKNOWN`,
-    )
-    return SupportedAssetPriceProvider.UNKNOWN
   }
 
   public getAddressOnTarget4BByCircuitAssetNumber(targetNetworkId: NetworkNameOnCircuit, asset: number): string {
-    let defaultAddress = this.config.tokens.addressZero
-
     const networkName = networkNameCircuitToPriceProvider[targetNetworkId]
-
     const assetName = assetNameCircuitToPriceProvider[asset]
+
     if (!assetName) {
-      logger.debug(
+      const errorMessage = 'Asset not mapped to a known asset name.'
+      logger.error(
         {
           asset,
           targetNetworkId,
-          defaultAddress,
         },
-        `🍑 Asset not found. Return default address`,
+        `🍑🚨 ${errorMessage}`,
       )
-      return defaultAddress
-    }
-
-    try {
-      const trnTickerName = mapSupportedAssetPriceProviderToT3rnVendorAssets(assetName)
-      let networkConfig: NetworkConfigWithPrivKey | null = null
-
-      //@ts-ignore - config keeps getting updated in multiple repos and cannot keep up with changes
-      // must move config to a single repo
-      if (!this.config.networks) {
-        logger.error(
-          {
-            target: targetNetworkId,
-            sourceNetwork: networkName,
-          },
-          `🚨 Networks required but not set in config. Return UNKNOWN`,
-        )
-        return SupportedAssetPriceProvider.UNKNOWN
-      }
-
-      //@ts-ignore - config keeps getting updated in multiple repos and cannot keep up with changes
-      // must move config to a single repo
-      for (const [name, network] of Object.entries(this.config.networks) as [string, NetworkConfigWithPrivKey][]) {
-        if (network.id == targetNetworkId) {
-          networkConfig = network
-          break
-        }
-      }
-      if (!networkConfig) {
-        logger.debug(`🍑 Network ${targetNetworkId} not found on config; defaultAddress: ${defaultAddress}`)
-        return defaultAddress
-      }
-      // FIXME: this ts-ignore might be hiding an actual error
-      // @ts-ignore
-      const tokenAddress = networkConfig.tokens[trnTickerName]
-      if (!tokenAddress) {
-        logger.debug(
-          `🍑 Token ${trnTickerName} not found on network ${targetNetworkId}; defaultAddress: ${defaultAddress}`,
-        )
-        return defaultAddress
-      }
-      return tokenAddress
-    } catch (err) {
-      // Continue
+      throw new Error(errorMessage)
     }
 
     if (!Array.isArray(networkToAssetAddressOnPriceProviderMap[networkName as NetworkNameOnPriceProvider])) {
-      logger.warn(
-        { targetNetworkId, networkName, defaultAddress },
-        `🍑 networkToAssetAddressOnPriceProviderMap for given network is not an array. Return default address`,
-      )
-      return defaultAddress
+      const errorMessage = '🍑🚨 NetworkToAssetAddressOnPriceProviderMap is not an array.'
+      logger.error({ targetNetworkId, networkName }, errorMessage)
+      throw new Error(errorMessage)
     }
 
-    for (const assetAddress of networkToAssetAddressOnPriceProviderMap[networkName as NetworkNameOnPriceProvider]) {
-      if (assetAddress.asset == assetName) {
-        return assetAddress.address
-      }
-    }
-
-    logger.debug(
-      { asset, assetName, targetNetworkId, networkName, defaultAddress },
-      `🍑 Asset not found on network. Return default address`,
+    const assetAddressMapping = networkToAssetAddressOnPriceProviderMap[networkName as NetworkNameOnPriceProvider].find(
+      (assetAndAddress) => assetAndAddress.asset === assetName,
     )
 
-    return defaultAddress
+    if (assetAddressMapping && assetAddressMapping.address) {
+      return assetAddressMapping.address
+    } else {
+      const errorMessage = '🍑🚨 Address not found in NetworkToAssetAddressOnPriceProviderMap mapping.'
+      logger.error({ asset, assetName, targetNetworkId, networkName }, errorMessage)
+      throw new Error(errorMessage)
+    }
   }
 }
