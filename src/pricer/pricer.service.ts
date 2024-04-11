@@ -738,17 +738,14 @@ export class Pricer {
    * If the asset is not found in the predefined map or fetching fails, it logs warnings/errors and may return a fake or zero price as a fallback.
    *
    * @param asset The asset for which the price is being retrieved.
-   * @param destinationNetwork The network on which the asset price is to be fetched.
+   * @param networkId The network on which the asset price is to be fetched.
    * @return The price of the asset as a BigNumber. Returns a fake or zero price if the asset is not found or fetching fails.
    */
   async receiveAssetPriceWithCache(
     asset: SupportedAssetPriceProvider,
-    destinationNetwork: NetworkNameOnPriceProvider,
+    networkId: NetworkNameOnPriceProvider,
   ): Promise<BigNumber> {
-    const { assetObject, isFakePrice, foundInRequestedNetwork, foundNetwork } = this.getAssetObject(
-      asset,
-      destinationNetwork,
-    )
+    const { assetObject } = this.getAssetObject(asset, networkId)
 
     if (assetObject instanceof BigNumber) {
       return assetObject
@@ -765,11 +762,11 @@ export class Pricer {
       logger.error(
         {
           asset,
-          destinationNetwork,
+          networkId,
           err: err.message,
           cache: JSON.stringify(this.priceCache.getWholeCache()),
         },
-        `🅰️ Failed to fetch price for asset from proxy server`,
+        `🅰️ Failed to fetch price for asset from proxy server. Return zero.`,
       )
       return BigNumber.from(0)
     }

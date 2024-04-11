@@ -169,10 +169,10 @@ export declare class Pricer {
      * If the asset is not found in the predefined map or fetching fails, it logs warnings/errors and may return a fake or zero price as a fallback.
      *
      * @param asset The asset for which the price is being retrieved.
-     * @param destinationNetwork The network on which the asset price is to be fetched.
+     * @param networkId The network on which the asset price is to be fetched.
      * @return The price of the asset as a BigNumber. Returns a fake or zero price if the asset is not found or fetching fails.
      */
-    receiveAssetPriceWithCache(asset: SupportedAssetPriceProvider, destinationNetwork: NetworkNameOnPriceProvider): Promise<BigNumber>;
+    receiveAssetPriceWithCache(asset: SupportedAssetPriceProvider, networkId: NetworkNameOnPriceProvider): Promise<BigNumber>;
     /**
      * Calculates the price of one asset in terms of another using their respective USD prices.
      * This method is useful for converting values between two different assets, taking into account their current market prices.
