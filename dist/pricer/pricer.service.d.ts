@@ -106,7 +106,7 @@ export declare class Pricer {
      * @param fromChain The network of the 'fromAsset'.
      * @param fromChainProvider The provider url for 'fromChain'.
      * @param toChain The network of the 'toAsset'.
-     * @param maxReward The maximum reward the user is willing to offer, in wei.
+     * @param maxRewardWei
      * @return The estimated amount of 'toAsset' the user will receive, in wei.
      */
     estimateReceivedAmount(fromAsset: SupportedAssetPriceProvider, toAsset: SupportedAssetPriceProvider, fromChain: NetworkNameOnPriceProvider, fromChainProvider: string, toChain: NetworkNameOnPriceProvider, maxRewardWei: BigNumber): Promise<BigNumber>;

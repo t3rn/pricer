@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PriceCache = void 0;
+const logger_1 = require("../utils/logger");
 /**
  * Manages the caching of asset prices for single or multiple networks to optimize performance and reduce API calls.
  */
@@ -29,27 +30,25 @@ class PriceCache {
      *
      * @param asset The asset for which to retrieve the price.
      * @param network The network from which to retrieve the price if multichain is enabled.
+     * @param assetObj
      * @return The price of the asset if found, undefined otherwise.
      */
     get(asset, network, assetObj) {
         return __awaiter(this, void 0, void 0, function* () {
-            // check local cache first
-            const localPrice = this.config.pricer.useMultichain
+            let price = this.config.pricer.useMultichain
                 ? this.getPriceMultiNetwork(asset, network)
                 : this.getPriceSingleNetwork(asset);
-            if (localPrice !== undefined) {
-                return localPrice;
+            if (price !== undefined) {
+                return price;
             }
-            // if not found in local cache, check the Redis cache
             if (assetObj && assetObj.address) {
-                const redisPrice = yield this.getPriceRedis(asset, network, assetObj.address);
-                if (redisPrice !== undefined) {
-                    this.set(asset, network, redisPrice); // also set price in local cache
-                    return redisPrice;
+                price = yield this.getPriceFromCacheServer(asset, network, assetObj.address);
+                if (price) {
+                    this.set(asset, network, price);
+                    return price;
                 }
             }
-            // neither cache has the price
-            return undefined;
+            return null;
         });
     }
     /**
@@ -69,50 +68,50 @@ class PriceCache {
         }
     }
     /**
-     * Get price from Redis cache
+     * Get asset price from price cache server
      *
      * @param asset
      * @param network
-     * @return The price of the asset if found, undefined otherwise.
+     * @param address
+     * @return The price of the asset if found, null otherwise.
      */
-    getPriceRedis(asset, network, address) {
+    getPriceFromCacheServer(asset, network, address) {
         return __awaiter(this, void 0, void 0, function* () {
+            const childLogger = logger_1.logger.child({ asset, network, address });
             if (!this.config.pricer.proxyServerUrl) {
-                console.warn('[Redis Cache]: No Redis cache server URL is set. Defaulting to local cache.');
-                return undefined;
+                childLogger.debug('Price cache server URL not defined. Default to local cache.');
+                return null;
             }
             if (!address) {
-                console.warn('[Redis Cache]: No token address was passed. Defaulting to local cache.');
-                return undefined;
+                childLogger.debug('No asset address was provided. Default to local cache.');
+                return null;
             }
             try {
                 const url = new URL(`${this.config.pricer.proxyServerUrl}/pricer`);
                 url.searchParams.append('network', network);
                 url.searchParams.append('asset', asset);
                 url.searchParams.append('address', address);
-                const response = yield fetch(url.toString());
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        console.warn('[Redis Cache]: Price not found in Redis cache for asset:', asset, 'on network:', network);
-                    }
-                    else {
-                        console.error('[Redis Cache]: Error fetching from Redis cache', response.statusText);
-                    }
-                    return undefined;
+                const res = yield fetch(url.toString());
+                if (!res.ok) {
+                    const errMsg = res.status === 404
+                        ? 'Price for asset not found price cache server.'
+                        : 'Could not fetch asset price from price cache server.';
+                    childLogger.error({ status: res.status, err: res.statusText }, `${errMsg} Return null.`);
+                    return null;
                 }
-                const data = yield response.json();
+                const data = yield res.json();
                 const price = data.price;
                 if (price) {
                     return price;
                 }
                 else {
-                    console.warn('[Redis Cache]: Request sent but price not found in Redis cache for asset:', asset, 'on network:', network);
-                    return undefined;
+                    childLogger.error({ data: JSON.stringify(data) }, 'Request to price cache server is OK, but price was not found. Return null.');
+                    return null;
                 }
             }
-            catch (error) {
-                console.error('[Redis Cache]: An unexpected error occurred', error);
-                return undefined;
+            catch (err) {
+                childLogger.error({ err: err.message }, 'Unexpected error while fetching asset price from price cache server');
+                return null;
             }
         });
     }
@@ -156,7 +155,8 @@ class PriceCache {
      * @return The price of the asset if found, undefined otherwise.
      */
     getPriceSingleNetwork(asset) {
-        return this.cacheSingleNetwork.get(asset);
+        const price = this.cacheSingleNetwork.get(asset);
+        return price === undefined ? null : price;
     }
     /**
      * Retrieves the price of an asset across multiple networks from the cache.
@@ -167,7 +167,8 @@ class PriceCache {
      */
     getPriceMultiNetwork(asset, network) {
         var _a;
-        return (_a = this.cacheMultiNetwork.get(asset)) === null || _a === void 0 ? void 0 : _a.get(network);
+        const price = (_a = this.cacheMultiNetwork.get(asset)) === null || _a === void 0 ? void 0 : _a.get(network);
+        return price === undefined ? null : price;
     }
     /**
      * Sets the price of an asset in a single network scenario in the cache.

@@ -2,16 +2,16 @@ import { expect } from 'chai'
 import config from '../../../src/config/config'
 import { BigNumber, ethers } from 'ethers'
 import { Order } from '../../../src/types'
-import { Pricer } from '../../../src/pricer/pricer.service'
-import { CostResult, PriceResult } from '../../../src/pricer/types'
-import { networkNameCircuitToPriceProvider, NetworkNameOnCircuit } from '../../../src/config/circuit-assets'
 import {
-  NetworkNameOnPriceProvider,
+  CostResult,
+  networkNameCircuitToPriceProvider,
+  NetworkNameOnCircuit,
+  OrderArbitrageStrategy,
+  Pricer,
+  PriceResult,
   SupportedAssetPriceProvider,
-  networkToAssetAddressOnPriceProviderMap,
-} from '../../../src/config/price-provider-assets'
-import { OrderArbitrageStrategy } from '../../../src/pricer/pricer.service'
-import { describe, it, beforeEach } from 'mocha'
+} from '../../../src'
+import { beforeEach, describe, it } from 'mocha'
 import sinon from 'sinon'
 
 describe('Pricer', () => {

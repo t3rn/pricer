@@ -141,9 +141,6 @@ class Pricer {
                 return { assetObject: ethers_1.BigNumber.from(0), isFakePrice: true };
             }
         }
-        if (assetDetails.address === this.config.tokens.addressZero) {
-            logger_1.logger.warn({ address: assetDetails.address, asset: assetDetails.asset, network: destinationNetwork }, 'Received native token');
-        }
         return {
             assetObject: assetDetails,
             isFakePrice: false,
@@ -371,7 +368,7 @@ class Pricer {
      * @param fromChain The network of the 'fromAsset'.
      * @param fromChainProvider The provider url for 'fromChain'.
      * @param toChain The network of the 'toAsset'.
-     * @param maxReward The maximum reward the user is willing to offer, in wei.
+     * @param maxRewardWei
      * @return The estimated amount of 'toAsset' the user will receive, in wei.
      */
     estimateReceivedAmount(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei) {
@@ -548,7 +545,7 @@ class Pricer {
      */
     fetchPriceAndStoreInCache(assetObj, network) {
         return __awaiter(this, void 0, void 0, function* () {
-            const usdPrice = yield this.priceCache.getPriceRedis(assetObj.asset, network, assetObj.address);
+            const usdPrice = yield this.priceCache.getPriceFromCacheServer(assetObj.asset, network, assetObj.address);
             if (!usdPrice) {
                 throw new Error('Failed to fetch price for asset from proxy server');
             }

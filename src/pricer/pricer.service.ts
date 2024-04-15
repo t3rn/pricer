@@ -199,13 +199,6 @@ export class Pricer {
       }
     }
 
-    if (assetDetails.address === this.config.tokens.addressZero) {
-      logger.warn(
-        { address: assetDetails.address, asset: assetDetails.asset, network: destinationNetwork },
-        'Received native token',
-      )
-    }
-
     return {
       assetObject: assetDetails,
       isFakePrice: false,
@@ -496,7 +489,7 @@ export class Pricer {
    * @param fromChain The network of the 'fromAsset'.
    * @param fromChainProvider The provider url for 'fromChain'.
    * @param toChain The network of the 'toAsset'.
-   * @param maxReward The maximum reward the user is willing to offer, in wei.
+   * @param maxRewardWei
    * @return The estimated amount of 'toAsset' the user will receive, in wei.
    */
   async estimateReceivedAmount(
@@ -722,7 +715,7 @@ export class Pricer {
    * @return {Promise<string>}
    */
   async fetchPriceAndStoreInCache(assetObj: AssetAndAddress, network: NetworkNameOnPriceProvider): Promise<string> {
-    const usdPrice = await this.priceCache.getPriceRedis(assetObj.asset, network, assetObj.address)
+    const usdPrice = await this.priceCache.getPriceFromCacheServer(assetObj.asset, network, assetObj.address)
 
     if (!usdPrice) {
       throw new Error('Failed to fetch price for asset from proxy server')

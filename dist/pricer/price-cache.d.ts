@@ -21,9 +21,10 @@ export declare class PriceCache {
      *
      * @param asset The asset for which to retrieve the price.
      * @param network The network from which to retrieve the price if multichain is enabled.
+     * @param assetObj
      * @return The price of the asset if found, undefined otherwise.
      */
-    get(asset: SupportedAssetPriceProvider, network: NetworkNameOnPriceProvider, assetObj: AssetAndAddress): Promise<string | undefined>;
+    get(asset: SupportedAssetPriceProvider, network: NetworkNameOnPriceProvider, assetObj: AssetAndAddress): Promise<string | null>;
     /**
      * Sets the price of an asset in the cache for a specific network if multichain is enabled, or globally otherwise.
      *
@@ -34,13 +35,14 @@ export declare class PriceCache {
      */
     set(asset: SupportedAssetPriceProvider, network: NetworkNameOnPriceProvider, price: string): NetworkToPriceMap | PriceCacheSingleNetwork;
     /**
-     * Get price from Redis cache
+     * Get asset price from price cache server
      *
      * @param asset
      * @param network
-     * @return The price of the asset if found, undefined otherwise.
+     * @param address
+     * @return The price of the asset if found, null otherwise.
      */
-    getPriceRedis(asset: SupportedAssetPriceProvider, network: NetworkNameOnPriceProvider, address: string): Promise<string | undefined>;
+    getPriceFromCacheServer(asset: SupportedAssetPriceProvider, network: NetworkNameOnPriceProvider, address: string): Promise<string | null>;
     /**
      * Periodically clean the local price cache
      */
