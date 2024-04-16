@@ -1,6 +1,11 @@
 # HOW TO
 
+## Why don't we support ankr.js and use the getSupportedTokens from there?
+pricer is also used in frontend and ankr.js used grpc.
+Security one browser was closing the connection and we had to strip ankr.js out.
+
 ## This document will present you an overview of how to work with the pricer library
+
 
 ### How do I add support for a new network?
 This pricer library fetches tokens usd prices from our rust proxy server which calls ankr provider to retrieve prices.
