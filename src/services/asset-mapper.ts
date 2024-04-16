@@ -145,9 +145,9 @@ export class AssetMapper {
   public mapAssetByAddress(networkId: NetworkNameOnCircuit, assetAddress: string): SupportedAssetPriceProvider {
     const networkName = networkNameCircuitToPriceProvider[networkId]
 
-    const assetsForNetwork = networkToAssetAddressOnPriceProviderMap[networkName as NetworkNameOnPriceProvider]
+    const assetsForNetwork = networkToAssetAddressOnPriceProviderMap[networkName]
     if (!Array.isArray(assetsForNetwork)) {
-      const errorMessage = '🍑🚨 Network name on Circuit not mapped to price provider.'
+      const errorMessage = '🍑🚨 Network name on Circuit not mapped to price provider'
       logger.error(
         {
           assetAddress,
@@ -158,6 +158,7 @@ export class AssetMapper {
       )
       throw new Error(errorMessage)
     }
+
     const assetName = assetsForNetwork.find((assetAndAddress: AssetAndAddress) => {
       return assetAndAddress.address.toLowerCase() === assetAddress.toLowerCase()
     })?.asset
@@ -165,7 +166,7 @@ export class AssetMapper {
     if (assetName) {
       return assetName
     } else {
-      const errorMessage = '🍑🚨 Asset address does not match any addresses in the provided mapping.'
+      const errorMessage = '🍑🚨 Asset address does not match any addresses in the provided mapping'
       logger.error({ assetAddress, networkId, networkName }, errorMessage)
       throw new Error(errorMessage)
     }

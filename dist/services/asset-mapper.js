@@ -120,7 +120,7 @@ class AssetMapper {
         const networkName = circuit_assets_1.networkNameCircuitToPriceProvider[networkId];
         const assetsForNetwork = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[networkName];
         if (!Array.isArray(assetsForNetwork)) {
-            const errorMessage = '🍑🚨 Network name on Circuit not mapped to price provider.';
+            const errorMessage = '🍑🚨 Network name on Circuit not mapped to price provider';
             logger_1.logger.error({
                 assetAddress,
                 networkId,
@@ -135,7 +135,7 @@ class AssetMapper {
             return assetName;
         }
         else {
-            const errorMessage = '🍑🚨 Asset address does not match any addresses in the provided mapping.';
+            const errorMessage = '🍑🚨 Asset address does not match any addresses in the provided mapping';
             logger_1.logger.error({ assetAddress, networkId, networkName }, errorMessage);
             throw new Error(errorMessage);
         }
