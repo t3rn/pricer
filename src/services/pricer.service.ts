@@ -19,7 +19,7 @@ import {
 } from './types'
 import { Config } from '../config/config'
 import { PriceCache } from './price-cache'
-import { AssetMapper } from '../config/circuit-assets'
+import { AssetMapper } from './asset-mapper'
 
 export interface OrderArbitrageStrategy {
   minProfitPerOrder: BigNumber // in target asset
@@ -523,7 +523,7 @@ export class Pricer {
       toAsset,
       toChain,
       estGasPriceOnNativeInWei,
-      this.config.tokens.addressZero,
+      ethers.constants.AddressZero,
     )
 
     // Convert the transaction cost to toAsset using the market price.
@@ -829,7 +829,7 @@ export class Pricer {
     estGasPriceOnNativeInWei: BigNumber,
     ofTokenTransfer: string,
   ): CostResult {
-    const gasLimit = ofTokenTransfer === this.config.tokens.addressZero ? ETH_TRANSFER_GAS_LIMIT : ERC20_GAS_LIMIT
+    const gasLimit = ofTokenTransfer === ethers.constants.AddressZero ? ETH_TRANSFER_GAS_LIMIT : ERC20_GAS_LIMIT
     const costInWei = estGasPriceOnNativeInWei.mul(gasLimit)
 
     // Convert cost to cost in Asset from price ratio Asset/Native

@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { Config } from '../../../src/config/config'
+import { Config } from '../../src/config/config'
 import {
   AssetAndAddress,
   NetworkNameOnPriceProvider,
@@ -8,7 +8,7 @@ import {
   PriceCacheMultiNetwork,
   PriceCacheSingleNetwork,
   SupportedAssetPriceProvider,
-} from '../../../src'
+} from '../../src'
 import { BigNumber } from 'ethers'
 
 describe('PriceCache', () => {

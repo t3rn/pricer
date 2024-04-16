@@ -7,7 +7,6 @@ dotenv.config()
 const get = envVar.get
 
 interface TokensConfig {
-  addressZero: string
   addressNonZero?: string
   bytes32Zero?: string
   oneOn18Decimals: number
@@ -32,7 +31,6 @@ interface AppConfig {
 
 const config = () => ({
   tokens: {
-    addressZero: get('ADDRESS_ZERO').required().default('0x0000000000000000000000000000000000000000').asString(),
     oneOn18Decimals: get('ONE_ON_18_DECIMALS').required().default(1000000000000000000).asIntPositive(),
     maxDecimals18: get('MAX_DECIMALS_18').required().default(18).asIntPositive(),
   },

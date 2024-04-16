@@ -1,7 +1,7 @@
 import { expect } from 'chai'
-import config from '../../../src/config/config'
+import config from '../../src/config/config'
 import { BigNumber, ethers } from 'ethers'
-import { Order } from '../../../src/types'
+import { Order } from '../../src/types'
 import {
   CostResult,
   networkNameCircuitToPriceProvider,
@@ -10,14 +10,13 @@ import {
   Pricer,
   PriceResult,
   SupportedAssetPriceProvider,
-} from '../../../src'
+} from '../../src'
 import { beforeEach, describe, it } from 'mocha'
 import sinon from 'sinon'
 
 describe('Pricer', () => {
   const pricer = new Pricer({
     tokens: {
-      addressZero: '0x0000000000000000000000000000000000000000',
       oneOn18Decimals: parseInt('1000000000000000000'),
       maxDecimals18: 18,
     },
@@ -170,7 +169,7 @@ describe('Pricer', () => {
       source: 'sepl',
       asset: 1,
       assetNative: false,
-      assetAddress: config.tokens.addressZero,
+      assetAddress: ethers.constants.AddressZero,
       targetAccount: 'someAccount',
       amount: BigNumber.from('100'),
       rewardAsset: '2',
@@ -260,7 +259,7 @@ describe('Pricer', () => {
       destination,
       source: 'sepl',
       asset: 1,
-      assetAddress: config.tokens.addressZero,
+      assetAddress: ethers.constants.AddressZero,
       assetNative: false,
       targetAccount: 'someAccount',
       amount: BigNumber.from((config.tokens.oneOn18Decimals * 0.1).toString()),
@@ -331,7 +330,7 @@ describe('Pricer', () => {
       destination,
       source: 'sepl',
       asset: 1,
-      assetAddress: config.tokens.addressZero,
+      assetAddress: ethers.constants.AddressZero,
       assetNative: false,
       targetAccount: 'someAccount',
       amount: BigNumber.from('100'),
@@ -393,7 +392,7 @@ describe('Pricer', () => {
       destination: 'bscp',
       source: 'sepl',
       asset: 1,
-      assetAddress: config.tokens.addressZero,
+      assetAddress: ethers.constants.AddressZero,
       assetNative: false,
       targetAccount: 'someAccount',
       amount: BigNumber.from('100'),
@@ -444,7 +443,7 @@ describe('Pricer', () => {
       destination: 'bscp',
       source: 'sepl',
       asset: 1,
-      assetAddress: config.tokens.addressZero,
+      assetAddress: ethers.constants.AddressZero,
       assetNative: false,
       targetAccount: 'someAccount',
       amount: BigNumber.from('100'),
@@ -496,7 +495,7 @@ describe('Pricer', () => {
       destination: 'bscp',
       source: 'sepl',
       asset: 1,
-      assetAddress: config.tokens.addressZero,
+      assetAddress: ethers.constants.AddressZero,
       assetNative: false,
       targetAccount: 'someAccount',
       amount: BigNumber.from('100'),
