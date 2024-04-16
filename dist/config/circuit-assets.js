@@ -28,6 +28,11 @@ var SupportedAssetCircuit;
     SupportedAssetCircuit[SupportedAssetCircuit["TRN"] = 3333] = "TRN";
     SupportedAssetCircuit[SupportedAssetCircuit["BRN"] = 3343] = "BRN";
 })(SupportedAssetCircuit || (exports.SupportedAssetCircuit = SupportedAssetCircuit = {}));
+// IMPORTANT
+// ANKR only supports these chains:
+// arbitrum, avalanche, base, bsc, eth, fantom, flare, gnosis, linea, optimism, polygon, polygon_zkevm, rollux, scroll, syscoin, avalanche_fuji, polygon_mumbai
+// pass any other chain than one of these and you will get error 'invalid argument 0: invalid params'
+// so try to convert incoming chains to existing ones, example: l0rn: 'arbitrum'
 exports.networkNameCircuitToPriceProvider = {
     ethm: 'eth',
     base: 'base',
@@ -49,8 +54,8 @@ exports.networkNameCircuitToPriceProvider = {
     l1rn: 'arbitrum',
     l3rn: 'arbitrum',
     line: 'linea',
-    blss: 'blast',
-    blst: 'blast',
+    blss: 'base',
+    blst: 'base',
 };
 exports.assetNameCircuitToPriceProvider = {
     0: price_provider_assets_1.SupportedAssetPriceProvider.ETH,
