@@ -1,10 +1,5 @@
 import { Config } from '../config/config'
-import {
-  AssetAndAddress,
-  NetworkNameOnPriceProvider,
-  networkToAssetAddressOnPriceProviderMap,
-  SupportedAssetPriceProvider,
-} from '../config/price-provider-assets'
+import { networkToAssetAddressOnPriceProviderMap, SupportedAssetPriceProvider } from '../config/price-provider-assets'
 import { logger } from '../utils/logger'
 import { BigNumber, Contract, ethers } from 'ethers'
 import {
@@ -115,7 +110,7 @@ export class AssetMapper {
     }
 
     try {
-      const assetAddress = this.getAddressOnTarget4BByCircuitAssetNumber(networkId, asset)
+      const assetAddress = this.mapAssetByCircuitNumber(networkId, asset)
       if (assetAddress === defaultAddress) {
         logger.warn(
           {
@@ -144,59 +139,49 @@ export class AssetMapper {
 
   public mapAssetByAddress(networkId: NetworkNameOnCircuit, assetAddress: string): SupportedAssetPriceProvider {
     const networkName = networkNameCircuitToPriceProvider[networkId]
-
     const assetsForNetwork = networkToAssetAddressOnPriceProviderMap[networkName]
     if (!Array.isArray(assetsForNetwork)) {
       const errorMessage = '🍑🚨 Network name on Circuit not mapped to price provider'
-      logger.error(
-        {
-          assetAddress,
-          networkId,
-          networkName,
-        },
-        errorMessage,
-      )
+      logger.error({ assetAddress, networkId, networkName }, errorMessage)
       throw new Error(errorMessage)
     }
 
-    const assetName = assetsForNetwork.find((assetAndAddress: AssetAndAddress) => {
+    const assetName = assetsForNetwork.find((assetAndAddress) => {
       return assetAndAddress.address.toLowerCase() === assetAddress.toLowerCase()
     })?.asset
 
     if (assetName) {
       return assetName
     } else {
-      const errorMessage = '🍑🚨 Asset address does not match any addresses in the provided mapping'
+      const errorMessage = '🍑🚨 Asset address does not match any addresses in the network config'
       logger.error({ assetAddress, networkId, networkName }, errorMessage)
       throw new Error(errorMessage)
     }
   }
 
-  public getAddressOnTarget4BByCircuitAssetNumber(networkId: NetworkNameOnCircuit, asset: number): string {
+  public mapAssetByCircuitNumber(networkId: NetworkNameOnCircuit, assetNumber: number): string {
     const networkName = networkNameCircuitToPriceProvider[networkId]
-    const assetName = assetNameCircuitToPriceProvider[asset]
-
-    if (!assetName) {
-      const errorMessage = '🍑🚨 Asset not mapped to a known asset name.'
-      logger.error({ asset, networkId }, errorMessage)
-      throw new Error(errorMessage)
-    }
-
-    if (!Array.isArray(networkToAssetAddressOnPriceProviderMap[networkName as NetworkNameOnPriceProvider])) {
-      const errorMessage = '🍑🚨 NetworkToAssetAddressOnPriceProviderMap is not an array.'
+    const assetsForNetwork = networkToAssetAddressOnPriceProviderMap[networkName]
+    if (!Array.isArray(assetsForNetwork)) {
+      const errorMessage = '🍑🚨 Network name on Circuit not mapped to price provider'
       logger.error({ networkId, networkName }, errorMessage)
       throw new Error(errorMessage)
     }
 
-    const assetAddressMapping = networkToAssetAddressOnPriceProviderMap[networkName as NetworkNameOnPriceProvider].find(
-      (assetAndAddress) => assetAndAddress.asset === assetName,
-    )
+    const assetName = assetNameCircuitToPriceProvider[assetNumber]
+    if (!assetName) {
+      const errorMessage = '🍑🚨 Asset number not mapped to a known asset name'
+      logger.error({ assetNumber, networkId }, errorMessage)
+      throw new Error(errorMessage)
+    }
 
-    if (assetAddressMapping && assetAddressMapping.address) {
-      return assetAddressMapping.address
+    const assetAddress = assetsForNetwork.find((assetAndAddress) => assetAndAddress.asset === assetName)?.address
+
+    if (assetAddress) {
+      return assetAddress
     } else {
-      const errorMessage = '🍑🚨 Address not found in NetworkToAssetAddressOnPriceProviderMap mapping.'
-      logger.error({ asset, assetName, networkId, networkName }, errorMessage)
+      const errorMessage = '🍑🚨 Asset number does not match any assets in the network config'
+      logger.error({ assetNumber, assetName, networkId, networkName }, errorMessage)
       throw new Error(errorMessage)
     }
   }
