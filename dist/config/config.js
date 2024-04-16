@@ -32,7 +32,6 @@ dotenv.config();
 const get = env_var_1.default.get;
 const config = () => ({
     tokens: {
-        addressZero: get('ADDRESS_ZERO').required().default('0x0000000000000000000000000000000000000000').asString(),
         oneOn18Decimals: get('ONE_ON_18_DECIMALS').required().default(1000000000000000000).asIntPositive(),
         maxDecimals18: get('MAX_DECIMALS_18').required().default(18).asIntPositive(),
     },

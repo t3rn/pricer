@@ -4,6 +4,7 @@ import {
   NetworkNameOnPriceProvider,
   SupportedAssetPriceProvider,
 } from '../config/price-provider-assets'
+import { logger } from '../utils/logger'
 
 export type PriceCacheSingleNetwork = Map<SupportedAssetPriceProvider, string>
 export type NetworkToPriceMap = Map<NetworkNameOnPriceProvider, string>
@@ -31,33 +32,31 @@ export class PriceCache {
    *
    * @param asset The asset for which to retrieve the price.
    * @param network The network from which to retrieve the price if multichain is enabled.
+   * @param assetObj
    * @return The price of the asset if found, undefined otherwise.
    */
   async get(
     asset: SupportedAssetPriceProvider,
     network: NetworkNameOnPriceProvider,
     assetObj: AssetAndAddress,
-  ): Promise<string | undefined> {
-    // check local cache first
-    const localPrice = this.config.pricer.useMultichain
+  ): Promise<string | null> {
+    let price = this.config.pricer.useMultichain
       ? this.getPriceMultiNetwork(asset, network)
       : this.getPriceSingleNetwork(asset)
 
-    if (localPrice !== undefined) {
-      return localPrice
+    if (price !== undefined) {
+      return price
     }
 
-    // if not found in local cache, check the Redis cache
     if (assetObj && assetObj.address) {
-      const redisPrice = await this.getPriceRedis(asset, network, assetObj.address)
-      if (redisPrice !== undefined) {
-        this.set(asset, network, redisPrice) // also set price in local cache
-        return redisPrice
+      price = await this.getPriceFromCacheServer(asset, network, assetObj.address)
+      if (price) {
+        this.set(asset, network, price)
+        return price
       }
     }
 
-    // neither cache has the price
-    return undefined
+    return null
   }
 
   /**
@@ -81,25 +80,28 @@ export class PriceCache {
   }
 
   /**
-   * Get price from Redis cache
+   * Get asset price from price cache server
    *
    * @param asset
    * @param network
-   * @return The price of the asset if found, undefined otherwise.
+   * @param address
+   * @return The price of the asset if found, null otherwise.
    */
-  async getPriceRedis(
+  async getPriceFromCacheServer(
     asset: SupportedAssetPriceProvider,
     network: NetworkNameOnPriceProvider,
     address: string,
-  ): Promise<string | undefined> {
+  ): Promise<string | null> {
+    const childLogger = logger.child({ asset, network, address })
+
     if (!this.config.pricer.proxyServerUrl) {
-      console.warn('[Redis Cache]: No Redis cache server URL is set. Defaulting to local cache.')
-      return undefined
+      childLogger.debug('Price cache server URL not defined. Default to local cache.')
+      return null
     }
 
     if (!address) {
-      console.warn('[Redis Cache]: No token address was passed. Defaulting to local cache.')
-      return undefined
+      childLogger.debug('No asset address was provided. Default to local cache.')
+      return null
     }
 
     try {
@@ -108,32 +110,30 @@ export class PriceCache {
       url.searchParams.append('asset', asset)
       url.searchParams.append('address', address)
 
-      const response = await fetch(url.toString())
-      if (!response.ok) {
-        if (response.status === 404) {
-          console.warn('[Redis Cache]: Price not found in Redis cache for asset:', asset, 'on network:', network)
-        } else {
-          console.error('[Redis Cache]: Error fetching from Redis cache', response.statusText)
-        }
-        return undefined
+      const res = await fetch(url.toString())
+      if (!res.ok) {
+        const errMsg: string =
+          res.status === 404
+            ? 'Price for asset not found price cache server.'
+            : 'Could not fetch asset price from price cache server.'
+        childLogger.error({ status: res.status, err: res.statusText }, `${errMsg} Return null.`)
+        return null
       }
 
-      const data: any = await response.json()
+      const data: any = await res.json()
       const price = data.price
       if (price) {
         return price
       } else {
-        console.warn(
-          '[Redis Cache]: Request sent but price not found in Redis cache for asset:',
-          asset,
-          'on network:',
-          network,
+        childLogger.error(
+          { data: JSON.stringify(data) },
+          'Request to price cache server is OK, but price was not found. Return null.',
         )
-        return undefined
+        return null
       }
-    } catch (error) {
-      console.error('[Redis Cache]: An unexpected error occurred', error)
-      return undefined
+    } catch (err: any) {
+      childLogger.error({ err: err.message }, 'Unexpected error while fetching asset price from price cache server')
+      return null
     }
   }
 
@@ -177,8 +177,9 @@ export class PriceCache {
    * @param asset The asset for which to retrieve the price.
    * @return The price of the asset if found, undefined otherwise.
    */
-  private getPriceSingleNetwork(asset: SupportedAssetPriceProvider): string | undefined {
-    return this.cacheSingleNetwork.get(asset)
+  private getPriceSingleNetwork(asset: SupportedAssetPriceProvider): string | null {
+    const price = this.cacheSingleNetwork.get(asset)
+    return price === undefined ? null : price
   }
 
   /**
@@ -188,11 +189,9 @@ export class PriceCache {
    * @param network The network for which to retrieve the price.
    * @return The price of the asset on the specified network if found, undefined otherwise.
    */
-  private getPriceMultiNetwork(
-    asset: SupportedAssetPriceProvider,
-    network: NetworkNameOnPriceProvider,
-  ): string | undefined {
-    return this.cacheMultiNetwork.get(asset)?.get(network)
+  private getPriceMultiNetwork(asset: SupportedAssetPriceProvider, network: NetworkNameOnPriceProvider): string | null {
+    const price = this.cacheMultiNetwork.get(asset)?.get(network)
+    return price === undefined ? null : price
   }
 
   /**

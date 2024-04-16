@@ -1,16 +1,14 @@
 import { expect } from 'chai'
-import { Config } from '../../../src/config/config'
+import { Config } from '../../src/config/config'
 import {
+  AssetAndAddress,
+  NetworkNameOnPriceProvider,
   NetworkToPriceMap,
   PriceCache,
   PriceCacheMultiNetwork,
   PriceCacheSingleNetwork,
-} from '../../../src/pricer/price-cache'
-import {
-  AssetAndAddress,
-  NetworkNameOnPriceProvider,
   SupportedAssetPriceProvider,
-} from '../../../src/config/price-provider-assets'
+} from '../../src'
 import { BigNumber } from 'ethers'
 
 describe('PriceCache', () => {
@@ -37,9 +35,9 @@ describe('PriceCache', () => {
       expectedResult = new Map<SupportedAssetPriceProvider, string>()
     })
 
-    it('should get "undefined" from cache', async () => {
+    it('should get "null" from cache', async () => {
       const result = await priceCache.get(asset, network, {} as AssetAndAddress)
-      expect(result).to.equal(undefined)
+      expect(result).to.equal(null)
     })
 
     it('should set price in cache', async () => {
@@ -58,7 +56,7 @@ describe('PriceCache', () => {
 
     it('should update price in cache', async () => {
       const emptyPrice = await priceCache.get(asset, network, {} as AssetAndAddress)
-      expect(emptyPrice).to.equal(undefined)
+      expect(emptyPrice).to.equal(null)
 
       priceCache.set(asset, network, ethPrice)
       const firstPrice = await priceCache.get(asset, network, {} as AssetAndAddress)
@@ -104,9 +102,9 @@ describe('PriceCache', () => {
       expectedInnerMap = new Map<NetworkNameOnPriceProvider, string>()
     })
 
-    it('should get "undefined" from cache', async () => {
+    it('should get "null" from cache', async () => {
       const result = await priceCache.get(asset, network, {} as AssetAndAddress)
-      expect(result).to.equal(undefined)
+      expect(result).to.equal(null)
     })
 
     it('should set price in cache', async () => {
@@ -125,7 +123,7 @@ describe('PriceCache', () => {
 
     it('should update price in cache', async () => {
       const emptyPrice = await priceCache.get(asset, network, {} as AssetAndAddress)
-      expect(emptyPrice).to.equal(undefined)
+      expect(emptyPrice).to.equal(null)
 
       priceCache.set(asset, network, ethPrice)
       const firstPrice = await priceCache.get(asset, network, {} as AssetAndAddress)

@@ -1,6 +1,5 @@
 declare const config: () => {
     tokens: {
-        addressZero: string;
         oneOn18Decimals: number;
         maxDecimals18: number;
     };
@@ -12,7 +11,6 @@ declare const config: () => {
 };
 declare const _default: {
     tokens: {
-        addressZero: string;
         oneOn18Decimals: number;
         maxDecimals18: number;
     };

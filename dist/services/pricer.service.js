@@ -14,7 +14,7 @@ const ethers_1 = require("ethers");
 const price_provider_assets_1 = require("../config/price-provider-assets");
 const logger_1 = require("../utils/logger");
 const price_cache_1 = require("./price-cache");
-const circuit_assets_1 = require("../config/circuit-assets");
+const asset_mapper_1 = require("./asset-mapper");
 exports.ERC20_GAS_LIMIT = ethers_1.ethers.BigNumber.from(50000);
 exports.ETH_TRANSFER_GAS_LIMIT = ethers_1.ethers.BigNumber.from(21000);
 /**
@@ -128,7 +128,7 @@ class Pricer {
             assetDetails.network = destinationNetwork;
         }
         if (!assetDetails) {
-            const maybeFakePrice = circuit_assets_1.AssetMapper.fakePriceOfAsset(this.config.tokens.oneOn18Decimals, normalizedAsset);
+            const maybeFakePrice = asset_mapper_1.AssetMapper.fakePriceOfAsset(this.config.tokens.oneOn18Decimals, normalizedAsset);
             if (maybeFakePrice > 0) {
                 const maybeFakePriceInNominal = maybeFakePrice / this.config.tokens.oneOn18Decimals;
                 return {
@@ -386,7 +386,7 @@ class Pricer {
             // Estimate the gas price on the source network.
             const estGasPriceOnNativeInWei = yield this.ethersProvider.getGasPrice();
             // Calculate the transaction cost in the fromAsset.
-            const transactionCostData = yield this.retrieveCostInAsset(fromAsset, fromChain, toAsset, toChain, estGasPriceOnNativeInWei, this.config.tokens.addressZero);
+            const transactionCostData = yield this.retrieveCostInAsset(fromAsset, fromChain, toAsset, toChain, estGasPriceOnNativeInWei, ethers_1.ethers.constants.AddressZero);
             // Convert the transaction cost to toAsset using the market price.
             const transactionCostInToAsset = transactionCostData.costInAsset
                 .mul(pricing.priceAinB)
@@ -639,7 +639,7 @@ class Pricer {
      * @return An object containing the cost of the transaction in Wei, ETH, USD, and the specified asset.
      */
     calculateCostInAsset(asset, priceAsset, priceNative, estGasPriceOnNativeInWei, ofTokenTransfer) {
-        const gasLimit = ofTokenTransfer === this.config.tokens.addressZero ? exports.ETH_TRANSFER_GAS_LIMIT : exports.ERC20_GAS_LIMIT;
+        const gasLimit = ofTokenTransfer === ethers_1.ethers.constants.AddressZero ? exports.ETH_TRANSFER_GAS_LIMIT : exports.ERC20_GAS_LIMIT;
         const costInWei = estGasPriceOnNativeInWei.mul(gasLimit);
         // Convert cost to cost in Asset from price ratio Asset/Native
         const priceOfNativeInAsset = this.calculatePriceAinBOn18Decimals(priceNative, priceAsset);
