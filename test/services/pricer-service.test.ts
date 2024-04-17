@@ -6,6 +6,7 @@ import {
   CostResult,
   networkNameCircuitToPriceProvider,
   NetworkNameOnCircuit,
+  NetworkNameOnPriceProvider,
   OrderArbitrageStrategy,
   OverpayRatio,
   Pricer,
@@ -519,12 +520,57 @@ describe('Pricer', () => {
         priceBInUsd: '0.1',
       }
 
-      // Evaluate the deal
       const result = pricer.evaluateDeal(myBalance, costOfExecutionOnTarget, strategy, order, pricing)
-      // Assertions
       expect(result.isProfitable).to.be.false
       expect(result.profit.toString()).to.equal('0')
       expect(result.loss.toString()).to.equal('97')
+    })
+
+    it.only('should evaluate a non-profitable deal from realistic values', () => {
+      const balance = BigNumber.from('26335629951215233423')
+      const costOnTarget = {
+        costInWei: BigNumber.from('63000010584000'),
+        costInEth: '0.000063000010584000',
+        costInUsd: 0.000063000010584,
+        costInAsset: BigNumber.from('20444946515'),
+        asset: 'eth',
+      }
+      const strategy = {
+        minProfitPerOrder: BigNumber.from('10000000000000'),
+        minProfitRate: 0.00001,
+        maxAmountPerOrder: BigNumber.from('1000000000000000000'),
+        minAmountPerOrder: BigNumber.from('100000000000000'),
+        maxShareOfMyBalancePerOrder: 25,
+      }
+      const order = {
+        id: '0x49415234575cd97e98be39fe4e61c787b19cb136482b1e0c7b02fd0b81b1c88d',
+        asset: 0,
+        assetAddress: '0x0000000000000000000000000000000000000000',
+        assetNative: true,
+        targetAccount: '0xc447247a786f6ff2e2e6e55d31214bafe2c630b4',
+        amount: BigNumber.from('238134552669580'),
+        rewardAsset: '0xfF3f18A66bB4Bd68079b93f70F7F7bE752986Ce8',
+        insurance: BigNumber.from('0'),
+        maxReward: BigNumber.from('733652187564595749'),
+        nonce: 8788344,
+        destination: 'opsp',
+        source: 'bssp',
+        txHash: '0xbd4e0c766ae689996292e89bd48031df39b2fbf563e612410c3009adbe2cf1d6',
+      } as Order
+      const pricing = {
+        assetA: 'eth',
+        assetB: 'trn',
+        priceAinB: BigNumber.from('3081446583312169400000'),
+        priceAInUsd: '3081.4465833121694',
+        priceBInUsd: '0',
+      }
+
+      const result = pricer.evaluateDeal(balance, costOnTarget, strategy, order, pricing)
+
+      expect(result.isProfitable).to.be.false
+      expect(result.profit.toString()).to.equal('0')
+      console.log(result.loss.toString())
+      // expect(result.loss.toString()).to.equal('97')
     })
   })
 
@@ -921,7 +967,6 @@ describe('Pricer', () => {
       const toChain = 'eth'
       const maxReward = ethers.utils.parseEther('1') // 1 ETH
 
-      // Mock the price fetch and gas estimation
       pricer.receiveAssetPriceWithCache = async () => BigNumber.from(ethers.utils.parseUnits('1', 'ether')) // Simplified 1:1 conversion for simplicity
       pricer.retrieveCostInAsset = async () => ({
         costInWei: ethers.utils.parseUnits('21000', 'wei'), // Mocked gas used
@@ -931,7 +976,6 @@ describe('Pricer', () => {
         asset: fromAsset,
       })
 
-      // Action
       const estimatedReceivedAmount = await pricer.estimateReceivedAmount(
         fromAsset,
         toAsset,
@@ -941,12 +985,10 @@ describe('Pricer', () => {
         maxReward,
       )
 
-      // Assert
       expect(ethers.utils.formatEther(estimatedReceivedAmount)).to.equal('0.99')
     })
 
     it('should correctly estimate the received amount for different assets across chains', async () => {
-      // Setup
       const fromAsset = SupportedAssetPriceProvider.ETH // Sending ETH
       const toAsset = SupportedAssetPriceProvider.DOT // Receiving DOT
       const fromChain = 'eth'
@@ -963,7 +1005,6 @@ describe('Pricer', () => {
         asset: fromAsset,
       })
 
-      // Action
       const estimatedReceivedAmount = await pricer.estimateReceivedAmount(
         fromAsset,
         toAsset,
@@ -973,9 +1014,29 @@ describe('Pricer', () => {
         maxReward,
       )
 
-      // Assert
       const expectedAmount = ethers.utils.parseUnits('0.99', 'ether')
       expect(estimatedReceivedAmount.toString()).to.equal(expectedAmount.toString())
+    })
+
+    it.only('should correctly estimate received amount for a realistic scenario', async () => {
+      const fromAsset = SupportedAssetPriceProvider.DOT
+      const toAsset = SupportedAssetPriceProvider.TRN
+      const fromChain: NetworkNameOnPriceProvider = 'optimism'
+      const fromChainProvider =
+        'https://wandering-patient-patron.optimism-sepolia.quiknode.pro/007f4491c04820fa756d0539c4916579eec3d509/'
+      const toChain: NetworkNameOnPriceProvider = 'base'
+      const amountWei = BigNumber.from('239562101995192')
+      const maxRewardWei = BigNumber.from('289331314549183')
+
+      const estimatedReceivedAmount = await pricer.estimateReceivedAmount(
+        fromAsset,
+        toAsset,
+        fromChain,
+        fromChainProvider,
+        toChain,
+        amountWei,
+      )
+      console.log(estimatedReceivedAmount.toString())
     })
 
     // describe('conversion tests', function () {

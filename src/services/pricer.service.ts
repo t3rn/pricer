@@ -273,11 +273,10 @@ export class Pricer {
 
     try {
       minProfitRateBaseline = (parseFloat(strategy.minProfitRate.toString()) * parseFloat(balance.toString())) / 100
-      // BigNumber fails for fixed point numbers
-      minProfitRateBaseline = Math.floor(minProfitRateBaseline)
-
       maxProfitRateBaseline =
         (parseFloat(strategy.maxShareOfMyBalancePerOrder.toString()) * parseFloat(balance.toString())) / 100
+      // BigNumber fails for fixed point numbers
+      minProfitRateBaseline = Math.floor(minProfitRateBaseline)
       maxProfitRateBaseline = Math.ceil(maxProfitRateBaseline)
 
       maxProfitRateBaselineBN = BigNumber.from(this.floatToBigIntString(maxProfitRateBaseline))
@@ -482,7 +481,8 @@ export class Pricer {
     if (!this.ethersProvider && !fromChainProvider) {
       throw new Error('No provider URL for the source network was provided.')
     }
-    // Retrieve the pricing information for converting fromAsset to toAsset.
+    // FIXME: this (often?) returns zero when fromAsset=DOT, toAsset=TRN, making (most?) erc20-erc20 transfers not possible.
+    //  But maybe it's only for certain networks.
     const pricing = await this.retrieveAssetPricing(fromAsset, toAsset, fromChain, toChain)
 
     // Convert the maxReward from its Wei representation to the equivalent amount in toAsset, considering the current market price.
@@ -492,7 +492,6 @@ export class Pricer {
       this.ethersProvider = new ethers.providers.JsonRpcProvider(fromChainProvider)
     }
 
-    // Estimate the gas price on the source network.
     const estGasPriceOnNativeInWei = await this.ethersProvider.getGasPrice()
 
     // Calculate the transaction cost in the fromAsset.
