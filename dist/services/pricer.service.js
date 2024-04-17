@@ -366,8 +366,9 @@ class Pricer {
             }
             // Estimate the gas price on the source network.
             const estGasPriceOnNativeInWei = yield this.ethersProvider.getGasPrice();
+            const { assetObject } = this.getAssetObject(fromAsset, fromChain);
             // Calculate the transaction cost in the fromAsset.
-            const transactionCostData = yield this.retrieveCostInAsset(fromAsset, fromChain, toAsset, toChain, estGasPriceOnNativeInWei, ethers_1.ethers.constants.AddressZero);
+            const transactionCostData = yield this.retrieveCostInAsset(fromAsset, fromChain, toAsset, toChain, estGasPriceOnNativeInWei, assetObject instanceof ethers_1.BigNumber ? ethers_1.ethers.constants.AddressZero : assetObject.address);
             // Convert the transaction cost to toAsset using the market price.
             const transactionCostInToAsset = transactionCostData.costInAsset
                 .mul(pricing.priceAinB)
@@ -411,59 +412,60 @@ class Pricer {
                 maxRewardWei = maxRewardWei.sub(customExecutorTipValue);
             }
             else {
-                let executorTipMultiplier = 1;
+                let executorTipAdjustment = 0;
                 switch (executorTipOption) {
                     case 'low':
-                        executorTipMultiplier = 0.95; // 5% less reward
-                        break;
-                    case 'regular':
-                        executorTipMultiplier = 1; // No change
+                        executorTipAdjustment = 0.95; // Give less tip, so lose less (more reward left)
                         break;
                     case 'high':
-                        executorTipMultiplier = 1.05; // 5% more reward
+                        executorTipAdjustment = 1.05; // Give more tip, so lose more (less reward left)
                         break;
-                    case 'custom':
-                        executorTipMultiplier = customExecutorTipPercentage !== null && customExecutorTipPercentage !== void 0 ? customExecutorTipPercentage : 1;
+                    default:
+                        executorTipAdjustment = 1; // 'regular' or 'custom' with percentage handling below
                         break;
                 }
-                maxRewardWei = maxRewardWei.mul(Math.floor(executorTipMultiplier * 100)).div(100);
+                if (executorTipOption === 'custom' && customExecutorTipPercentage) {
+                    executorTipAdjustment = 1 + customExecutorTipPercentage / 100;
+                }
+                maxRewardWei = maxRewardWei.div(ethers_1.BigNumber.from(Math.round(executorTipAdjustment * 100))).mul(100);
             }
-            // Process overpay option
-            let overpayMultiplier = 1;
+            // Overpay Adjustment
+            let overpayAdjustment = 1;
             switch (overpayOption) {
                 case 'slow':
-                    overpayMultiplier = 1.05; // 5% overpay
-                    break;
-                case 'regular':
-                    overpayMultiplier = 1.1; // 10% overpay
+                    overpayAdjustment = 1.05; // Spend more for less speed (less reward left)
                     break;
                 case 'fast':
-                    overpayMultiplier = 1.2; // 20% overpay
+                    overpayAdjustment = 1.2; // Spend much more for more speed (much less reward left)
                     break;
                 case 'custom':
-                    overpayMultiplier = customOverpayRatio || 1.0;
+                    overpayAdjustment = customOverpayRatio || 1; // Custom overpay, potentially no adjustment
+                    break;
+                default:
+                    overpayAdjustment = 1.1; // 'regular'
                     break;
             }
-            maxRewardWei = maxRewardWei.mul(Math.floor(overpayMultiplier * 100)).div(100);
-            // Process slippage option
-            let slippageMultiplier = 1;
+            maxRewardWei = maxRewardWei.div(ethers_1.BigNumber.from(Math.round(overpayAdjustment * 100))).mul(100);
+            // Slippage Adjustment
+            let slippageAdjustment = 1;
             switch (slippageOption) {
                 case 'zero':
-                    slippageMultiplier = 1.0; // No slippage
-                    break;
-                case 'regular':
-                    slippageMultiplier = 1.02; // 2% slippage
+                    slippageAdjustment = 1.0; // No slippage
                     break;
                 case 'high':
-                    slippageMultiplier = 1.05; // 5% slippage
+                    slippageAdjustment = 1.05; // Allow for more slippage (less reward left)
                     break;
                 case 'custom':
-                    slippageMultiplier = customSlippage || 1.0;
+                    slippageAdjustment = customSlippage || 1; // Custom slippage, potentially no adjustment
+                    break;
+                default:
+                    slippageAdjustment = 1.02; // 'regular'
                     break;
             }
+            maxRewardWei = maxRewardWei.div(ethers_1.BigNumber.from(Math.round(slippageAdjustment * 100))).mul(100);
+            // Calculate the final amount after all adjustments
             const estimatedReceivedAmount = yield this.estimateReceivedAmount(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei);
-            const finalAmount = estimatedReceivedAmount.mul(Math.floor(slippageMultiplier * 100)).div(100);
-            return finalAmount;
+            return estimatedReceivedAmount;
         });
     }
     /**

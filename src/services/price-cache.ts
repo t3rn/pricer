@@ -44,7 +44,7 @@ export class PriceCache {
       ? this.getPriceMultiNetwork(asset, network)
       : this.getPriceSingleNetwork(asset)
 
-    if (price !== undefined) {
+    if (price !== null) {
       return price
     }
 
