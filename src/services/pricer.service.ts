@@ -472,10 +472,6 @@ export class Pricer {
               estimatedReceivedAmountWei: BigNumber
               gasFeeWei: BigNumber
               bridgeFeeWei: BigNumber
-              estimatedReceivedAmountUSD: number
-              gasFeeUSD: number
-              bridgeFeeUSD: number
-              BRNbonusUSD: number
    */
   async estimateReceivedAmount(
     fromAsset: SupportedAssetPriceProvider,
@@ -488,10 +484,6 @@ export class Pricer {
     estimatedReceivedAmountWei: BigNumber
     gasFeeWei: BigNumber
     bridgeFeeWei: BigNumber
-    estimatedReceivedAmountUSD: number
-    gasFeeUSD: number
-    bridgeFeeUSD: number
-    BRNbonusUSD: number
   }> {
     if (!fromAsset || !toAsset || !fromChain || !fromChainProvider || !toChain || !maxRewardWei) {
       throw new Error('All parameters must be provided and valid.')
@@ -514,8 +506,6 @@ export class Pricer {
     // Calculate the total estimated gas fee on the source network for the transaction
     const sourceGasFeeWei = estGasPriceOnSourceInWei.mul(sourceGasLimit)
 
-    const sourceGasFeeUSD = await this.receiveAssetUSDValue(fromAsset, fromChain, sourceGasFeeWei)
-
     const { assetObject } = this.getAssetObject(fromAsset, fromChain)
 
     // Calculate the transaction cost in the fromAsset, using the source network's gas price
@@ -535,19 +525,13 @@ export class Pricer {
 
     // Subtract the transaction cost in toAsset from the maxReward in toAsset to estimate the amount received.
     const estimatedReceivedAmountWei = maxRewardInToAsset.sub(transactionCostInToAsset)
-    const estimatedReceivedAmountUSD = await this.receiveAssetUSDValue(toAsset, toChain, estimatedReceivedAmountWei)
 
     const bridgeFeeWei = maxRewardWei.sub(estimatedReceivedAmountWei)
-    const bridgeFeeUSD = await this.receiveAssetUSDValue(toAsset, toChain, bridgeFeeWei)
 
     return {
       estimatedReceivedAmountWei,
       gasFeeWei: sourceGasFeeWei,
       bridgeFeeWei,
-      estimatedReceivedAmountUSD,
-      gasFeeUSD: sourceGasFeeUSD,
-      bridgeFeeUSD,
-      BRNbonusUSD: estimatedReceivedAmountUSD,
     }
   }
 
@@ -572,10 +556,6 @@ export class Pricer {
               estimatedReceivedAmountWei: BigNumber
               gasFeeWei: BigNumber
               bridgeFeeWei: BigNumber
-              estimatedReceivedAmountUSD: number
-              gasFeeUSD: number
-              bridgeFeeUSD: number
-              BRNbonusUSD: number
    */
   async estimateReceivedAmountWithOptions(
     fromAsset: SupportedAssetPriceProvider,
@@ -595,10 +575,6 @@ export class Pricer {
     estimatedReceivedAmountWei: BigNumber
     gasFeeWei: BigNumber
     bridgeFeeWei: BigNumber
-    estimatedReceivedAmountUSD: number
-    gasFeeUSD: number
-    bridgeFeeUSD: number
-    BRNbonusUSD: number
   }> {
     if (!fromAsset || !toAsset || !fromChain || !fromChainProvider || !toChain || !maxRewardWei) {
       throw new Error('All primary parameters must be provided and valid.')
@@ -673,24 +649,19 @@ export class Pricer {
     maxRewardWei = maxRewardWei.div(BigNumber.from(Math.round(slippageAdjustment * 100))).mul(100)
 
     // Calculate the final amount after all adjustments
-    const {
-      estimatedReceivedAmountWei,
-      gasFeeWei,
-      bridgeFeeWei,
-      estimatedReceivedAmountUSD,
-      gasFeeUSD,
-      bridgeFeeUSD,
-      BRNbonusUSD,
-    } = await this.estimateReceivedAmount(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei)
+    const { estimatedReceivedAmountWei, gasFeeWei, bridgeFeeWei } = await this.estimateReceivedAmount(
+      fromAsset,
+      toAsset,
+      fromChain,
+      fromChainProvider,
+      toChain,
+      maxRewardWei,
+    )
 
     return {
       estimatedReceivedAmountWei,
       gasFeeWei,
       bridgeFeeWei,
-      estimatedReceivedAmountUSD,
-      gasFeeUSD,
-      bridgeFeeUSD,
-      BRNbonusUSD,
     }
   }
 

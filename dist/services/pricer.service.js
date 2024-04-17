@@ -353,10 +353,6 @@ class Pricer {
                 estimatedReceivedAmountWei: BigNumber
                 gasFeeWei: BigNumber
                 bridgeFeeWei: BigNumber
-                estimatedReceivedAmountUSD: number
-                gasFeeUSD: number
-                bridgeFeeUSD: number
-                BRNbonusUSD: number
      */
     estimateReceivedAmount(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -374,7 +370,6 @@ class Pricer {
             const sourceGasLimit = fromAsset === price_provider_assets_1.SupportedAssetPriceProvider.ETH ? exports.ETH_TRANSFER_GAS_LIMIT : exports.ERC20_GAS_LIMIT;
             // Calculate the total estimated gas fee on the source network for the transaction
             const sourceGasFeeWei = estGasPriceOnSourceInWei.mul(sourceGasLimit);
-            const sourceGasFeeUSD = yield this.receiveAssetUSDValue(fromAsset, fromChain, sourceGasFeeWei);
             const { assetObject } = this.getAssetObject(fromAsset, fromChain);
             // Calculate the transaction cost in the fromAsset, using the source network's gas price
             const transactionCostData = yield this.retrieveCostInAsset(fromAsset, fromChain, toAsset, toChain, estGasPriceOnSourceInWei, assetObject instanceof ethers_1.BigNumber ? ethers_1.ethers.constants.AddressZero : assetObject.address);
@@ -384,17 +379,11 @@ class Pricer {
                 .div(ethers_1.BigNumber.from(10).pow(18));
             // Subtract the transaction cost in toAsset from the maxReward in toAsset to estimate the amount received.
             const estimatedReceivedAmountWei = maxRewardInToAsset.sub(transactionCostInToAsset);
-            const estimatedReceivedAmountUSD = yield this.receiveAssetUSDValue(toAsset, toChain, estimatedReceivedAmountWei);
             const bridgeFeeWei = maxRewardWei.sub(estimatedReceivedAmountWei);
-            const bridgeFeeUSD = yield this.receiveAssetUSDValue(toAsset, toChain, bridgeFeeWei);
             return {
                 estimatedReceivedAmountWei,
                 gasFeeWei: sourceGasFeeWei,
                 bridgeFeeWei,
-                estimatedReceivedAmountUSD,
-                gasFeeUSD: sourceGasFeeUSD,
-                bridgeFeeUSD,
-                BRNbonusUSD: estimatedReceivedAmountUSD,
             };
         });
     }
@@ -419,10 +408,6 @@ class Pricer {
                 estimatedReceivedAmountWei: BigNumber
                 gasFeeWei: BigNumber
                 bridgeFeeWei: BigNumber
-                estimatedReceivedAmountUSD: number
-                gasFeeUSD: number
-                bridgeFeeUSD: number
-                BRNbonusUSD: number
      */
     estimateReceivedAmountWithOptions(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei, executorTipOption, overpayOption, slippageOption, customExecutorTipPercentage, customExecutorTipValue, customOverpayRatio, customSlippage) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -494,15 +479,11 @@ class Pricer {
             }
             maxRewardWei = maxRewardWei.div(ethers_1.BigNumber.from(Math.round(slippageAdjustment * 100))).mul(100);
             // Calculate the final amount after all adjustments
-            const { estimatedReceivedAmountWei, gasFeeWei, bridgeFeeWei, estimatedReceivedAmountUSD, gasFeeUSD, bridgeFeeUSD, BRNbonusUSD, } = yield this.estimateReceivedAmount(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei);
+            const { estimatedReceivedAmountWei, gasFeeWei, bridgeFeeWei } = yield this.estimateReceivedAmount(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei);
             return {
                 estimatedReceivedAmountWei,
                 gasFeeWei,
                 bridgeFeeWei,
-                estimatedReceivedAmountUSD,
-                gasFeeUSD,
-                bridgeFeeUSD,
-                BRNbonusUSD,
             };
         });
     }

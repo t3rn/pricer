@@ -110,19 +110,11 @@ export declare class Pricer {
                 estimatedReceivedAmountWei: BigNumber
                 gasFeeWei: BigNumber
                 bridgeFeeWei: BigNumber
-                estimatedReceivedAmountUSD: number
-                gasFeeUSD: number
-                bridgeFeeUSD: number
-                BRNbonusUSD: number
      */
     estimateReceivedAmount(fromAsset: SupportedAssetPriceProvider, toAsset: SupportedAssetPriceProvider, fromChain: NetworkNameOnPriceProvider, fromChainProvider: string, toChain: NetworkNameOnPriceProvider, maxRewardWei: BigNumber): Promise<{
         estimatedReceivedAmountWei: BigNumber;
         gasFeeWei: BigNumber;
         bridgeFeeWei: BigNumber;
-        estimatedReceivedAmountUSD: number;
-        gasFeeUSD: number;
-        bridgeFeeUSD: number;
-        BRNbonusUSD: number;
     }>;
     /**
      * Estimates the amount of 'toAsset' the user will receive at the end of the transaction,
@@ -145,19 +137,11 @@ export declare class Pricer {
                 estimatedReceivedAmountWei: BigNumber
                 gasFeeWei: BigNumber
                 bridgeFeeWei: BigNumber
-                estimatedReceivedAmountUSD: number
-                gasFeeUSD: number
-                bridgeFeeUSD: number
-                BRNbonusUSD: number
      */
     estimateReceivedAmountWithOptions(fromAsset: SupportedAssetPriceProvider, toAsset: SupportedAssetPriceProvider, fromChain: NetworkNameOnPriceProvider, fromChainProvider: string, toChain: NetworkNameOnPriceProvider, maxRewardWei: BigNumber, executorTipOption: 'low' | 'regular' | 'high' | 'custom', overpayOption: 'slow' | 'regular' | 'fast' | 'custom', slippageOption: 'zero' | 'regular' | 'high' | 'custom', customExecutorTipPercentage?: number, customExecutorTipValue?: BigNumber, customOverpayRatio?: number, customSlippage?: number): Promise<{
         estimatedReceivedAmountWei: BigNumber;
         gasFeeWei: BigNumber;
         bridgeFeeWei: BigNumber;
-        estimatedReceivedAmountUSD: number;
-        gasFeeUSD: number;
-        bridgeFeeUSD: number;
-        BRNbonusUSD: number;
     }>;
     /**
      * Parse the given price string as float with decimal precision
