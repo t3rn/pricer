@@ -255,15 +255,17 @@ const defaultNetworkData = {
         },
         {
             asset: 'usdt',
-            address: '0x1990bc6dfe2ef605bfc08f5a23564db75642ad73',
+            address: '0xA219439258ca9da29E9Cc4cE5596924745e12B93',
         },
+        //using USDT, no DOT address on linea actually has any balance
         {
             asset: 'dot',
-            address: '0x4b227b3c6AE905D97CdfB765afe8b23D5154b81c',
+            address: '0xA219439258ca9da29E9Cc4cE5596924745e12B93',
         },
+        //using USDC
         {
             asset: 'trn',
-            address: '0xEBF92D16133BEc430547D53fe557AC91aeB8332E',
+            address: '0x176211869cA2b568f2A7D4EE941E073a821EE1ff',
         },
     ],
     optimism: [
