@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import config from '../../src/config/config'
 import { AssetMapper, NetworkNameOnCircuit } from '../../src'
 
-describe.only('AssetMapper', () => {
+describe('AssetMapper', () => {
   const assetMapper = AssetMapper.getInstance(config)
   let networkId: NetworkNameOnCircuit
   let assetAddress: string

@@ -13,6 +13,7 @@ exports.Pricer = exports.ETH_TRANSFER_GAS_LIMIT = exports.ERC20_GAS_LIMIT = void
 const ethers_1 = require("ethers");
 const price_provider_assets_1 = require("../config/price-provider-assets");
 const logger_1 = require("../utils/logger");
+const types_1 = require("./types");
 const price_cache_1 = require("./price-cache");
 const asset_mapper_1 = require("./asset-mapper");
 exports.ERC20_GAS_LIMIT = ethers_1.ethers.BigNumber.from(50000);
@@ -162,6 +163,15 @@ class Pricer {
      * @return {OrderProfitability}
      */
     evaluateDeal(balance, costOfExecutionOnDestination, strategy, order, pricing) {
+        const childLogger = logger_1.logger.child({
+            id: order.id,
+            balance: ethers_1.utils.formatEther(balance),
+            amountToSpend: ethers_1.utils.formatEther(order.amount),
+            rewardToReceive: ethers_1.utils.formatEther(order.maxReward),
+            maxShareOfMyBalancePerOrder: ethers_1.utils.formatEther(strategy.maxAmountPerOrder),
+            minShareOfMyBalancePerOrder: ethers_1.utils.formatEther(strategy.minAmountPerOrder),
+            minProfitRate: ethers_1.utils.formatEther(strategy.minProfitPerOrder),
+        });
         const rewardInDestinationAsset = order.maxReward
             .mul(pricing.priceAinB)
             .div(ethers_1.BigNumber.from(10).pow(this.config.tokens.maxDecimals18));
@@ -171,17 +181,9 @@ class Pricer {
             .sub(orderAmountInAsset);
         // used only at returning to avoid returning negative numbers
         const potentialLoss = potentialProfit.abs();
-        logger_1.logger.debug({
-            id: order.id,
-            balance: ethers_1.utils.formatEther(balance),
-            amountToSpend: ethers_1.utils.formatEther(order.amount),
-            rewardToReceive: ethers_1.utils.formatEther(order.maxReward),
-            maxShareOfMyBalancePerOrder: ethers_1.utils.formatEther(strategy.maxAmountPerOrder),
-            minShareOfMyBalancePerOrder: ethers_1.utils.formatEther(strategy.minAmountPerOrder),
-            minProfitRate: ethers_1.utils.formatEther(strategy.minProfitPerOrder),
-            potentialProfit: ethers_1.utils.formatEther(potentialProfit),
-        }, '🍐 evaluateDeal::Entry - deal conditions before any checks');
+        childLogger.debug({ potentialProfit: ethers_1.utils.formatEther(potentialProfit) }, '🍐 Entry: deal conditions before any checks');
         if (potentialProfit.lte(ethers_1.BigNumber.from(0))) {
+            childLogger.info({ potentialProfit: ethers_1.utils.formatEther(potentialProfit) }, '🍐 Potential profit is lte than zero. Return as not profitable');
             return {
                 isProfitable: false,
                 profit: ethers_1.BigNumber.from(0),
@@ -195,7 +197,7 @@ class Pricer {
         let maxProfitRateBaselineBN;
         try {
             minProfitRateBaseline = (parseFloat(strategy.minProfitRate.toString()) * parseFloat(balance.toString())) / 100;
-            // Bignumber would fail for fixed point numbers
+            // BigNumber fails for fixed point numbers
             minProfitRateBaseline = Math.floor(minProfitRateBaseline);
             maxProfitRateBaseline =
                 (parseFloat(strategy.maxShareOfMyBalancePerOrder.toString()) * parseFloat(balance.toString())) / 100;
@@ -204,17 +206,8 @@ class Pricer {
             minProfitRateBaselineBN = ethers_1.BigNumber.from(this.floatToBigIntString(minProfitRateBaseline));
             minProfitRateBaselineStr = ethers_1.utils.formatEther(minProfitRateBaselineBN);
         }
-        catch (error) {
-            logger_1.logger.warn({
-                id: order.id,
-                error,
-                balance: ethers_1.utils.formatEther(balance),
-                amountToSpend: ethers_1.utils.formatEther(order.amount),
-                rewardToReceive: ethers_1.utils.formatEther(order.maxReward),
-                maxShareOfMyBalancePerOrder: ethers_1.utils.formatEther(strategy.maxAmountPerOrder),
-                minShareOfMyBalancePerOrder: ethers_1.utils.formatEther(strategy.minAmountPerOrder),
-                minProfitRate: ethers_1.utils.formatEther(strategy.minProfitPerOrder),
-            }, '🍐 evaluateDeal::Failed to calculate minProfitRateBaseline or maxProfitRateBaseline; return as not profitable');
+        catch (err) {
+            childLogger.error({ error: err.message }, '🍐 Failed to calculate profit rate baseline. Return as not profitable');
             return {
                 isProfitable: false,
                 profit: ethers_1.BigNumber.from(0),
@@ -226,8 +219,7 @@ class Pricer {
         const isAmountBelowMaxAmountPerOrder = order.amount.lte(strategy.maxAmountPerOrder);
         const isAmountAboveMinAmountPerOrder = order.amount.gte(strategy.minAmountPerOrder);
         const isProfitAboveMinProfitPerOrder = potentialProfit.gte(strategy.minProfitPerOrder);
-        logger_1.logger.debug({
-            id: order.id,
+        childLogger.debug({
             minProfitRateBaselineStr,
             potentialProfit: ethers_1.utils.formatEther(potentialProfit),
             isProfitAboveMinProfitRate,
@@ -235,7 +227,7 @@ class Pricer {
             isAmountBelowMaxAmountPerOrder,
             isAmountAboveMinAmountPerOrder,
             isProfitAboveMinProfitPerOrder,
-        }, '🍐 evaluateDeal::isProfitable conditions');
+        }, '🍐 IsProfitable conditions');
         // Check if profit satisfies strategy constraints
         const isProfitable = isProfitAboveMinProfitRate &&
             isProfitBelowMaxProfitRate &&
@@ -249,7 +241,7 @@ class Pricer {
         };
     }
     /**
-     * Assesses the publishability of a deal based on user balance, estimated cost, and user-defined strategy.
+     * Assesses whether a deal is publishable based on user balance, estimated cost, and user-defined strategy.
      * Determines whether the deal can be published given the constraints.
      *
      * @param userBalance The balance of the user in the native asset.
@@ -263,37 +255,35 @@ class Pricer {
      * @return An object indicating whether the deal is publishable and the maximum reward for the deal.
      */
     assessDealForPublication(userBalance, estimatedCostOfExecution, userStrategy, marketPricing, overpayOption, slippageOption, customOverpayRatio, customSlippage) {
-        // Determine the overpay ratio based on the selected option
         let overpayRatio;
         switch (overpayOption) {
-            case 'slow':
+            case types_1.OverpayRatio.slow:
                 overpayRatio = 1.05; // 5% overpay
                 break;
-            case 'regular':
+            case types_1.OverpayRatio.regular:
                 overpayRatio = 1.1; // 10% overpay
                 break;
-            case 'fast':
+            case types_1.OverpayRatio.fast:
                 overpayRatio = 1.2; // 20% overpay
                 break;
-            case 'custom':
+            case types_1.OverpayRatio.custom:
                 overpayRatio = customOverpayRatio || 1.0;
                 break;
             default:
                 overpayRatio = 1.0;
         }
-        // Determine the slippage tolerance
         let slippageTolerance;
         switch (slippageOption) {
-            case 'zero':
+            case types_1.Slippage.zero:
                 slippageTolerance = 1.0; // No slippage
                 break;
-            case 'regular':
+            case types_1.Slippage.regular:
                 slippageTolerance = 1.02; // 2% slippage
                 break;
-            case 'high':
+            case types_1.Slippage.high:
                 slippageTolerance = 1.05; // 5% slippage
                 break;
-            case 'custom':
+            case types_1.Slippage.custom:
                 slippageTolerance = customSlippage || 1.0;
                 break;
             default:
@@ -304,29 +294,20 @@ class Pricer {
             const decimalPlaces = (value.toString().split('.')[1] || '').length;
             return Math.pow(10, decimalPlaces);
         };
-        // Determine the maximum scale factor needed for both overpayRatio and slippageTolerance
         const overpayScaleFactor = calculateScaleFactor(overpayRatio);
         const slippageScaleFactor = calculateScaleFactor(slippageTolerance);
-        // Convert overpayRatio and slippageTolerance to integer equivalents
         let overpayRatioInt = Math.floor(overpayRatio * overpayScaleFactor);
         let slippageToleranceInt = Math.floor(slippageTolerance * slippageScaleFactor);
-        // Adjust maxReward calculation with overpay and slippage
         const adjustedCost = estimatedCostOfExecution.costInAsset.mul(overpayRatioInt).div(overpayScaleFactor); // Adjust for the first scaleFactor
-        // Adjust marketPricing.priceAinB with slippage tolerance
         const adjustedPriceAinB = marketPricing.priceAinB.mul(slippageToleranceInt).div(slippageScaleFactor);
-        // Calculate maxReward considering the adjusted cost and market pricing with slippage
         const maxReward = adjustedCost.add(adjustedPriceAinB);
-        // Assess if the user's balance is sufficient for the maxReward
         if (userBalance.lt(maxReward)) {
             return {
                 isPublishable: false,
                 maxReward,
             };
         }
-        // Consider user's strategy constraints (e.g., max spending limit)
-        const isWithinStrategyLimits = maxReward.lte(userStrategy.maxSpendLimit);
-        // Determine if the deal is publishable
-        const isPublishable = isWithinStrategyLimits;
+        const isPublishable = maxReward.lte(userStrategy.maxSpendLimit);
         return {
             isPublishable,
             maxReward: isPublishable ? maxReward : ethers_1.BigNumber.from(0),

@@ -42,3 +42,15 @@ export interface UserPublishStrategy {
     maxSpendLimit?: BigNumber;
     setAmount?: BigNumber;
 }
+export declare enum OverpayRatio {
+    slow = "slow",
+    regular = "regular",
+    fast = "fast",
+    custom = "custom"
+}
+export declare enum Slippage {
+    zero = "zero",
+    regular = "regular",
+    high = "high",
+    custom = "custom"
+}

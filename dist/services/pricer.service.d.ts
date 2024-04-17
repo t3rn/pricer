@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers';
 import { AssetAndAddress, AssetAndAddressExtended, NetworkNameOnPriceProvider, SupportedAssetPriceProvider } from '../config/price-provider-assets';
 import { Order } from '../types';
-import { CostResult, DealPublishability, OrderProfitability, OrderProfitabilityProposalForSetAmount, PriceResult, UserPublishStrategy } from './types';
+import { CostResult, DealPublishability, OrderProfitability, OrderProfitabilityProposalForSetAmount, OverpayRatio, PriceResult, Slippage, UserPublishStrategy } from './types';
 import { Config } from '../config/config';
 import { PriceCache } from './price-cache';
 export interface OrderArbitrageStrategy {
@@ -73,7 +73,7 @@ export declare class Pricer {
      */
     evaluateDeal(balance: BigNumber, costOfExecutionOnDestination: CostResult, strategy: OrderArbitrageStrategy, order: Order, pricing: PriceResult): OrderProfitability;
     /**
-     * Assesses the publishability of a deal based on user balance, estimated cost, and user-defined strategy.
+     * Assesses whether a deal is publishable based on user balance, estimated cost, and user-defined strategy.
      * Determines whether the deal can be published given the constraints.
      *
      * @param userBalance The balance of the user in the native asset.
@@ -86,7 +86,7 @@ export declare class Pricer {
      * @param customSlippage Custom slippage tolerance if the 'custom' option is selected.
      * @return An object indicating whether the deal is publishable and the maximum reward for the deal.
      */
-    assessDealForPublication(userBalance: BigNumber, estimatedCostOfExecution: CostResult, userStrategy: UserPublishStrategy, marketPricing: PriceResult, overpayOption: 'slow' | 'regular' | 'fast' | 'custom', slippageOption: 'zero' | 'regular' | 'high' | 'custom', customOverpayRatio?: number, customSlippage?: number): DealPublishability;
+    assessDealForPublication(userBalance: BigNumber, estimatedCostOfExecution: CostResult, userStrategy: UserPublishStrategy, marketPricing: PriceResult, overpayOption: OverpayRatio, slippageOption: Slippage, customOverpayRatio?: number, customSlippage?: number): DealPublishability;
     /**
      * Proposes a deal for a set amount of asset, evaluating its profitability and setting a maximum reward.
      *

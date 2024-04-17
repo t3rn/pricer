@@ -14,7 +14,9 @@ import {
   DealPublishability,
   OrderProfitability,
   OrderProfitabilityProposalForSetAmount,
+  OverpayRatio,
   PriceResult,
+  Slippage,
   UserPublishStrategy,
 } from './types'
 import { Config } from '../config/config'
@@ -227,6 +229,15 @@ export class Pricer {
     order: Order,
     pricing: PriceResult,
   ): OrderProfitability {
+    const childLogger = logger.child({
+      id: order.id,
+      balance: utils.formatEther(balance),
+      amountToSpend: utils.formatEther(order.amount),
+      rewardToReceive: utils.formatEther(order.maxReward),
+      maxShareOfMyBalancePerOrder: utils.formatEther(strategy.maxAmountPerOrder),
+      minShareOfMyBalancePerOrder: utils.formatEther(strategy.minAmountPerOrder),
+      minProfitRate: utils.formatEther(strategy.minProfitPerOrder),
+    })
     const rewardInDestinationAsset = order.maxReward
       .mul(pricing.priceAinB)
       .div(BigNumber.from(10).pow(this.config.tokens.maxDecimals18))
@@ -237,21 +248,16 @@ export class Pricer {
     // used only at returning to avoid returning negative numbers
     const potentialLoss = potentialProfit.abs()
 
-    logger.debug(
-      {
-        id: order.id,
-        balance: utils.formatEther(balance),
-        amountToSpend: utils.formatEther(order.amount),
-        rewardToReceive: utils.formatEther(order.maxReward),
-        maxShareOfMyBalancePerOrder: utils.formatEther(strategy.maxAmountPerOrder),
-        minShareOfMyBalancePerOrder: utils.formatEther(strategy.minAmountPerOrder),
-        minProfitRate: utils.formatEther(strategy.minProfitPerOrder),
-        potentialProfit: utils.formatEther(potentialProfit),
-      },
-      '🍐 evaluateDeal::Entry - deal conditions before any checks',
+    childLogger.debug(
+      { potentialProfit: utils.formatEther(potentialProfit) },
+      '🍐 Entry: deal conditions before any checks',
     )
 
     if (potentialProfit.lte(BigNumber.from(0))) {
+      childLogger.info(
+        { potentialProfit: utils.formatEther(potentialProfit) },
+        '🍐 Potential profit is lte than zero. Return as not profitable',
+      )
       return {
         isProfitable: false,
         profit: BigNumber.from(0),
@@ -267,7 +273,7 @@ export class Pricer {
 
     try {
       minProfitRateBaseline = (parseFloat(strategy.minProfitRate.toString()) * parseFloat(balance.toString())) / 100
-      // Bignumber would fail for fixed point numbers
+      // BigNumber fails for fixed point numbers
       minProfitRateBaseline = Math.floor(minProfitRateBaseline)
 
       maxProfitRateBaseline =
@@ -277,20 +283,8 @@ export class Pricer {
       maxProfitRateBaselineBN = BigNumber.from(this.floatToBigIntString(maxProfitRateBaseline))
       minProfitRateBaselineBN = BigNumber.from(this.floatToBigIntString(minProfitRateBaseline))
       minProfitRateBaselineStr = utils.formatEther(minProfitRateBaselineBN)
-    } catch (error) {
-      logger.warn(
-        {
-          id: order.id,
-          error,
-          balance: utils.formatEther(balance),
-          amountToSpend: utils.formatEther(order.amount),
-          rewardToReceive: utils.formatEther(order.maxReward),
-          maxShareOfMyBalancePerOrder: utils.formatEther(strategy.maxAmountPerOrder),
-          minShareOfMyBalancePerOrder: utils.formatEther(strategy.minAmountPerOrder),
-          minProfitRate: utils.formatEther(strategy.minProfitPerOrder),
-        },
-        '🍐 evaluateDeal::Failed to calculate minProfitRateBaseline or maxProfitRateBaseline; return as not profitable',
-      )
+    } catch (err: any) {
+      childLogger.error({ error: err.message }, '🍐 Failed to calculate profit rate baseline. Return as not profitable')
       return {
         isProfitable: false,
         profit: BigNumber.from(0),
@@ -304,9 +298,8 @@ export class Pricer {
     const isAmountAboveMinAmountPerOrder = order.amount.gte(strategy.minAmountPerOrder)
     const isProfitAboveMinProfitPerOrder = potentialProfit.gte(strategy.minProfitPerOrder)
 
-    logger.debug(
+    childLogger.debug(
       {
-        id: order.id,
         minProfitRateBaselineStr,
         potentialProfit: utils.formatEther(potentialProfit),
         isProfitAboveMinProfitRate,
@@ -315,7 +308,7 @@ export class Pricer {
         isAmountAboveMinAmountPerOrder,
         isProfitAboveMinProfitPerOrder,
       },
-      '🍐 evaluateDeal::isProfitable conditions',
+      '🍐 IsProfitable conditions',
     )
 
     // Check if profit satisfies strategy constraints
@@ -334,7 +327,7 @@ export class Pricer {
   }
 
   /**
-   * Assesses the publishability of a deal based on user balance, estimated cost, and user-defined strategy.
+   * Assesses whether a deal is publishable based on user balance, estimated cost, and user-defined strategy.
    * Determines whether the deal can be published given the constraints.
    *
    * @param userBalance The balance of the user in the native asset.
@@ -352,43 +345,41 @@ export class Pricer {
     estimatedCostOfExecution: CostResult,
     userStrategy: UserPublishStrategy,
     marketPricing: PriceResult,
-    overpayOption: 'slow' | 'regular' | 'fast' | 'custom',
-    slippageOption: 'zero' | 'regular' | 'high' | 'custom',
+    overpayOption: OverpayRatio,
+    slippageOption: Slippage,
     customOverpayRatio?: number,
     customSlippage?: number,
   ): DealPublishability {
-    // Determine the overpay ratio based on the selected option
     let overpayRatio
     switch (overpayOption) {
-      case 'slow':
+      case OverpayRatio.slow:
         overpayRatio = 1.05 // 5% overpay
         break
-      case 'regular':
+      case OverpayRatio.regular:
         overpayRatio = 1.1 // 10% overpay
         break
-      case 'fast':
+      case OverpayRatio.fast:
         overpayRatio = 1.2 // 20% overpay
         break
-      case 'custom':
+      case OverpayRatio.custom:
         overpayRatio = customOverpayRatio || 1.0
         break
       default:
         overpayRatio = 1.0
     }
 
-    // Determine the slippage tolerance
     let slippageTolerance
     switch (slippageOption) {
-      case 'zero':
+      case Slippage.zero:
         slippageTolerance = 1.0 // No slippage
         break
-      case 'regular':
+      case Slippage.regular:
         slippageTolerance = 1.02 // 2% slippage
         break
-      case 'high':
+      case Slippage.high:
         slippageTolerance = 1.05 // 5% slippage
         break
-      case 'custom':
+      case Slippage.custom:
         slippageTolerance = customSlippage || 1.0
         break
       default:
@@ -401,24 +392,16 @@ export class Pricer {
       return Math.pow(10, decimalPlaces)
     }
 
-    // Determine the maximum scale factor needed for both overpayRatio and slippageTolerance
     const overpayScaleFactor = calculateScaleFactor(overpayRatio)
     const slippageScaleFactor = calculateScaleFactor(slippageTolerance)
 
-    // Convert overpayRatio and slippageTolerance to integer equivalents
     let overpayRatioInt = Math.floor(overpayRatio * overpayScaleFactor)
     let slippageToleranceInt = Math.floor(slippageTolerance * slippageScaleFactor)
 
-    // Adjust maxReward calculation with overpay and slippage
     const adjustedCost = estimatedCostOfExecution.costInAsset.mul(overpayRatioInt).div(overpayScaleFactor) // Adjust for the first scaleFactor
-
-    // Adjust marketPricing.priceAinB with slippage tolerance
     const adjustedPriceAinB = marketPricing.priceAinB.mul(slippageToleranceInt).div(slippageScaleFactor)
 
-    // Calculate maxReward considering the adjusted cost and market pricing with slippage
     const maxReward = adjustedCost.add(adjustedPriceAinB)
-
-    // Assess if the user's balance is sufficient for the maxReward
     if (userBalance.lt(maxReward)) {
       return {
         isPublishable: false,
@@ -426,11 +409,7 @@ export class Pricer {
       }
     }
 
-    // Consider user's strategy constraints (e.g., max spending limit)
-    const isWithinStrategyLimits = maxReward.lte(userStrategy.maxSpendLimit as BigNumber)
-
-    // Determine if the deal is publishable
-    const isPublishable = isWithinStrategyLimits
+    const isPublishable = maxReward.lte(userStrategy.maxSpendLimit as BigNumber)
 
     return {
       isPublishable,

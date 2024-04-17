@@ -7,8 +7,10 @@ import {
   networkNameCircuitToPriceProvider,
   NetworkNameOnCircuit,
   OrderArbitrageStrategy,
+  OverpayRatio,
   Pricer,
   PriceResult,
+  Slippage,
   SupportedAssetPriceProvider,
 } from '../../src'
 import { beforeEach, describe, it } from 'mocha'
@@ -108,418 +110,422 @@ describe('Pricer', () => {
     expect(Pricer.priceAsFloat(exampleAPriceInBigNumber7)).to.equal(1796.3363923143922)
   })
 
-  it('should correctly calculate gas costs of ERC-20 in target asset pricing', () => {
-    const priceAssetCache = '1.102723238337682431'
-    const asset = 'optimism'
-    const priceNativeCache = '1980.861883676755965'
-    const estGasPriceInGwei = BigNumber.from('20')
-    const estGasPriceOnNativeInWei = estGasPriceInGwei.mul(BigNumber.from('1000000000'))
-    const ofToken = '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270'
+  describe('calculateCostInAsset', () => {
+    it('should correctly calculate gas costs of ERC-20 in target asset pricing', () => {
+      const priceAssetCache = '1.102723238337682431'
+      const asset = 'optimism'
+      const priceNativeCache = '1980.861883676755965'
+      const estGasPriceInGwei = BigNumber.from('20')
+      const estGasPriceOnNativeInWei = estGasPriceInGwei.mul(BigNumber.from('1000000000'))
+      const ofToken = '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270'
 
-    const priceAsset = pricer.parsePriceStringToBigNumberOn18Decimals(priceAssetCache)
-    const priceNative = pricer.parsePriceStringToBigNumberOn18Decimals(priceNativeCache)
-    const costResult = pricer.calculateCostInAsset(asset, priceAsset, priceNative, estGasPriceOnNativeInWei, ofToken)
-    expect(costResult.costInWei.toString()).to.equal('1000000000000000')
-    expect(costResult.costInEth).to.equal('0.001000000000000000')
-    expect(costResult.costInUsd).to.equal(1.980861883676756)
-    expect(costResult.asset).to.equal(asset)
-    expect(costResult.costInAsset.toString()).to.equal('1796336392314392238')
-    expect(Pricer.priceAsFloat(costResult.costInAsset)).to.equal(1.7963363923143922)
+      const priceAsset = pricer.parsePriceStringToBigNumberOn18Decimals(priceAssetCache)
+      const priceNative = pricer.parsePriceStringToBigNumberOn18Decimals(priceNativeCache)
+      const costResult = pricer.calculateCostInAsset(asset, priceAsset, priceNative, estGasPriceOnNativeInWei, ofToken)
+      expect(costResult.costInWei.toString()).to.equal('1000000000000000')
+      expect(costResult.costInEth).to.equal('0.001000000000000000')
+      expect(costResult.costInUsd).to.equal(1.980861883676756)
+      expect(costResult.asset).to.equal(asset)
+      expect(costResult.costInAsset.toString()).to.equal('1796336392314392238')
+      expect(Pricer.priceAsFloat(costResult.costInAsset)).to.equal(1.7963363923143922)
+    })
+
+    it('should correctly calculate gas costs of native transfer in target asset pricing', () => {
+      const priceAssetCache = '1.102723238337682431'
+      const asset = 'optimism'
+      const priceNativeCache = '1980.861883676755965'
+      const estGasPriceInGwei = BigNumber.from('20')
+      const estGasPriceOnNativeInWei = estGasPriceInGwei.mul(BigNumber.from('1000000000'))
+      const ofToken = '0x0000000000000000000000000000000000000000'
+
+      const priceAsset = pricer.parsePriceStringToBigNumberOn18Decimals(priceAssetCache)
+      const priceNative = pricer.parsePriceStringToBigNumberOn18Decimals(priceNativeCache)
+      const costResult = pricer.calculateCostInAsset(asset, priceAsset, priceNative, estGasPriceOnNativeInWei, ofToken)
+      expect(costResult.costInWei.toString()).to.equal('420000000000000')
+      expect(costResult.costInEth).to.equal('0.000420000000000000')
+      expect(costResult.costInUsd).to.equal(0.8319619911442375)
+      expect(costResult.asset).to.equal(asset)
+      expect(costResult.costInAsset.toString()).to.equal('754461284772044771')
+      expect(Pricer.priceAsFloat(costResult.costInAsset)).to.equal(0.7544612847720448)
+    })
   })
 
-  it('should correctly calculate gas costs of native transfer in target asset pricing', () => {
-    const priceAssetCache = '1.102723238337682431'
-    const asset = 'optimism'
-    const priceNativeCache = '1980.861883676755965'
-    const estGasPriceInGwei = BigNumber.from('20')
-    const estGasPriceOnNativeInWei = estGasPriceInGwei.mul(BigNumber.from('1000000000'))
-    const ofToken = '0x0000000000000000000000000000000000000000'
+  describe('evaluateDeal', () => {
+    it('should correctly evaluate non-profitable deal based on example cost and pricing', async () => {
+      const destination: NetworkNameOnCircuit = 'bscp'
+      const priceAssetCache = '1.102723238337682431'
+      const asset = SupportedAssetPriceProvider.OPTIMISM
+      const priceNativeCache = '1980.861883676755965'
+      const estGasPriceInGwei = BigNumber.from('20')
+      const estGasPriceOnNativeInWei = estGasPriceInGwei.mul(BigNumber.from('1000000000'))
+      const ofToken = '0x0000000000000000000000000000000000000000'
 
-    const priceAsset = pricer.parsePriceStringToBigNumberOn18Decimals(priceAssetCache)
-    const priceNative = pricer.parsePriceStringToBigNumberOn18Decimals(priceNativeCache)
-    const costResult = pricer.calculateCostInAsset(asset, priceAsset, priceNative, estGasPriceOnNativeInWei, ofToken)
-    expect(costResult.costInWei.toString()).to.equal('420000000000000')
-    expect(costResult.costInEth).to.equal('0.000420000000000000')
-    expect(costResult.costInUsd).to.equal(0.8319619911442375)
-    expect(costResult.asset).to.equal(asset)
-    expect(costResult.costInAsset.toString()).to.equal('754461284772044771')
-    expect(Pricer.priceAsFloat(costResult.costInAsset)).to.equal(0.7544612847720448)
-  })
+      const strategy: OrderArbitrageStrategy = {
+        minProfitPerOrder: BigNumber.from('1'),
+        minProfitRate: 1,
+        maxAmountPerOrder: BigNumber.from('500'),
+        minAmountPerOrder: BigNumber.from('5'),
+        maxShareOfMyBalancePerOrder: 50,
+      }
 
-  it('should correctly evaluate non-profitable deal based on example cost and pricing', async () => {
-    const destination: NetworkNameOnCircuit = 'bscp'
-    const priceAssetCache = '1.102723238337682431'
-    const asset = SupportedAssetPriceProvider.OPTIMISM
-    const priceNativeCache = '1980.861883676755965'
-    const estGasPriceInGwei = BigNumber.from('20')
-    const estGasPriceOnNativeInWei = estGasPriceInGwei.mul(BigNumber.from('1000000000'))
-    const ofToken = '0x0000000000000000000000000000000000000000'
+      const order: Order = {
+        id: '1',
+        destination,
+        source: 'sepl',
+        asset: 1,
+        assetNative: false,
+        assetAddress: ethers.constants.AddressZero,
+        targetAccount: 'someAccount',
+        amount: BigNumber.from('100'),
+        rewardAsset: '2',
+        insurance: BigNumber.from('1'),
+        maxReward: BigNumber.from('112'),
+        nonce: 0,
+        txHash: '0xasdf123',
+      }
 
-    const strategy: OrderArbitrageStrategy = {
-      minProfitPerOrder: BigNumber.from('1'),
-      minProfitRate: 1,
-      maxAmountPerOrder: BigNumber.from('500'),
-      minAmountPerOrder: BigNumber.from('5'),
-      maxShareOfMyBalancePerOrder: 50,
-    }
+      const myBalance1Eth = ethers.utils.parseEther('1')
+      const priceAsset = pricer.parsePriceStringToBigNumberOn18Decimals(priceAssetCache)
+      expect(Pricer.priceAsFloat(priceAsset)).to.equal(1.1027232383376824)
+      const priceNative = pricer.parsePriceStringToBigNumberOn18Decimals(priceNativeCache)
+      expect(Pricer.priceAsFloat(priceNative)).to.equal(1980.861883676756)
+      const costResult = pricer.calculateCostInAsset(asset, priceAsset, priceNative, estGasPriceOnNativeInWei, ofToken)
 
-    const order: Order = {
-      id: '1',
-      destination,
-      source: 'sepl',
-      asset: 1,
-      assetNative: false,
-      assetAddress: ethers.constants.AddressZero,
-      targetAccount: 'someAccount',
-      amount: BigNumber.from('100'),
-      rewardAsset: '2',
-      insurance: BigNumber.from('1'),
-      maxReward: BigNumber.from('112'),
-      nonce: 0,
-      txHash: '0xasdf123',
-    }
+      expect(costResult.costInWei.toString()).to.equal('420000000000000')
+      expect(costResult.costInEth).to.equal('0.000420000000000000')
+      expect(costResult.costInUsd).to.equal(0.8319619911442375)
+      expect(costResult.asset).to.equal(asset)
+      expect(costResult.costInAsset.toString()).to.equal('754461284772044771')
+      const pricingResult = await pricer.calculatePricingAssetAinB(
+        SupportedAssetPriceProvider.ETH,
+        asset,
+        priceAsset,
+        priceNative,
+        networkNameCircuitToPriceProvider[destination],
+      )
+      expect(pricingResult.priceAinB.toString()).to.equal('556688604806143')
+      expect(Pricer.priceAsFloat(pricingResult.priceAinB)).to.equal(0.000556688604806143)
+      const evalDealResult = pricer.evaluateDeal(myBalance1Eth, costResult, strategy, order, pricingResult)
 
-    const myBalance1Eth = ethers.utils.parseEther('1')
-    const priceAsset = pricer.parsePriceStringToBigNumberOn18Decimals(priceAssetCache)
-    expect(Pricer.priceAsFloat(priceAsset)).to.equal(1.1027232383376824)
-    const priceNative = pricer.parsePriceStringToBigNumberOn18Decimals(priceNativeCache)
-    expect(Pricer.priceAsFloat(priceNative)).to.equal(1980.861883676756)
-    const costResult = pricer.calculateCostInAsset(asset, priceAsset, priceNative, estGasPriceOnNativeInWei, ofToken)
+      expect(evalDealResult.isProfitable).to.equal(false)
+      expect(evalDealResult.loss.toString()).to.equal('754461284772044771')
+      expect(Pricer.priceAsFloat(evalDealResult.loss)).to.equal(0.7544612847720448)
+      expect(evalDealResult.profit.toString()).to.equal('0')
+    })
 
-    expect(costResult.costInWei.toString()).to.equal('420000000000000')
-    expect(costResult.costInEth).to.equal('0.000420000000000000')
-    expect(costResult.costInUsd).to.equal(0.8319619911442375)
-    expect(costResult.asset).to.equal(asset)
-    expect(costResult.costInAsset.toString()).to.equal('754461284772044771')
-    const pricingResult = await pricer.calculatePricingAssetAinB(
-      SupportedAssetPriceProvider.ETH,
-      asset,
-      priceAsset,
-      priceNative,
-      networkNameCircuitToPriceProvider[destination],
-    )
-    expect(pricingResult.priceAinB.toString()).to.equal('556688604806143')
-    expect(Pricer.priceAsFloat(pricingResult.priceAinB)).to.equal(0.000556688604806143)
-    const evalDealResult = pricer.evaluateDeal(myBalance1Eth, costResult, strategy, order, pricingResult)
+    it('should correctly evaluate deal as profitable based on todays optimism gas cost and pricing on big 1mln wallet', async () => {
+      const destination: NetworkNameOnCircuit = 'bscp'
+      const priceAssetCache = '233.238337682431'
+      const asset = SupportedAssetPriceProvider.BSC
+      const priceNativeCache = '1980.861883676755965'
+      const estGasPriceOnNativeInWei = ethers.utils.parseUnits('14.6868125', 'gwei')
+      const ofToken = '0x0000000000000000000000000000000000000002'
 
-    expect(evalDealResult.isProfitable).to.equal(false)
-    expect(evalDealResult.loss.toString()).to.equal('754461284772044771')
-    expect(Pricer.priceAsFloat(evalDealResult.loss)).to.equal(0.7544612847720448)
-    expect(evalDealResult.profit.toString()).to.equal('0')
-  })
+      const myBalance1MlnEth = ethers.utils.parseEther('1000000')
+      const priceAsset = pricer.parsePriceStringToBigNumberOn18Decimals(priceAssetCache)
+      expect(Pricer.priceAsFloat(priceAsset)).to.equal(233.238337682431)
+      const priceNative = pricer.parsePriceStringToBigNumberOn18Decimals(priceNativeCache)
+      expect(Pricer.priceAsFloat(priceNative)).to.equal(1980.861883676756)
+      const costResult = pricer.calculateCostInAsset(asset, priceAsset, priceNative, estGasPriceOnNativeInWei, ofToken)
 
-  it('should correctly evaluate deal as profitable based on todays optimism gas cost and pricing on big 1mln wallet', async () => {
-    const destination: NetworkNameOnCircuit = 'bscp'
-    const priceAssetCache = '233.238337682431'
-    const asset = SupportedAssetPriceProvider.BSC
-    const priceNativeCache = '1980.861883676755965'
-    const estGasPriceOnNativeInWei = ethers.utils.parseUnits('14.6868125', 'gwei')
-    const ofToken = '0x0000000000000000000000000000000000000002'
+      expect(costResult.costInUsd).to.equal(1.4546273536978662)
+      expect(costResult.asset).to.equal(asset)
+      expect(costResult.costInAsset.toString()).to.equal('6236656323963494')
+      const pricingResult = await pricer.calculatePricingAssetAinB(
+        SupportedAssetPriceProvider.ETH,
+        asset,
+        priceAsset,
+        priceNative,
+        networkNameCircuitToPriceProvider[destination],
+      )
+      expect(pricingResult.priceAinB.toString()).to.equal('117745886073343030')
+      expect(Pricer.priceAsFloat(pricingResult.priceAinB)).to.equal(0.11774588607334302)
 
-    const myBalance1MlnEth = ethers.utils.parseEther('1000000')
-    const priceAsset = pricer.parsePriceStringToBigNumberOn18Decimals(priceAssetCache)
-    expect(Pricer.priceAsFloat(priceAsset)).to.equal(233.238337682431)
-    const priceNative = pricer.parsePriceStringToBigNumberOn18Decimals(priceNativeCache)
-    expect(Pricer.priceAsFloat(priceNative)).to.equal(1980.861883676756)
-    const costResult = pricer.calculateCostInAsset(asset, priceAsset, priceNative, estGasPriceOnNativeInWei, ofToken)
+      // Increase costResult.costInAsset by 20% to make it profitable
 
-    expect(costResult.costInUsd).to.equal(1.4546273536978662)
-    expect(costResult.asset).to.equal(asset)
-    expect(costResult.costInAsset.toString()).to.equal('6236656323963494')
-    const pricingResult = await pricer.calculatePricingAssetAinB(
-      SupportedAssetPriceProvider.ETH,
-      asset,
-      priceAsset,
-      priceNative,
-      networkNameCircuitToPriceProvider[destination],
-    )
-    expect(pricingResult.priceAinB.toString()).to.equal('117745886073343030')
-    expect(Pricer.priceAsFloat(pricingResult.priceAinB)).to.equal(0.11774588607334302)
+      const priceBinA = pricer.calculatePriceAinBOn18Decimals(priceNative, priceAsset)
+      // const maxAmountPerOrderAllowance = costResult.costInAsset.mul(BigNumber.from("12")).div(BigNumber.from("10")).div(pricingResult.priceAinB).mul(BigNumber.from(10).pow(MAX_DECIMALS_18));
+      const maxAmountPerOrderAllowance = BigNumber.from((config.tokens.oneOn18Decimals * 0.1).toString())
+        .mul(BigNumber.from('12'))
+        .div(BigNumber.from('10'))
+        .mul(priceBinA)
+        .div(BigNumber.from(10).pow(config.tokens.maxDecimals18))
+      const maxRewardAdjustedToCoverCosts = maxAmountPerOrderAllowance
 
-    // Increase costResult.costInAsset by 20% to make it profitable
+      const strategy: OrderArbitrageStrategy = {
+        minProfitPerOrder: BigNumber.from((0.1 * config.tokens.oneOn18Decimals * 0.001).toString()),
+        minProfitRate: 0.0000001,
+        maxAmountPerOrder: BigNumber.from((10 * config.tokens.oneOn18Decimals).toString()),
+        minAmountPerOrder: BigNumber.from((0.1 * config.tokens.oneOn18Decimals).toString()),
+        maxShareOfMyBalancePerOrder: 25,
+      }
+      const order: Order = {
+        id: '1',
+        destination,
+        source: 'sepl',
+        asset: 1,
+        assetAddress: ethers.constants.AddressZero,
+        assetNative: false,
+        targetAccount: 'someAccount',
+        amount: BigNumber.from((config.tokens.oneOn18Decimals * 0.1).toString()),
+        rewardAsset: '2',
+        insurance: BigNumber.from('1'),
+        maxReward: maxRewardAdjustedToCoverCosts,
+        nonce: 0,
+        txHash: '0xasdf123',
+      }
 
-    const priceBinA = pricer.calculatePriceAinBOn18Decimals(priceNative, priceAsset)
-    // const maxAmountPerOrderAllowance = costResult.costInAsset.mul(BigNumber.from("12")).div(BigNumber.from("10")).div(pricingResult.priceAinB).mul(BigNumber.from(10).pow(MAX_DECIMALS_18));
-    const maxAmountPerOrderAllowance = BigNumber.from((config.tokens.oneOn18Decimals * 0.1).toString())
-      .mul(BigNumber.from('12'))
-      .div(BigNumber.from('10'))
-      .mul(priceBinA)
-      .div(BigNumber.from(10).pow(config.tokens.maxDecimals18))
-    const maxRewardAdjustedToCoverCosts = maxAmountPerOrderAllowance
+      const evalDealResult = pricer.evaluateDeal(myBalance1MlnEth, costResult, strategy, order, pricingResult)
 
-    const strategy: OrderArbitrageStrategy = {
-      minProfitPerOrder: BigNumber.from((0.1 * config.tokens.oneOn18Decimals * 0.001).toString()),
-      minProfitRate: 0.0000001,
-      maxAmountPerOrder: BigNumber.from((10 * config.tokens.oneOn18Decimals).toString()),
-      minAmountPerOrder: BigNumber.from((0.1 * config.tokens.oneOn18Decimals).toString()),
-      maxShareOfMyBalancePerOrder: 25,
-    }
-    const order: Order = {
-      id: '1',
-      destination,
-      source: 'sepl',
-      asset: 1,
-      assetAddress: ethers.constants.AddressZero,
-      assetNative: false,
-      targetAccount: 'someAccount',
-      amount: BigNumber.from((config.tokens.oneOn18Decimals * 0.1).toString()),
-      rewardAsset: '2',
-      insurance: BigNumber.from('1'),
-      maxReward: maxRewardAdjustedToCoverCosts,
-      nonce: 0,
-      txHash: '0xasdf123',
-    }
+      expect(evalDealResult.isProfitable).to.equal(true)
+      expect(evalDealResult.loss.toString()).to.equal('0')
+      expect(Pricer.priceAsFloat(evalDealResult.profit)).to.equal(0.1137633436760365)
+      expect(evalDealResult.profit.toString()).to.equal('113763343676036492')
+    })
 
-    const evalDealResult = pricer.evaluateDeal(myBalance1MlnEth, costResult, strategy, order, pricingResult)
+    it('should correctly evaluate deal as profitable based on todays optimism gas cost and pricing', async () => {
+      const destination: NetworkNameOnCircuit = 'bscp'
+      const priceAssetCache = '233.238337682431'
+      const asset = SupportedAssetPriceProvider.BSC
+      const priceNativeCache = '1980.861883676755965'
+      const estGasPriceOnNativeInWei = ethers.utils.parseUnits('14.6868125', 'gwei')
+      const ofToken = '0x0000000000000000000000000000000000000002'
 
-    expect(evalDealResult.isProfitable).to.equal(true)
-    expect(evalDealResult.loss.toString()).to.equal('0')
-    expect(Pricer.priceAsFloat(evalDealResult.profit)).to.equal(0.1137633436760365)
-    expect(evalDealResult.profit.toString()).to.equal('113763343676036492')
-  })
+      const myBalance1Eth = ethers.utils.parseEther('1')
+      const priceAsset = pricer.parsePriceStringToBigNumberOn18Decimals(priceAssetCache)
+      expect(Pricer.priceAsFloat(priceAsset)).to.equal(233.238337682431)
+      const priceNative = pricer.parsePriceStringToBigNumberOn18Decimals(priceNativeCache)
+      expect(Pricer.priceAsFloat(priceNative)).to.equal(1980.861883676756)
+      const costResult = pricer.calculateCostInAsset(asset, priceAsset, priceNative, estGasPriceOnNativeInWei, ofToken)
 
-  it('should correctly evaluate deal as profitable based on todays optimism gas cost and pricing', async () => {
-    const destination: NetworkNameOnCircuit = 'bscp'
-    const priceAssetCache = '233.238337682431'
-    const asset = SupportedAssetPriceProvider.BSC
-    const priceNativeCache = '1980.861883676755965'
-    const estGasPriceOnNativeInWei = ethers.utils.parseUnits('14.6868125', 'gwei')
-    const ofToken = '0x0000000000000000000000000000000000000002'
+      expect(costResult.costInUsd).to.equal(1.4546273536978662)
+      expect(costResult.asset).to.equal(asset)
+      expect(costResult.costInAsset.toString()).to.equal('6236656323963494')
+      const pricingResult = await pricer.calculatePricingAssetAinB(
+        SupportedAssetPriceProvider.ETH,
+        asset,
+        priceAsset,
+        priceNative,
+        networkNameCircuitToPriceProvider[destination],
+      )
+      expect(pricingResult.priceAinB.toString()).to.equal('117745886073343030')
+      expect(Pricer.priceAsFloat(pricingResult.priceAinB)).to.equal(0.11774588607334302)
 
-    const myBalance1Eth = ethers.utils.parseEther('1')
-    const priceAsset = pricer.parsePriceStringToBigNumberOn18Decimals(priceAssetCache)
-    expect(Pricer.priceAsFloat(priceAsset)).to.equal(233.238337682431)
-    const priceNative = pricer.parsePriceStringToBigNumberOn18Decimals(priceNativeCache)
-    expect(Pricer.priceAsFloat(priceNative)).to.equal(1980.861883676756)
-    const costResult = pricer.calculateCostInAsset(asset, priceAsset, priceNative, estGasPriceOnNativeInWei, ofToken)
+      // Increase costResult.costInAsset by 20% to make it profitable
 
-    expect(costResult.costInUsd).to.equal(1.4546273536978662)
-    expect(costResult.asset).to.equal(asset)
-    expect(costResult.costInAsset.toString()).to.equal('6236656323963494')
-    const pricingResult = await pricer.calculatePricingAssetAinB(
-      SupportedAssetPriceProvider.ETH,
-      asset,
-      priceAsset,
-      priceNative,
-      networkNameCircuitToPriceProvider[destination],
-    )
-    expect(pricingResult.priceAinB.toString()).to.equal('117745886073343030')
-    expect(Pricer.priceAsFloat(pricingResult.priceAinB)).to.equal(0.11774588607334302)
+      const priceBinA = pricer.calculatePriceAinBOn18Decimals(priceNative, priceAsset)
+      // const maxAmountPerOrderAllowance = costResult.costInAsset.mul(BigNumber.from("12")).div(BigNumber.from("10")).div(pricingResult.priceAinB).mul(BigNumber.from(10).pow(config.misc.maxDecimals18));
+      const maxAmountPerOrderAllowance = costResult.costInAsset
+        .mul(BigNumber.from('12'))
+        .div(BigNumber.from('10'))
+        .mul(priceBinA)
+        .div(BigNumber.from(10).pow(config.tokens.maxDecimals18))
+      const maxRewardAdjustedToCoverCosts = maxAmountPerOrderAllowance
 
-    // Increase costResult.costInAsset by 20% to make it profitable
+      const strategy: OrderArbitrageStrategy = {
+        minProfitPerOrder: BigNumber.from('1'),
+        minProfitRate: 0.1,
+        maxAmountPerOrder: maxAmountPerOrderAllowance,
+        minAmountPerOrder: BigNumber.from('5'),
+        maxShareOfMyBalancePerOrder: 50,
+      }
 
-    const priceBinA = pricer.calculatePriceAinBOn18Decimals(priceNative, priceAsset)
-    // const maxAmountPerOrderAllowance = costResult.costInAsset.mul(BigNumber.from("12")).div(BigNumber.from("10")).div(pricingResult.priceAinB).mul(BigNumber.from(10).pow(config.misc.maxDecimals18));
-    const maxAmountPerOrderAllowance = costResult.costInAsset
-      .mul(BigNumber.from('12'))
-      .div(BigNumber.from('10'))
-      .mul(priceBinA)
-      .div(BigNumber.from(10).pow(config.tokens.maxDecimals18))
-    const maxRewardAdjustedToCoverCosts = maxAmountPerOrderAllowance
+      const order: Order = {
+        id: '1',
+        destination,
+        source: 'sepl',
+        asset: 1,
+        assetAddress: ethers.constants.AddressZero,
+        assetNative: false,
+        targetAccount: 'someAccount',
+        amount: BigNumber.from('100'),
+        rewardAsset: '2',
+        insurance: BigNumber.from('1'),
+        maxReward: maxRewardAdjustedToCoverCosts,
+        nonce: 0,
+        txHash: '0xasdf123',
+      }
 
-    const strategy: OrderArbitrageStrategy = {
-      minProfitPerOrder: BigNumber.from('1'),
-      minProfitRate: 0.1,
-      maxAmountPerOrder: maxAmountPerOrderAllowance,
-      minAmountPerOrder: BigNumber.from('5'),
-      maxShareOfMyBalancePerOrder: 50,
-    }
+      const evalDealResult = pricer.evaluateDeal(myBalance1Eth, costResult, strategy, order, pricingResult)
 
-    const order: Order = {
-      id: '1',
-      destination,
-      source: 'sepl',
-      asset: 1,
-      assetAddress: ethers.constants.AddressZero,
-      assetNative: false,
-      targetAccount: 'someAccount',
-      amount: BigNumber.from('100'),
-      rewardAsset: '2',
-      insurance: BigNumber.from('1'),
-      maxReward: maxRewardAdjustedToCoverCosts,
-      nonce: 0,
-      txHash: '0xasdf123',
-    }
+      expect(evalDealResult.isProfitable).to.equal(true)
+      expect(evalDealResult.loss.toString()).to.equal('0')
+      expect(Pricer.priceAsFloat(evalDealResult.profit)).to.equal(0.001247331264792697)
+      expect(evalDealResult.profit.toString()).to.equal('1247331264792697')
+    })
 
-    const evalDealResult = pricer.evaluateDeal(myBalance1Eth, costResult, strategy, order, pricingResult)
+    it('should correctly calculate gas costs of native transfer in for same assets pricing', () => {
+      const priceAssetCache = '1980.861883676755965'
+      const asset = 'ethereum'
+      const priceNativeCache = '1980.861883676755965'
+      const estGasPriceInGwei = BigNumber.from('20')
+      const estGasPriceOnNativeInWei = estGasPriceInGwei.mul(BigNumber.from('1000000000'))
+      const ofToken = '0x0000000000000000000000000000000000000000'
 
-    expect(evalDealResult.isProfitable).to.equal(true)
-    expect(evalDealResult.loss.toString()).to.equal('0')
-    expect(Pricer.priceAsFloat(evalDealResult.profit)).to.equal(0.001247331264792697)
-    expect(evalDealResult.profit.toString()).to.equal('1247331264792697')
-  })
+      const priceAsset = pricer.parsePriceStringToBigNumberOn18Decimals(priceAssetCache)
+      const priceNative = pricer.parsePriceStringToBigNumberOn18Decimals(priceNativeCache)
+      const costResult = pricer.calculateCostInAsset(asset, priceAsset, priceNative, estGasPriceOnNativeInWei, ofToken)
+      expect(costResult.costInWei.toString()).to.equal('420000000000000')
+      expect(costResult.costInEth).to.equal('0.000420000000000000')
+      expect(costResult.costInUsd).to.equal(0.8319619911442375)
+      expect(costResult.asset).to.equal(asset)
+      expect(costResult.costInAsset.toString()).to.equal('420000000000000')
+      expect(Pricer.priceAsFloat(costResult.costInAsset)).to.equal(0.00042)
+    })
 
-  it('should correctly calculate gas costs of native transfer in for same assets pricing', () => {
-    const priceAssetCache = '1980.861883676755965'
-    const asset = 'ethereum'
-    const priceNativeCache = '1980.861883676755965'
-    const estGasPriceInGwei = BigNumber.from('20')
-    const estGasPriceOnNativeInWei = estGasPriceInGwei.mul(BigNumber.from('1000000000'))
-    const ofToken = '0x0000000000000000000000000000000000000000'
+    it('should correctly evaluate the profitability of an order', () => {
+      // Mock data setup
+      const myBalance: BigNumber = BigNumber.from('1000')
+      const costOfExecutionOnTarget: CostResult = {
+        costInWei: BigNumber.from('2'),
+        costInEth: '0.000000000000000002',
+        costInUsd: 0.000000000000000002,
+        costInAsset: BigNumber.from('2'),
+        asset: 'testAsset',
+      }
 
-    const priceAsset = pricer.parsePriceStringToBigNumberOn18Decimals(priceAssetCache)
-    const priceNative = pricer.parsePriceStringToBigNumberOn18Decimals(priceNativeCache)
-    const costResult = pricer.calculateCostInAsset(asset, priceAsset, priceNative, estGasPriceOnNativeInWei, ofToken)
-    expect(costResult.costInWei.toString()).to.equal('420000000000000')
-    expect(costResult.costInEth).to.equal('0.000420000000000000')
-    expect(costResult.costInUsd).to.equal(0.8319619911442375)
-    expect(costResult.asset).to.equal(asset)
-    expect(costResult.costInAsset.toString()).to.equal('420000000000000')
-    expect(Pricer.priceAsFloat(costResult.costInAsset)).to.equal(0.00042)
-  })
+      const strategy: OrderArbitrageStrategy = {
+        minProfitPerOrder: BigNumber.from('5'),
+        minProfitRate: 0.1, // 0.1% of 1000 balance sets the min profit to 1 wei
+        maxAmountPerOrder: BigNumber.from('500'),
+        minAmountPerOrder: BigNumber.from('5'),
+        maxShareOfMyBalancePerOrder: 50,
+      }
 
-  it('should correctly evaluate the profitability of an order', () => {
-    // Mock data setup
-    const myBalance: BigNumber = BigNumber.from('1000')
-    const costOfExecutionOnTarget: CostResult = {
-      costInWei: BigNumber.from('2'),
-      costInEth: '0.000000000000000002',
-      costInUsd: 0.000000000000000002,
-      costInAsset: BigNumber.from('2'),
-      asset: 'testAsset',
-    }
+      const order: Order = {
+        id: '1',
+        destination: 'bscp',
+        source: 'sepl',
+        asset: 1,
+        assetAddress: ethers.constants.AddressZero,
+        assetNative: false,
+        targetAccount: 'someAccount',
+        amount: BigNumber.from('100'),
+        rewardAsset: '2',
+        insurance: BigNumber.from('1'),
+        maxReward: BigNumber.from('110'),
+        nonce: 0,
+        txHash: '0xasdf123',
+      }
 
-    const strategy: OrderArbitrageStrategy = {
-      minProfitPerOrder: BigNumber.from('5'),
-      minProfitRate: 0.1, // 0.1% of 1000 balance sets the min profit to 1 wei
-      maxAmountPerOrder: BigNumber.from('500'),
-      minAmountPerOrder: BigNumber.from('5'),
-      maxShareOfMyBalancePerOrder: 50,
-    }
+      const pricing: PriceResult = {
+        assetA: 'testA',
+        assetB: 'testB',
+        priceAinB: BigNumber.from('1000000000000000000'),
+        priceAInUsd: '0.1',
+        priceBInUsd: '0.1',
+      }
+      // Evaluate the deal
+      const result = pricer.evaluateDeal(myBalance, costOfExecutionOnTarget, strategy, order, pricing)
+      // Assertions
+      expect(result.isProfitable).to.be.true
+      expect(result.profit.toString()).to.equal('108')
+      expect(result.loss.toString()).to.equal('0')
+    })
 
-    const order: Order = {
-      id: '1',
-      destination: 'bscp',
-      source: 'sepl',
-      asset: 1,
-      assetAddress: ethers.constants.AddressZero,
-      assetNative: false,
-      targetAccount: 'someAccount',
-      amount: BigNumber.from('100'),
-      rewardAsset: '2',
-      insurance: BigNumber.from('1'),
-      maxReward: BigNumber.from('110'),
-      nonce: 0,
-      txHash: '0xasdf123',
-    }
+    it('should correctly evaluate the profitable order', () => {
+      // Mock data setup
+      const myBalance: BigNumber = BigNumber.from('1000')
 
-    const pricing: PriceResult = {
-      assetA: 'testA',
-      assetB: 'testB',
-      priceAinB: BigNumber.from('1000000000000000000'),
-      priceAInUsd: '0.1',
-      priceBInUsd: '0.1',
-    }
-    // Evaluate the deal
-    const result = pricer.evaluateDeal(myBalance, costOfExecutionOnTarget, strategy, order, pricing)
-    // Assertions
-    expect(result.isProfitable).to.be.true
-    expect(result.profit.toString()).to.equal('108')
-    expect(result.loss.toString()).to.equal('0')
-  })
+      const costOfExecutionOnTarget: CostResult = {
+        costInWei: BigNumber.from('2'),
+        costInEth: '0.000000000000000002',
+        costInUsd: 0.000000000000000002,
+        costInAsset: BigNumber.from('2'),
+        asset: 'testAsset',
+      }
 
-  it('should correctly evaluate the profitable order', () => {
-    // Mock data setup
-    const myBalance: BigNumber = BigNumber.from('1000')
+      const strategy: OrderArbitrageStrategy = {
+        minProfitPerOrder: BigNumber.from('5'),
+        minProfitRate: 0.001,
+        maxAmountPerOrder: BigNumber.from('500'),
+        minAmountPerOrder: BigNumber.from('5'),
+        maxShareOfMyBalancePerOrder: 50,
+      }
 
-    const costOfExecutionOnTarget: CostResult = {
-      costInWei: BigNumber.from('2'),
-      costInEth: '0.000000000000000002',
-      costInUsd: 0.000000000000000002,
-      costInAsset: BigNumber.from('2'),
-      asset: 'testAsset',
-    }
+      const order: Order = {
+        id: '1',
+        destination: 'bscp',
+        source: 'sepl',
+        asset: 1,
+        assetAddress: ethers.constants.AddressZero,
+        assetNative: false,
+        targetAccount: 'someAccount',
+        amount: BigNumber.from('100'),
+        rewardAsset: '2',
+        insurance: BigNumber.from('1'),
+        maxReward: BigNumber.from('102'),
+        nonce: 0,
+        txHash: '0xasdf123',
+      }
 
-    const strategy: OrderArbitrageStrategy = {
-      minProfitPerOrder: BigNumber.from('5'),
-      minProfitRate: 0.001,
-      maxAmountPerOrder: BigNumber.from('500'),
-      minAmountPerOrder: BigNumber.from('5'),
-      maxShareOfMyBalancePerOrder: 50,
-    }
+      const pricing: PriceResult = {
+        assetA: 'testA',
+        assetB: 'testB',
+        priceAinB: BigNumber.from('1000000000000000000'),
+        priceAInUsd: '0.1',
+        priceBInUsd: '0.1',
+      }
 
-    const order: Order = {
-      id: '1',
-      destination: 'bscp',
-      source: 'sepl',
-      asset: 1,
-      assetAddress: ethers.constants.AddressZero,
-      assetNative: false,
-      targetAccount: 'someAccount',
-      amount: BigNumber.from('100'),
-      rewardAsset: '2',
-      insurance: BigNumber.from('1'),
-      maxReward: BigNumber.from('102'),
-      nonce: 0,
-      txHash: '0xasdf123',
-    }
+      // Evaluate the deal
+      const result = pricer.evaluateDeal(myBalance, costOfExecutionOnTarget, strategy, order, pricing)
+      // Assertions
+      expect(result.isProfitable).to.be.true
+      expect(result.profit.toString()).to.equal('100')
+      expect(result.loss.toString()).to.equal('0')
+    })
 
-    const pricing: PriceResult = {
-      assetA: 'testA',
-      assetB: 'testB',
-      priceAinB: BigNumber.from('1000000000000000000'),
-      priceAInUsd: '0.1',
-      priceBInUsd: '0.1',
-    }
+    it('should correctly evaluate the non-profitable order and show the expected loss', () => {
+      // Mock data setup
+      const myBalance: BigNumber = BigNumber.from('1000')
 
-    // Evaluate the deal
-    const result = pricer.evaluateDeal(myBalance, costOfExecutionOnTarget, strategy, order, pricing)
-    // Assertions
-    expect(result.isProfitable).to.be.true
-    expect(result.profit.toString()).to.equal('100')
-    expect(result.loss.toString()).to.equal('0')
-  })
+      const costOfExecutionOnTarget: CostResult = {
+        costInWei: BigNumber.from('5'),
+        costInEth: '0.000000000000000002',
+        costInUsd: 0.000000000000000002,
+        costInAsset: BigNumber.from('5'),
+        asset: 'testAsset',
+      }
 
-  it('should correctly evaluate the non-profitable order and show the expected loss', () => {
-    // Mock data setup
-    const myBalance: BigNumber = BigNumber.from('1000')
+      const strategy: OrderArbitrageStrategy = {
+        minProfitPerOrder: BigNumber.from('5'),
+        minProfitRate: 10,
+        maxAmountPerOrder: BigNumber.from('500'),
+        minAmountPerOrder: BigNumber.from('5'),
+        maxShareOfMyBalancePerOrder: 50,
+      }
 
-    const costOfExecutionOnTarget: CostResult = {
-      costInWei: BigNumber.from('5'),
-      costInEth: '0.000000000000000002',
-      costInUsd: 0.000000000000000002,
-      costInAsset: BigNumber.from('5'),
-      asset: 'testAsset',
-    }
+      const order: Order = {
+        id: '1',
+        destination: 'bscp',
+        source: 'sepl',
+        asset: 1,
+        assetAddress: ethers.constants.AddressZero,
+        assetNative: false,
+        targetAccount: 'someAccount',
+        amount: BigNumber.from('100'),
+        rewardAsset: '2',
+        insurance: BigNumber.from('1'),
+        maxReward: BigNumber.from('102'),
+        nonce: 0,
+        txHash: '0xasdf123',
+      }
 
-    const strategy: OrderArbitrageStrategy = {
-      minProfitPerOrder: BigNumber.from('5'),
-      minProfitRate: 10,
-      maxAmountPerOrder: BigNumber.from('500'),
-      minAmountPerOrder: BigNumber.from('5'),
-      maxShareOfMyBalancePerOrder: 50,
-    }
+      const pricing: PriceResult = {
+        assetA: 'testA',
+        assetB: 'testB',
+        priceAinB: BigNumber.from('1000000000000000000'),
+        priceAInUsd: '0.1',
+        priceBInUsd: '0.1',
+      }
 
-    const order: Order = {
-      id: '1',
-      destination: 'bscp',
-      source: 'sepl',
-      asset: 1,
-      assetAddress: ethers.constants.AddressZero,
-      assetNative: false,
-      targetAccount: 'someAccount',
-      amount: BigNumber.from('100'),
-      rewardAsset: '2',
-      insurance: BigNumber.from('1'),
-      maxReward: BigNumber.from('102'),
-      nonce: 0,
-      txHash: '0xasdf123',
-    }
-
-    const pricing: PriceResult = {
-      assetA: 'testA',
-      assetB: 'testB',
-      priceAinB: BigNumber.from('1000000000000000000'),
-      priceAInUsd: '0.1',
-      priceBInUsd: '0.1',
-    }
-
-    // Evaluate the deal
-    const result = pricer.evaluateDeal(myBalance, costOfExecutionOnTarget, strategy, order, pricing)
-    // Assertions
-    expect(result.isProfitable).to.be.false
-    expect(result.profit.toString()).to.equal('0')
-    expect(result.loss.toString()).to.equal('97')
+      // Evaluate the deal
+      const result = pricer.evaluateDeal(myBalance, costOfExecutionOnTarget, strategy, order, pricing)
+      // Assertions
+      expect(result.isProfitable).to.be.false
+      expect(result.profit.toString()).to.equal('0')
+      expect(result.loss.toString()).to.equal('97')
+    })
   })
 
   describe('assessDealForPublication', () => {
@@ -557,8 +563,8 @@ describe('Pricer', () => {
         estimatedCost,
         userStrategy,
         marketPricing,
-        overpayOption as 'regular' | 'custom' | 'slow' | 'fast',
-        slippageOption as 'zero' | 'regular' | 'high' | 'custom',
+        overpayOption as OverpayRatio,
+        slippageOption as Slippage,
         undefined,
         undefined,
       )
@@ -583,8 +589,8 @@ describe('Pricer', () => {
         estimatedCost,
         userStrategy,
         marketPricing,
-        overpayOption as 'regular' | 'custom' | 'slow' | 'fast',
-        slippageOption as 'zero' | 'regular' | 'high' | 'custom',
+        overpayOption as OverpayRatio,
+        slippageOption as Slippage,
       )
 
       expect(result.isPublishable).to.be.false
@@ -600,8 +606,8 @@ describe('Pricer', () => {
         estimatedCost,
         userStrategy,
         marketPricing,
-        overpayOption as 'regular' | 'custom' | 'slow' | 'fast',
-        slippageOption as 'zero' | 'regular' | 'high' | 'custom',
+        overpayOption as OverpayRatio,
+        slippageOption as Slippage,
         undefined,
         undefined,
       )
@@ -621,8 +627,8 @@ describe('Pricer', () => {
         estimatedCost,
         userStrategy,
         marketPricing,
-        overpayOption as 'regular' | 'custom' | 'slow' | 'fast',
-        slippageOption as 'zero' | 'regular' | 'high' | 'custom',
+        overpayOption as OverpayRatio,
+        slippageOption as Slippage,
         1.5, // customOverpayRatio
         1.1, // customSlippage
       )
@@ -642,8 +648,8 @@ describe('Pricer', () => {
         estimatedCost,
         userStrategy,
         marketPricing,
-        overpayOption as 'regular' | 'custom' | 'slow' | 'fast',
-        slippageOption as 'zero' | 'regular' | 'high' | 'custom',
+        overpayOption as OverpayRatio,
+        slippageOption as Slippage,
         undefined,
         undefined,
       )
@@ -662,8 +668,8 @@ describe('Pricer', () => {
         estimatedCost,
         userStrategy,
         marketPricing,
-        overpayOption as 'regular' | 'custom' | 'slow' | 'fast',
-        slippageOption as 'zero' | 'regular' | 'high' | 'custom',
+        overpayOption as OverpayRatio,
+        slippageOption as Slippage,
         1.5, // customOverpayRatio
         undefined,
       )
@@ -682,8 +688,8 @@ describe('Pricer', () => {
         estimatedCost,
         userStrategy,
         marketPricing,
-        overpayOption as 'regular' | 'custom' | 'slow' | 'fast',
-        slippageOption as 'zero' | 'regular' | 'high' | 'custom',
+        overpayOption as OverpayRatio,
+        slippageOption as Slippage,
         undefined,
         1.2, // customSlippage
       )
