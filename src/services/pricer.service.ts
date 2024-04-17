@@ -39,7 +39,6 @@ export const ETH_TRANSFER_GAS_LIMIT = ethers.BigNumber.from(21000)
  */
 export class Pricer {
   private readonly config: Config
-  private ethersProvider: ethers.providers.Provider | undefined
   readonly priceCache: PriceCache
 
   /**
@@ -47,11 +46,10 @@ export class Pricer {
    *
    * @param _config Configuration settings including provider URLs and token configurations.
    */
-  constructor(_config: Config, _ethersProvider = undefined) {
+  constructor(_config: Config) {
     this.config = _config
     this.priceCache = new PriceCache(this.config)
     this.priceCache.initCleanup()
-    this.ethersProvider = _ethersProvider
   }
 
   /**
@@ -462,15 +460,22 @@ export class Pricer {
   }
 
   /**
-   * Estimates the amount of 'toAsset' the user will receive at the end of the transaction.
+   * Estimates the details of the transaction when sending assets from one chain to another.
    *
    * @param fromAsset The asset being sent.
    * @param toAsset The asset to be received.
    * @param fromChain The network of the 'fromAsset'.
-   * @param fromChainProvider The provider url for 'fromChain'.
+   * @param fromChainProvider The provider URL for 'fromChain'.
    * @param toChain The network of the 'toAsset'.
-   * @param maxRewardWei
-   * @return The estimated amount of 'toAsset' the user will receive, in wei.
+   * @param maxRewardWei The maximum amount of 'fromAsset' in Wei to be sent.
+   * @returns Details of the transaction, including the estimated amount received, gas fees, and bridge fees:
+              estimatedReceivedAmountWei: BigNumber
+              gasFeeWei: BigNumber
+              bridgeFeeWei: BigNumber
+              estimatedReceivedAmountUSD: number
+              gasFeeUSD: number
+              bridgeFeeUSD: number
+              BRNbonusUSD: number
    */
   async estimateReceivedAmount(
     fromAsset: SupportedAssetPriceProvider,
@@ -479,10 +484,20 @@ export class Pricer {
     fromChainProvider: string,
     toChain: NetworkNameOnPriceProvider,
     maxRewardWei: BigNumber,
-  ): Promise<BigNumber> {
-    if (!this.ethersProvider && !fromChainProvider) {
-      throw new Error('No provider URL for the source network was provided.')
+  ): Promise<{
+    estimatedReceivedAmountWei: BigNumber
+    gasFeeWei: BigNumber
+    bridgeFeeWei: BigNumber
+    estimatedReceivedAmountUSD: number
+    gasFeeUSD: number
+    bridgeFeeUSD: number
+    BRNbonusUSD: number
+  }> {
+    if (!fromAsset || !toAsset || !fromChain || !fromChainProvider || !toChain || !maxRewardWei) {
+      throw new Error('All parameters must be provided and valid.')
     }
+
+    const fromChainEthersProvider = new ethers.providers.JsonRpcProvider(fromChainProvider)
 
     // Retrieve the pricing information for converting fromAsset to toAsset.
     const pricing = await this.retrieveAssetPricing(fromAsset, toAsset, fromChain, toChain)
@@ -490,22 +505,26 @@ export class Pricer {
     // Convert the maxReward from its Wei representation to the equivalent amount in toAsset, considering the current market price.
     const maxRewardInToAsset = maxRewardWei.mul(pricing.priceAinB).div(BigNumber.from(10).pow(18))
 
-    if (!this.ethersProvider) {
-      this.ethersProvider = new ethers.providers.JsonRpcProvider(fromChainProvider)
-    }
+    // Estimate the gas price on the source network, which is relevant for the initial transaction cost calculation.
+    const estGasPriceOnSourceInWei = await fromChainEthersProvider.getGasPrice()
 
-    // Estimate the gas price on the source network.
-    const estGasPriceOnNativeInWei = await this.ethersProvider.getGasPrice()
+    // Determine the appropriate gas limit based on the asset type being transferred from the source chain
+    const sourceGasLimit = fromAsset === SupportedAssetPriceProvider.ETH ? ETH_TRANSFER_GAS_LIMIT : ERC20_GAS_LIMIT
+
+    // Calculate the total estimated gas fee on the source network for the transaction
+    const sourceGasFeeWei = estGasPriceOnSourceInWei.mul(sourceGasLimit)
+
+    const sourceGasFeeUSD = await this.receiveAssetUSDValue(fromAsset, fromChain, sourceGasFeeWei)
 
     const { assetObject } = this.getAssetObject(fromAsset, fromChain)
 
-    // Calculate the transaction cost in the fromAsset.
+    // Calculate the transaction cost in the fromAsset, using the source network's gas price
     const transactionCostData = await this.retrieveCostInAsset(
       fromAsset,
       fromChain,
       toAsset,
       toChain,
-      estGasPriceOnNativeInWei,
+      estGasPriceOnSourceInWei,
       assetObject instanceof BigNumber ? ethers.constants.AddressZero : assetObject.address,
     )
 
@@ -515,9 +534,21 @@ export class Pricer {
       .div(BigNumber.from(10).pow(18))
 
     // Subtract the transaction cost in toAsset from the maxReward in toAsset to estimate the amount received.
-    const estimatedReceivedAmount = maxRewardInToAsset.sub(transactionCostInToAsset)
+    const estimatedReceivedAmountWei = maxRewardInToAsset.sub(transactionCostInToAsset)
+    const estimatedReceivedAmountUSD = await this.receiveAssetUSDValue(toAsset, toChain, estimatedReceivedAmountWei)
 
-    return estimatedReceivedAmount
+    const bridgeFeeWei = maxRewardWei.sub(estimatedReceivedAmountWei)
+    const bridgeFeeUSD = await this.receiveAssetUSDValue(toAsset, toChain, bridgeFeeWei)
+
+    return {
+      estimatedReceivedAmountWei,
+      gasFeeWei: sourceGasFeeWei,
+      bridgeFeeWei,
+      estimatedReceivedAmountUSD,
+      gasFeeUSD: sourceGasFeeUSD,
+      bridgeFeeUSD,
+      BRNbonusUSD: estimatedReceivedAmountUSD,
+    }
   }
 
   /**
@@ -537,7 +568,14 @@ export class Pricer {
    * @param customExecutorTipValue Custom executor tip in wei if the 'custom' option is selected.
    * @param customOverpayRatio Custom overpay ratio if the 'custom' option is selected.
    * @param customSlippage Custom slippage tolerance if the 'custom' option is selected.
-   * @return The estimated amount of 'toAsset' the user will receive, in wei.
+   * @returns Details of the transaction, including the estimated amount received, gas fees, and bridge fees:
+              estimatedReceivedAmountWei: BigNumber
+              gasFeeWei: BigNumber
+              bridgeFeeWei: BigNumber
+              estimatedReceivedAmountUSD: number
+              gasFeeUSD: number
+              bridgeFeeUSD: number
+              BRNbonusUSD: number
    */
   async estimateReceivedAmountWithOptions(
     fromAsset: SupportedAssetPriceProvider,
@@ -553,7 +591,18 @@ export class Pricer {
     customExecutorTipValue?: BigNumber,
     customOverpayRatio?: number,
     customSlippage?: number,
-  ): Promise<BigNumber> {
+  ): Promise<{
+    estimatedReceivedAmountWei: BigNumber
+    gasFeeWei: BigNumber
+    bridgeFeeWei: BigNumber
+    estimatedReceivedAmountUSD: number
+    gasFeeUSD: number
+    bridgeFeeUSD: number
+    BRNbonusUSD: number
+  }> {
+    if (!fromAsset || !toAsset || !fromChain || !fromChainProvider || !toChain || !maxRewardWei) {
+      throw new Error('All primary parameters must be provided and valid.')
+    }
     if (executorTipOption === 'custom' && !customExecutorTipValue && !customExecutorTipPercentage) {
       throw new Error(
         'Received custom executor tip option but missing customExecutorTipValue or customExecutorTipPercentage.',
@@ -624,16 +673,25 @@ export class Pricer {
     maxRewardWei = maxRewardWei.div(BigNumber.from(Math.round(slippageAdjustment * 100))).mul(100)
 
     // Calculate the final amount after all adjustments
-    const estimatedReceivedAmount = await this.estimateReceivedAmount(
-      fromAsset,
-      toAsset,
-      fromChain,
-      fromChainProvider,
-      toChain,
-      maxRewardWei,
-    )
+    const {
+      estimatedReceivedAmountWei,
+      gasFeeWei,
+      bridgeFeeWei,
+      estimatedReceivedAmountUSD,
+      gasFeeUSD,
+      bridgeFeeUSD,
+      BRNbonusUSD,
+    } = await this.estimateReceivedAmount(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei)
 
-    return estimatedReceivedAmount
+    return {
+      estimatedReceivedAmountWei,
+      gasFeeWei,
+      bridgeFeeWei,
+      estimatedReceivedAmountUSD,
+      gasFeeUSD,
+      bridgeFeeUSD,
+      BRNbonusUSD,
+    }
   }
 
   /**

@@ -27,11 +27,10 @@ class Pricer {
      *
      * @param _config Configuration settings including provider URLs and token configurations.
      */
-    constructor(_config, _ethersProvider = undefined) {
+    constructor(_config) {
         this.config = _config;
         this.priceCache = new price_cache_1.PriceCache(this.config);
         this.priceCache.initCleanup();
-        this.ethersProvider = _ethersProvider;
     }
     /**
      * Retrieves the USD value of a specified amount of an asset.
@@ -342,40 +341,61 @@ class Pricer {
         };
     }
     /**
-     * Estimates the amount of 'toAsset' the user will receive at the end of the transaction.
+     * Estimates the details of the transaction when sending assets from one chain to another.
      *
      * @param fromAsset The asset being sent.
      * @param toAsset The asset to be received.
      * @param fromChain The network of the 'fromAsset'.
-     * @param fromChainProvider The provider url for 'fromChain'.
+     * @param fromChainProvider The provider URL for 'fromChain'.
      * @param toChain The network of the 'toAsset'.
-     * @param maxRewardWei
-     * @return The estimated amount of 'toAsset' the user will receive, in wei.
+     * @param maxRewardWei The maximum amount of 'fromAsset' in Wei to be sent.
+     * @returns Details of the transaction, including the estimated amount received, gas fees, and bridge fees:
+                estimatedReceivedAmountWei: BigNumber
+                gasFeeWei: BigNumber
+                bridgeFeeWei: BigNumber
+                estimatedReceivedAmountUSD: number
+                gasFeeUSD: number
+                bridgeFeeUSD: number
+                BRNbonusUSD: number
      */
     estimateReceivedAmount(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!this.ethersProvider && !fromChainProvider) {
-                throw new Error('No provider URL for the source network was provided.');
+            if (!fromAsset || !toAsset || !fromChain || !fromChainProvider || !toChain || !maxRewardWei) {
+                throw new Error('All parameters must be provided and valid.');
             }
+            const fromChainEthersProvider = new ethers_1.ethers.providers.JsonRpcProvider(fromChainProvider);
             // Retrieve the pricing information for converting fromAsset to toAsset.
             const pricing = yield this.retrieveAssetPricing(fromAsset, toAsset, fromChain, toChain);
             // Convert the maxReward from its Wei representation to the equivalent amount in toAsset, considering the current market price.
             const maxRewardInToAsset = maxRewardWei.mul(pricing.priceAinB).div(ethers_1.BigNumber.from(10).pow(18));
-            if (!this.ethersProvider) {
-                this.ethersProvider = new ethers_1.ethers.providers.JsonRpcProvider(fromChainProvider);
-            }
-            // Estimate the gas price on the source network.
-            const estGasPriceOnNativeInWei = yield this.ethersProvider.getGasPrice();
+            // Estimate the gas price on the source network, which is relevant for the initial transaction cost calculation.
+            const estGasPriceOnSourceInWei = yield fromChainEthersProvider.getGasPrice();
+            // Determine the appropriate gas limit based on the asset type being transferred from the source chain
+            const sourceGasLimit = fromAsset === price_provider_assets_1.SupportedAssetPriceProvider.ETH ? exports.ETH_TRANSFER_GAS_LIMIT : exports.ERC20_GAS_LIMIT;
+            // Calculate the total estimated gas fee on the source network for the transaction
+            const sourceGasFeeWei = estGasPriceOnSourceInWei.mul(sourceGasLimit);
+            const sourceGasFeeUSD = yield this.receiveAssetUSDValue(fromAsset, fromChain, sourceGasFeeWei);
             const { assetObject } = this.getAssetObject(fromAsset, fromChain);
-            // Calculate the transaction cost in the fromAsset.
-            const transactionCostData = yield this.retrieveCostInAsset(fromAsset, fromChain, toAsset, toChain, estGasPriceOnNativeInWei, assetObject instanceof ethers_1.BigNumber ? ethers_1.ethers.constants.AddressZero : assetObject.address);
+            // Calculate the transaction cost in the fromAsset, using the source network's gas price
+            const transactionCostData = yield this.retrieveCostInAsset(fromAsset, fromChain, toAsset, toChain, estGasPriceOnSourceInWei, assetObject instanceof ethers_1.BigNumber ? ethers_1.ethers.constants.AddressZero : assetObject.address);
             // Convert the transaction cost to toAsset using the market price.
             const transactionCostInToAsset = transactionCostData.costInAsset
                 .mul(pricing.priceAinB)
                 .div(ethers_1.BigNumber.from(10).pow(18));
             // Subtract the transaction cost in toAsset from the maxReward in toAsset to estimate the amount received.
-            const estimatedReceivedAmount = maxRewardInToAsset.sub(transactionCostInToAsset);
-            return estimatedReceivedAmount;
+            const estimatedReceivedAmountWei = maxRewardInToAsset.sub(transactionCostInToAsset);
+            const estimatedReceivedAmountUSD = yield this.receiveAssetUSDValue(toAsset, toChain, estimatedReceivedAmountWei);
+            const bridgeFeeWei = maxRewardWei.sub(estimatedReceivedAmountWei);
+            const bridgeFeeUSD = yield this.receiveAssetUSDValue(toAsset, toChain, bridgeFeeWei);
+            return {
+                estimatedReceivedAmountWei,
+                gasFeeWei: sourceGasFeeWei,
+                bridgeFeeWei,
+                estimatedReceivedAmountUSD,
+                gasFeeUSD: sourceGasFeeUSD,
+                bridgeFeeUSD,
+                BRNbonusUSD: estimatedReceivedAmountUSD,
+            };
         });
     }
     /**
@@ -395,10 +415,20 @@ class Pricer {
      * @param customExecutorTipValue Custom executor tip in wei if the 'custom' option is selected.
      * @param customOverpayRatio Custom overpay ratio if the 'custom' option is selected.
      * @param customSlippage Custom slippage tolerance if the 'custom' option is selected.
-     * @return The estimated amount of 'toAsset' the user will receive, in wei.
+     * @returns Details of the transaction, including the estimated amount received, gas fees, and bridge fees:
+                estimatedReceivedAmountWei: BigNumber
+                gasFeeWei: BigNumber
+                bridgeFeeWei: BigNumber
+                estimatedReceivedAmountUSD: number
+                gasFeeUSD: number
+                bridgeFeeUSD: number
+                BRNbonusUSD: number
      */
     estimateReceivedAmountWithOptions(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei, executorTipOption, overpayOption, slippageOption, customExecutorTipPercentage, customExecutorTipValue, customOverpayRatio, customSlippage) {
         return __awaiter(this, void 0, void 0, function* () {
+            if (!fromAsset || !toAsset || !fromChain || !fromChainProvider || !toChain || !maxRewardWei) {
+                throw new Error('All primary parameters must be provided and valid.');
+            }
             if (executorTipOption === 'custom' && !customExecutorTipValue && !customExecutorTipPercentage) {
                 throw new Error('Received custom executor tip option but missing customExecutorTipValue or customExecutorTipPercentage.');
             }
@@ -464,8 +494,16 @@ class Pricer {
             }
             maxRewardWei = maxRewardWei.div(ethers_1.BigNumber.from(Math.round(slippageAdjustment * 100))).mul(100);
             // Calculate the final amount after all adjustments
-            const estimatedReceivedAmount = yield this.estimateReceivedAmount(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei);
-            return estimatedReceivedAmount;
+            const { estimatedReceivedAmountWei, gasFeeWei, bridgeFeeWei, estimatedReceivedAmountUSD, gasFeeUSD, bridgeFeeUSD, BRNbonusUSD, } = yield this.estimateReceivedAmount(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei);
+            return {
+                estimatedReceivedAmountWei,
+                gasFeeWei,
+                bridgeFeeWei,
+                estimatedReceivedAmountUSD,
+                gasFeeUSD,
+                bridgeFeeUSD,
+                BRNbonusUSD,
+            };
         });
     }
     /**
