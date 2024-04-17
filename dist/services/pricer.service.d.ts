@@ -18,14 +18,13 @@ export declare const ETH_TRANSFER_GAS_LIMIT: BigNumber;
  */
 export declare class Pricer {
     private readonly config;
-    private ethersProvider;
     readonly priceCache: PriceCache;
     /**
      * Initializes a new instance of the Pricer class with the specified configuration.
      *
      * @param _config Configuration settings including provider URLs and token configurations.
      */
-    constructor(_config: Config, _ethersProvider?: undefined);
+    constructor(_config: Config);
     /**
      * Retrieves the USD value of a specified amount of an asset.
      *
@@ -99,17 +98,32 @@ export declare class Pricer {
      */
     proposeDealForSetAmount(balance: BigNumber, costOfExecutionOnDestination: CostResult, strategy: OrderArbitrageStrategy, order: Order, pricing: PriceResult): OrderProfitabilityProposalForSetAmount;
     /**
-     * Estimates the amount of 'toAsset' the user will receive at the end of the transaction.
+     * Estimates the details of the transaction when sending assets from one chain to another.
      *
      * @param fromAsset The asset being sent.
      * @param toAsset The asset to be received.
      * @param fromChain The network of the 'fromAsset'.
-     * @param fromChainProvider The provider url for 'fromChain'.
+     * @param fromChainProvider The provider URL for 'fromChain'.
      * @param toChain The network of the 'toAsset'.
-     * @param maxRewardWei
-     * @return The estimated amount of 'toAsset' the user will receive, in wei.
+     * @param maxRewardWei The maximum amount of 'fromAsset' in Wei to be sent.
+     * @returns Details of the transaction, including the estimated amount received, gas fees, and bridge fees:
+                estimatedReceivedAmountWei: BigNumber
+                gasFeeWei: BigNumber
+                bridgeFeeWei: BigNumber
+                estimatedReceivedAmountUSD: number
+                gasFeeUSD: number
+                bridgeFeeUSD: number
+                BRNbonusUSD: number
      */
-    estimateReceivedAmount(fromAsset: SupportedAssetPriceProvider, toAsset: SupportedAssetPriceProvider, fromChain: NetworkNameOnPriceProvider, fromChainProvider: string, toChain: NetworkNameOnPriceProvider, maxRewardWei: BigNumber): Promise<BigNumber>;
+    estimateReceivedAmount(fromAsset: SupportedAssetPriceProvider, toAsset: SupportedAssetPriceProvider, fromChain: NetworkNameOnPriceProvider, fromChainProvider: string, toChain: NetworkNameOnPriceProvider, maxRewardWei: BigNumber): Promise<{
+        estimatedReceivedAmountWei: BigNumber;
+        gasFeeWei: BigNumber;
+        bridgeFeeWei: BigNumber;
+        estimatedReceivedAmountUSD: number;
+        gasFeeUSD: number;
+        bridgeFeeUSD: number;
+        BRNbonusUSD: number;
+    }>;
     /**
      * Estimates the amount of 'toAsset' the user will receive at the end of the transaction,
      * taking into account executor tip, overpay, and slippage.
@@ -127,9 +141,24 @@ export declare class Pricer {
      * @param customExecutorTipValue Custom executor tip in wei if the 'custom' option is selected.
      * @param customOverpayRatio Custom overpay ratio if the 'custom' option is selected.
      * @param customSlippage Custom slippage tolerance if the 'custom' option is selected.
-     * @return The estimated amount of 'toAsset' the user will receive, in wei.
+     * @returns Details of the transaction, including the estimated amount received, gas fees, and bridge fees:
+                estimatedReceivedAmountWei: BigNumber
+                gasFeeWei: BigNumber
+                bridgeFeeWei: BigNumber
+                estimatedReceivedAmountUSD: number
+                gasFeeUSD: number
+                bridgeFeeUSD: number
+                BRNbonusUSD: number
      */
-    estimateReceivedAmountWithOptions(fromAsset: SupportedAssetPriceProvider, toAsset: SupportedAssetPriceProvider, fromChain: NetworkNameOnPriceProvider, fromChainProvider: string, toChain: NetworkNameOnPriceProvider, maxRewardWei: BigNumber, executorTipOption: 'low' | 'regular' | 'high' | 'custom', overpayOption: 'slow' | 'regular' | 'fast' | 'custom', slippageOption: 'zero' | 'regular' | 'high' | 'custom', customExecutorTipPercentage?: number, customExecutorTipValue?: BigNumber, customOverpayRatio?: number, customSlippage?: number): Promise<BigNumber>;
+    estimateReceivedAmountWithOptions(fromAsset: SupportedAssetPriceProvider, toAsset: SupportedAssetPriceProvider, fromChain: NetworkNameOnPriceProvider, fromChainProvider: string, toChain: NetworkNameOnPriceProvider, maxRewardWei: BigNumber, executorTipOption: 'low' | 'regular' | 'high' | 'custom', overpayOption: 'slow' | 'regular' | 'fast' | 'custom', slippageOption: 'zero' | 'regular' | 'high' | 'custom', customExecutorTipPercentage?: number, customExecutorTipValue?: BigNumber, customOverpayRatio?: number, customSlippage?: number): Promise<{
+        estimatedReceivedAmountWei: BigNumber;
+        gasFeeWei: BigNumber;
+        bridgeFeeWei: BigNumber;
+        estimatedReceivedAmountUSD: number;
+        gasFeeUSD: number;
+        bridgeFeeUSD: number;
+        BRNbonusUSD: number;
+    }>;
     /**
      * Parse the given price string as float with decimal precision
      *

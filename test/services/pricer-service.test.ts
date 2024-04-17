@@ -932,7 +932,7 @@ describe('Pricer', () => {
       })
 
       // Action
-      const estimatedReceivedAmount = await pricer.estimateReceivedAmount(
+      const { estimatedReceivedAmountWei } = await pricer.estimateReceivedAmount(
         fromAsset,
         toAsset,
         fromChain,
@@ -942,7 +942,7 @@ describe('Pricer', () => {
       )
 
       // Assert
-      expect(ethers.utils.formatEther(estimatedReceivedAmount)).to.equal('0.99')
+      expect(ethers.utils.formatEther(estimatedReceivedAmountWei)).to.equal('0.99')
     })
 
     it('should correctly estimate the received amount for different assets across chains', async () => {
@@ -964,7 +964,7 @@ describe('Pricer', () => {
       })
 
       // Action
-      const estimatedReceivedAmount = await pricer.estimateReceivedAmount(
+      const { estimatedReceivedAmountWei } = await pricer.estimateReceivedAmount(
         fromAsset,
         toAsset,
         fromChain,
@@ -975,7 +975,7 @@ describe('Pricer', () => {
 
       // Assert
       const expectedAmount = ethers.utils.parseUnits('0.99', 'ether')
-      expect(estimatedReceivedAmount.toString()).to.equal(expectedAmount.toString())
+      expect(estimatedReceivedAmountWei.toString()).to.equal(expectedAmount.toString())
     })
 
     // describe('conversion tests', function () {
@@ -1061,7 +1061,15 @@ describe('Pricer', () => {
       beforeEach(() => {
         sandbox = sinon.createSandbox()
 
-        sandbox.stub(pricer, 'estimateReceivedAmount').resolves(BigNumber.from('990000000000000000')) // 0.99 ETH
+        sandbox.stub(pricer, 'estimateReceivedAmount').resolves({
+          estimatedReceivedAmountWei: BigNumber.from('990000000000000000'), // 0.99 ETH
+          gasFeeWei: BigNumber.from('0'),
+          bridgeFeeWei: BigNumber.from(0),
+          estimatedReceivedAmountUSD: 3000,
+          gasFeeUSD: 0.000042,
+          bridgeFeeUSD: 0,
+          BRNbonusUSD: 0,
+        })
         sandbox.stub(pricer, 'receiveAssetPriceWithCache').resolves(BigNumber.from('2000')) // $2000 per ETH
         sandbox.stub(pricer, 'retrieveCostInAsset').resolves({
           costInWei: BigNumber.from('10000000000000000'), // 0.01 ETH
@@ -1077,7 +1085,7 @@ describe('Pricer', () => {
       })
 
       it('should accurately estimate received amount with fast modifiers', async function () {
-        const estimatedAmount = await pricer.estimateReceivedAmountWithOptions(
+        const { estimatedReceivedAmountWei } = await pricer.estimateReceivedAmountWithOptions(
           SupportedAssetPriceProvider.ETH,
           SupportedAssetPriceProvider.ETH,
           'arbitrum',
@@ -1090,11 +1098,11 @@ describe('Pricer', () => {
         )
 
         const expectedAmount = BigNumber.from('990000000000000000')
-        expect(estimatedAmount.toString()).to.equal(expectedAmount.toString())
+        expect(estimatedReceivedAmountWei.toString()).to.equal(expectedAmount.toString())
       })
 
       it('should accurately estimate received amount with slow modifiers', async function () {
-        const estimatedAmount = await pricer.estimateReceivedAmountWithOptions(
+        const { estimatedReceivedAmountWei } = await pricer.estimateReceivedAmountWithOptions(
           SupportedAssetPriceProvider.ETH,
           SupportedAssetPriceProvider.ETH,
           'arbitrum',
@@ -1107,11 +1115,11 @@ describe('Pricer', () => {
         )
 
         const expectedAmount = BigNumber.from('990000000000000000')
-        expect(estimatedAmount.toString()).to.equal(expectedAmount.toString())
+        expect(estimatedReceivedAmountWei.toString()).to.equal(expectedAmount.toString())
       })
 
       it('should accurately estimate received amount with custom executor tip percentage', async function () {
-        const estimatedAmount = await pricer.estimateReceivedAmountWithOptions(
+        const { estimatedReceivedAmountWei } = await pricer.estimateReceivedAmountWithOptions(
           SupportedAssetPriceProvider.ETH,
           SupportedAssetPriceProvider.ETH,
           'arbitrum',
@@ -1128,12 +1136,12 @@ describe('Pricer', () => {
         )
 
         const expectedAmount = BigNumber.from('990000000000000000')
-        expect(estimatedAmount.toString()).to.equal(expectedAmount.toString())
+        expect(estimatedReceivedAmountWei.toString()).to.equal(expectedAmount.toString())
       })
 
       it('should accurately estimate received amount with custom executor tip value', async function () {
         const customTipValue = ethers.utils.parseEther('0.05') // 0.05 ETH fixed tip value
-        const estimatedAmount = await pricer.estimateReceivedAmountWithOptions(
+        const { estimatedReceivedAmountWei } = await pricer.estimateReceivedAmountWithOptions(
           SupportedAssetPriceProvider.ETH,
           SupportedAssetPriceProvider.ETH,
           'arbitrum',
@@ -1148,7 +1156,7 @@ describe('Pricer', () => {
         )
 
         const expectedAmount = BigNumber.from('990000000000000000')
-        expect(estimatedAmount.toString()).to.equal(expectedAmount.toString())
+        expect(estimatedReceivedAmountWei.toString()).to.equal(expectedAmount.toString())
       })
     })
   })
