@@ -114,9 +114,10 @@ const defaultNetworkData = {
       asset: 'arbitrum',
       address: '0x912ce59144191c1204e64559fe8253a0e49e6548',
     },
+    //wETH
     {
       asset: 'eth',
-      address: ethers.constants.AddressZero,
+      address: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
     },
     {
       asset: 'usdc',
@@ -136,13 +137,15 @@ const defaultNetworkData = {
     },
   ],
   base: [
+    //wETH
     {
       asset: 'base',
       address: '0x4200000000000000000000000000000000000006',
     },
+    //wETH
     {
       asset: 'eth',
-      address: ethers.constants.AddressZero,
+      address: '0x4200000000000000000000000000000000000006',
     },
     {
       asset: 'usdc',
@@ -166,14 +169,13 @@ const defaultNetworkData = {
     },
   ],
   bsc: [
-    // {
-    //   asset: 'bnb',
-    //   address: ethers.constants.AddressZero,
-    // },
+    {
+      asset: 'bnb',
+      address: ethers.constants.AddressZero,
+    },
     {
       asset: 'eth',
-      address: ethers.constants.AddressZero,
-      // address: '0x2170ed0880ac9a755fd29b2688956bd959f933f8',
+      address: '0x2170ed0880ac9a755fd29b2688956bd959f933f8',
     },
     {
       asset: 'usdc',
@@ -286,10 +288,9 @@ const defaultNetworkData = {
   ],
   linea: [
     {
+      // wETH
       asset: 'eth',
-      address: ethers.constants.AddressZero,
-      // TODO: this is wrapped ETH
-      //   address: '0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f',
+      address: '0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f',
     },
     {
       asset: 'usdt',
@@ -309,11 +310,10 @@ const defaultNetworkData = {
       asset: 'optimism',
       address: '0x4200000000000000000000000000000000000042',
     },
+    //wETH
     {
       asset: 'eth',
-      address: ethers.constants.AddressZero,
-      // TODO: this is wrapped ETH
-      // address: '0x4200000000000000000000000000000000000006',
+      address: '0x4200000000000000000000000000000000000006',
     },
     {
       asset: 'usdc',
@@ -337,9 +337,10 @@ const defaultNetworkData = {
     },
   ],
   scroll: [
+    //wETH
     {
       asset: 'eth',
-      address: ethers.constants.AddressZero,
+      address: '0x5300000000000000000000000000000000000004',
     },
     {
       asset: 'usdc',
@@ -359,9 +360,10 @@ const defaultNetworkData = {
     },
   ],
   eth: [
+    //wETH
     {
       asset: 'eth',
-      address: ethers.constants.AddressZero,
+      address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     },
     {
       asset: 'usdc',
@@ -397,9 +399,10 @@ const defaultNetworkData = {
       asset: 'matic',
       address: '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270',
     },
+    //wETH
     {
       asset: 'eth',
-      address: ethers.constants.AddressZero,
+      address: '0xe50fA9b3c56FfB159cB0FCA61F5c9D750e8128c8',
     },
     {
       asset: 'usdc',

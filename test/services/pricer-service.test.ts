@@ -1089,7 +1089,7 @@ describe('Pricer', () => {
           'high',
         )
 
-        const expectedAmount = BigNumber.from('1039500000000000000')
+        const expectedAmount = BigNumber.from('990000000000000000')
         expect(estimatedAmount.toString()).to.equal(expectedAmount.toString())
       })
 
@@ -1127,7 +1127,7 @@ describe('Pricer', () => {
           undefined, // No custom slippage
         )
 
-        const expectedAmount = BigNumber.from('1039500000000000000')
+        const expectedAmount = BigNumber.from('990000000000000000')
         expect(estimatedAmount.toString()).to.equal(expectedAmount.toString())
       })
 
