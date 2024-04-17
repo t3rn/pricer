@@ -197,10 +197,10 @@ class Pricer {
         let maxProfitRateBaselineBN;
         try {
             minProfitRateBaseline = (parseFloat(strategy.minProfitRate.toString()) * parseFloat(balance.toString())) / 100;
-            // BigNumber fails for fixed point numbers
-            minProfitRateBaseline = Math.floor(minProfitRateBaseline);
             maxProfitRateBaseline =
                 (parseFloat(strategy.maxShareOfMyBalancePerOrder.toString()) * parseFloat(balance.toString())) / 100;
+            // BigNumber fails for fixed point numbers
+            minProfitRateBaseline = Math.floor(minProfitRateBaseline);
             maxProfitRateBaseline = Math.ceil(maxProfitRateBaseline);
             maxProfitRateBaselineBN = ethers_1.BigNumber.from(this.floatToBigIntString(maxProfitRateBaseline));
             minProfitRateBaselineBN = ethers_1.BigNumber.from(this.floatToBigIntString(minProfitRateBaseline));
@@ -357,14 +357,14 @@ class Pricer {
             if (!this.ethersProvider && !fromChainProvider) {
                 throw new Error('No provider URL for the source network was provided.');
             }
-            // Retrieve the pricing information for converting fromAsset to toAsset.
+            // FIXME: this (often?) returns zero when fromAsset=DOT, toAsset=TRN, making (most?) erc20-erc20 transfers not possible.
+            //  But maybe it's only for certain networks.
             const pricing = yield this.retrieveAssetPricing(fromAsset, toAsset, fromChain, toChain);
             // Convert the maxReward from its Wei representation to the equivalent amount in toAsset, considering the current market price.
             const maxRewardInToAsset = maxRewardWei.mul(pricing.priceAinB).div(ethers_1.BigNumber.from(10).pow(18));
             if (!this.ethersProvider) {
                 this.ethersProvider = new ethers_1.ethers.providers.JsonRpcProvider(fromChainProvider);
             }
-            // Estimate the gas price on the source network.
             const estGasPriceOnNativeInWei = yield this.ethersProvider.getGasPrice();
             // Calculate the transaction cost in the fromAsset.
             const transactionCostData = yield this.retrieveCostInAsset(fromAsset, fromChain, toAsset, toChain, estGasPriceOnNativeInWei, ethers_1.ethers.constants.AddressZero);
