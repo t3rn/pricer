@@ -1,6 +1,6 @@
 {
   "name": "@t3rn/pricer",
-  "version": "1.7.4",
+  "version": "1.7.5",
   "description": "Retrieve asset prices, evaluate deals, and propose deals for a given set amount.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

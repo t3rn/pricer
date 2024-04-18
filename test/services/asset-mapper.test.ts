@@ -1,6 +1,7 @@
 import { expect } from 'chai'
 import config from '../../src/config/config'
 import { AssetMapper, NetworkNameOnCircuit } from '../../src'
+import { ethers } from 'ethers'
 
 describe('AssetMapper', () => {
   const assetMapper = AssetMapper.getInstance(config)
@@ -34,7 +35,7 @@ describe('AssetMapper', () => {
 
     it('should map an existing asset address to its corresponding asset name', () => {
       networkId = 'opsp'
-      assetAddress = '0x4200000000000000000000000000000000000042'
+      assetAddress = ethers.constants.AddressZero
       const expectedAssetName = 'optimism'
 
       expect(assetMapper.mapAssetByAddress(networkId, assetAddress)).to.equal(expectedAssetName)
