@@ -110,6 +110,23 @@ class Pricer {
             normalizedAsset = (0, price_provider_assets_1.mapT3rnVendorAssetsToSupportedAssetPrice)(asset);
             logger_1.logger.info({ asset, normalizedAsset, destinationNetwork }, '🍐 Asset is a t3 token. Normalizing to supported asset.');
         }
+        // search for DOT only on bsc
+        if (normalizedAsset === price_provider_assets_1.SupportedAssetPriceProvider.DOT) {
+            const dotDetailsOnBSC = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap['bsc'].find((a) => a.asset === 'dot');
+            if (dotDetailsOnBSC) {
+                const dotDetails = Object.assign(Object.assign({}, dotDetailsOnBSC), { network: 'bsc' });
+                return {
+                    assetObject: dotDetails,
+                    isFakePrice: false,
+                    foundInRequestedNetwork: false,
+                    foundNetwork: 'bsc',
+                };
+            }
+            else {
+                logger_1.logger.error('DOT specified but no DOT address on BSC found.');
+                return { assetObject: ethers_1.BigNumber.from(0), isFakePrice: true };
+            }
+        }
         let foundInRequestedNetwork = true;
         let assetDetails = (_a = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap[destinationNetwork]) === null || _a === void 0 ? void 0 : _a.find((a) => a.asset === normalizedAsset);
         if (!assetDetails) {
@@ -353,6 +370,7 @@ class Pricer {
                 estimatedReceivedAmountWei: BigNumber
                 gasFeeWei: BigNumber
                 bridgeFeeWei: BigNumber
+                BRNBonusWei: BigNumber
      */
     estimateReceivedAmount(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -380,10 +398,12 @@ class Pricer {
             // Subtract the transaction cost in toAsset from the maxReward in toAsset to estimate the amount received.
             const estimatedReceivedAmountWei = maxRewardInToAsset.sub(transactionCostInToAsset);
             const bridgeFeeWei = maxRewardWei.sub(estimatedReceivedAmountWei);
+            const BRNBonusWei = estimatedReceivedAmountWei;
             return {
                 estimatedReceivedAmountWei,
                 gasFeeWei: sourceGasFeeWei,
                 bridgeFeeWei,
+                BRNBonusWei,
             };
         });
     }
@@ -408,6 +428,7 @@ class Pricer {
                 estimatedReceivedAmountWei: BigNumber
                 gasFeeWei: BigNumber
                 bridgeFeeWei: BigNumber
+                BRNBonusWei: BigNumber
      */
     estimateReceivedAmountWithOptions(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei, executorTipOption, overpayOption, slippageOption, customExecutorTipPercentage, customExecutorTipValue, customOverpayRatio, customSlippage) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -479,11 +500,12 @@ class Pricer {
             }
             maxRewardWei = maxRewardWei.div(ethers_1.BigNumber.from(Math.round(slippageAdjustment * 100))).mul(100);
             // Calculate the final amount after all adjustments
-            const { estimatedReceivedAmountWei, gasFeeWei, bridgeFeeWei } = yield this.estimateReceivedAmount(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei);
+            const { estimatedReceivedAmountWei, gasFeeWei, bridgeFeeWei, BRNBonusWei } = yield this.estimateReceivedAmount(fromAsset, toAsset, fromChain, fromChainProvider, toChain, maxRewardWei);
             return {
                 estimatedReceivedAmountWei,
                 gasFeeWei,
                 bridgeFeeWei,
+                BRNBonusWei,
             };
         });
     }
