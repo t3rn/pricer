@@ -112,7 +112,8 @@ const defaultNetworkData = {
   arbitrum: [
     {
       asset: 'arbitrum',
-      address: '0x912ce59144191c1204e64559fe8253a0e49e6548',
+      address: ethers.constants.AddressZero,
+      // address: '0x912ce59144191c1204e64559fe8253a0e49e6548',
     },
     //wETH
     {
@@ -141,7 +142,8 @@ const defaultNetworkData = {
     //wETH
     {
       asset: 'base',
-      address: '0x4200000000000000000000000000000000000006',
+      address: ethers.constants.AddressZero,
+      // address: '0x4200000000000000000000000000000000000006',
     },
     //wETH
     {
@@ -251,7 +253,8 @@ const defaultNetworkData = {
   file: [
     {
       asset: 'optimism',
-      address: '0x4200000000000000000000000000000000000042',
+      address: ethers.constants.AddressZero,
+      // address: '0x4200000000000000000000000000000000000042',
     },
     {
       asset: 'eth',
@@ -297,7 +300,8 @@ const defaultNetworkData = {
     {
       // wETH
       asset: 'eth',
-      address: '0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f',
+      address: ethers.constants.AddressZero,
+      // address: '0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f',
     },
     {
       asset: 'usdc',
@@ -320,7 +324,8 @@ const defaultNetworkData = {
   optimism: [
     {
       asset: 'optimism',
-      address: '0x4200000000000000000000000000000000000042',
+      address: ethers.constants.AddressZero,
+      // address: '0x4200000000000000000000000000000000000042',
     },
     //wETH
     {
@@ -355,7 +360,8 @@ const defaultNetworkData = {
     //wETH
     {
       asset: 'eth',
-      address: '0x5300000000000000000000000000000000000004',
+      address: ethers.constants.AddressZero,
+      // address: '0x5300000000000000000000000000000000000004',
     },
     {
       asset: 'usdc',
@@ -379,7 +385,8 @@ const defaultNetworkData = {
     //wETH
     {
       asset: 'eth',
-      address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+      address: ethers.constants.AddressZero,
+      // address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
     },
     {
       asset: 'usdc',
@@ -410,7 +417,8 @@ const defaultNetworkData = {
   polygon: [
     {
       asset: 'matic',
-      address: '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270',
+      address: ethers.constants.AddressZero,
+      // address: '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270',
     },
     //wETH
     {

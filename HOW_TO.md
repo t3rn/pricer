@@ -26,3 +26,9 @@ When we have an unsupported chain, we should do our best to assign it to a simil
 blss: 'base',
 
 Here blss (blast) won't be supported by ankr but we make sure the pricer will return something by assigning it to 'base'
+
+
+### Address zero
+In 'networkToAssetAddressOnPriceProviderMap' mapping we use address zero to represent native tokens on each network.
+In order to fetch a native token price from ankr, we cannot pass address zero as it is not supported, only the network name is required.
+Our proxy server knows to not add address zero to the provider request, therefore we will still get the price.
