@@ -131,9 +131,10 @@ const defaultNetworkData = {
       asset: 'dot',
       address: '0x4909C938CD2ce2A31adDbee9b469694549D8d0e1',
     },
+    //usdt
     {
       asset: 'trn',
-      address: '0x371F89D467Cfc4979833AC488C54f98436A3f541',
+      address: '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9',
     },
   ],
   base: [
@@ -151,21 +152,23 @@ const defaultNetworkData = {
       asset: 'usdc',
       address: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
     },
+    //USDT has no supply, using USDC
     {
       asset: 'usdt',
-      address: '0xf19d560eB8d2ADf07BD6D13ed03e1D11215721F9',
+      address: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
     },
     {
       asset: 'dai',
-      address: '0x591e79239a7d679378eC8c847e5038150364C78F',
+      address: '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb',
     },
     {
       asset: 'dot',
       address: '0xb85BCF4d3A2eE1DA17F684F9f890Cd5807Bbe5A3',
     },
+    //usdc
     {
       asset: 'trn',
-      address: '0xfF3f18A66bB4Bd68079b93f70F7F7bE752986Ce8',
+      address: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
     },
   ],
   bsc: [
@@ -189,25 +192,27 @@ const defaultNetworkData = {
       asset: 'arbitrum',
       address: '0xa050ffb3eeb8200eeb7f61ce34ff644420fd3522',
     },
+    //TODO: provider returns 0, using usdt
     {
       asset: 'optimism',
-      address: '0x170c84e3b1d282f9628229836086716141995200',
+      address: '0x55d398326f99059ff775485246999027b3197955',
+      // address: '0x170c84e3b1d282f9628229836086716141995200',
     },
     {
       asset: 'matic',
       address: '0xcc42724c6683b7e57334c4e856f4c9965ed682bd',
     },
-    // TODO: this is wrapped DOT
-    // check this out: https://support.polkadot.network/support/solutions/articles/65000169207-what-is-the-contract-address-of-polkadot-
     {
       asset: 'dot',
       address: '0x7083609fCE4d1d8Dc0C979AAb8c869Ea2C873402',
     },
+    //usdt
     {
       asset: 'trn',
-      address: '0x9868fc3bFB38a139cB63c080F4F2f1D59A12F8bf',
+      address: '0x55d398326f99059ff775485246999027b3197955',
     },
   ],
+  //not supported on provider - networkNameCircuitToPriceProvider will use 'base' instead
   blast: [
     {
       asset: 'eth',
@@ -242,6 +247,7 @@ const defaultNetworkData = {
       address: '0x2Ee8d484eAad28427cc9938DbC4Cd438C1cC095d',
     },
   ],
+  //not supported on provider and not used
   file: [
     {
       asset: 'optimism',
@@ -272,6 +278,7 @@ const defaultNetworkData = {
       address: '0xa790dcFfc723B74b5436ce929E813dE03D5D57ed',
     },
   ],
+  //not supported on provider, networkNameCircuitToPriceProvider will use 'arbitrum' instead
   l0rn: [
     {
       asset: 'eth',
@@ -293,18 +300,21 @@ const defaultNetworkData = {
       address: '0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f',
     },
     {
+      asset: 'usdc',
+      address: '0x176211869cA2b568f2A7D4EE941E073a821EE1ff',
+    },
+    {
       asset: 'usdt',
       address: '0xA219439258ca9da29E9Cc4cE5596924745e12B93',
     },
-    //using USDT, no DOT address on linea actually has any balance
     {
       asset: 'dot',
       address: '0xA219439258ca9da29E9Cc4cE5596924745e12B93',
     },
-    //using USDC
+    //usdt
     {
       asset: 'trn',
-      address: '0x176211869cA2b568f2A7D4EE941E073a821EE1ff',
+      address: '0xA219439258ca9da29E9Cc4cE5596924745e12B93',
     },
   ],
   optimism: [
@@ -325,17 +335,20 @@ const defaultNetworkData = {
       asset: 'usdt',
       address: '0x94b008aa00579c1307b0ef2c499ad98a8ce58e58',
     },
+    //no supply, using usdt
     {
       asset: 'matic',
-      address: '0xe211233fe8b6964208cfc7ca66df9c0340088670',
+      address: '0x94b008aa00579c1307b0ef2c499ad98a8ce58e58',
+      // address: '0xe211233fe8b6964208cfc7ca66df9c0340088670',
     },
     {
       asset: 'dot',
       address: '0xd36ba3dfd846eFF512Ac3712a92500Ae665689b2',
     },
+    //usdt
     {
       asset: 'trn',
-      address: '0x2Ee8d484eAad28427cc9938DbC4Cd438C1cC095d',
+      address: '0x94b008aa00579c1307b0ef2c499ad98a8ce58e58',
     },
   ],
   scroll: [
@@ -356,9 +369,10 @@ const defaultNetworkData = {
       asset: 'dot',
       address: '0x39c36E69BC4fA97a7380de21d6EF88377F7822ad',
     },
+    //usdt
     {
       asset: 'trn',
-      address: '0x8e7297EC98b3133b9F3CE7e4c3604DA7a97113F6',
+      address: '0xf55bec9cafdbe8730f096aa55dad6d22d44099df',
     },
   ],
   eth: [
@@ -384,16 +398,13 @@ const defaultNetworkData = {
       address: '0xb50721bcf8d664c30412cfbc6cf7a15145234ad1',
     },
     {
-      asset: 'optimism',
-      address: '0x4200000000000000000000000000000000000042',
-    },
-    {
       asset: 'dot',
       address: '0xe56AC558178c4a71AEa3E542Ff4bDD131B5fCE54',
     },
+    //usdt
     {
       asset: 'trn',
-      address: '0xd05bC5f794d04340B2b6c55F81fe0ABCEe6349b1',
+      address: '0xdac17f958d2ee523a2206206994597c13d831ec7',
     },
   ],
   polygon: [
@@ -414,6 +425,11 @@ const defaultNetworkData = {
       asset: 'usdt',
       address: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f',
     },
+    //usdt
+    {
+      asset: 'trn',
+      address: '0xc2132d05d31c914a87c6611c10748aeb04b58e8f',
+    },
   ],
   avalanche_fuji: [],
   avalanche: [],
@@ -426,6 +442,7 @@ const defaultNetworkData = {
   rollux: [],
   eth_goerli: [],
   optimism_testnet: [],
+  //not supported on provider - networkNameCircuitToPriceProvider will use 'polygon' instead
   t0rn: [
     {
       asset: 'dot',

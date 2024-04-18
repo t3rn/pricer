@@ -110,11 +110,13 @@ export declare class Pricer {
                 estimatedReceivedAmountWei: BigNumber
                 gasFeeWei: BigNumber
                 bridgeFeeWei: BigNumber
+                BRNBonusWei: BigNumber
      */
     estimateReceivedAmount(fromAsset: SupportedAssetPriceProvider, toAsset: SupportedAssetPriceProvider, fromChain: NetworkNameOnPriceProvider, fromChainProvider: string, toChain: NetworkNameOnPriceProvider, maxRewardWei: BigNumber): Promise<{
         estimatedReceivedAmountWei: BigNumber;
         gasFeeWei: BigNumber;
         bridgeFeeWei: BigNumber;
+        BRNBonusWei: BigNumber;
     }>;
     /**
      * Estimates the amount of 'toAsset' the user will receive at the end of the transaction,
@@ -137,11 +139,13 @@ export declare class Pricer {
                 estimatedReceivedAmountWei: BigNumber
                 gasFeeWei: BigNumber
                 bridgeFeeWei: BigNumber
+                BRNBonusWei: BigNumber
      */
     estimateReceivedAmountWithOptions(fromAsset: SupportedAssetPriceProvider, toAsset: SupportedAssetPriceProvider, fromChain: NetworkNameOnPriceProvider, fromChainProvider: string, toChain: NetworkNameOnPriceProvider, maxRewardWei: BigNumber, executorTipOption: 'low' | 'regular' | 'high' | 'custom', overpayOption: 'slow' | 'regular' | 'fast' | 'custom', slippageOption: 'zero' | 'regular' | 'high' | 'custom', customExecutorTipPercentage?: number, customExecutorTipValue?: BigNumber, customOverpayRatio?: number, customSlippage?: number): Promise<{
         estimatedReceivedAmountWei: BigNumber;
         gasFeeWei: BigNumber;
         bridgeFeeWei: BigNumber;
+        BRNBonusWei: BigNumber;
     }>;
     /**
      * Parse the given price string as float with decimal precision

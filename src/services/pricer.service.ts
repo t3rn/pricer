@@ -158,6 +158,23 @@ export class Pricer {
       )
     }
 
+    // search for DOT only on bsc
+    if (normalizedAsset === SupportedAssetPriceProvider.DOT) {
+      const dotDetailsOnBSC = networkToAssetAddressOnPriceProviderMap['bsc'].find((a) => a.asset === 'dot')
+      if (dotDetailsOnBSC) {
+        const dotDetails = { ...dotDetailsOnBSC, network: 'bsc' as NetworkNameOnPriceProvider }
+        return {
+          assetObject: dotDetails,
+          isFakePrice: false,
+          foundInRequestedNetwork: false,
+          foundNetwork: 'bsc',
+        }
+      } else {
+        logger.error('DOT specified but no DOT address on BSC found.')
+        return { assetObject: BigNumber.from(0), isFakePrice: true }
+      }
+    }
+
     let foundInRequestedNetwork = true
     let assetDetails: AssetAndAddress | undefined = networkToAssetAddressOnPriceProviderMap[destinationNetwork]?.find(
       (a) => a.asset === normalizedAsset,
@@ -472,6 +489,7 @@ export class Pricer {
               estimatedReceivedAmountWei: BigNumber
               gasFeeWei: BigNumber
               bridgeFeeWei: BigNumber
+              BRNBonusWei: BigNumber
    */
   async estimateReceivedAmount(
     fromAsset: SupportedAssetPriceProvider,
@@ -484,6 +502,7 @@ export class Pricer {
     estimatedReceivedAmountWei: BigNumber
     gasFeeWei: BigNumber
     bridgeFeeWei: BigNumber
+    BRNBonusWei: BigNumber
   }> {
     if (!fromAsset || !toAsset || !fromChain || !fromChainProvider || !toChain || !maxRewardWei) {
       throw new Error('All parameters must be provided and valid.')
@@ -528,10 +547,13 @@ export class Pricer {
 
     const bridgeFeeWei = maxRewardWei.sub(estimatedReceivedAmountWei)
 
+    const BRNBonusWei = estimatedReceivedAmountWei
+
     return {
       estimatedReceivedAmountWei,
       gasFeeWei: sourceGasFeeWei,
       bridgeFeeWei,
+      BRNBonusWei,
     }
   }
 
@@ -556,6 +578,7 @@ export class Pricer {
               estimatedReceivedAmountWei: BigNumber
               gasFeeWei: BigNumber
               bridgeFeeWei: BigNumber
+              BRNBonusWei: BigNumber
    */
   async estimateReceivedAmountWithOptions(
     fromAsset: SupportedAssetPriceProvider,
@@ -575,6 +598,7 @@ export class Pricer {
     estimatedReceivedAmountWei: BigNumber
     gasFeeWei: BigNumber
     bridgeFeeWei: BigNumber
+    BRNBonusWei: BigNumber
   }> {
     if (!fromAsset || !toAsset || !fromChain || !fromChainProvider || !toChain || !maxRewardWei) {
       throw new Error('All primary parameters must be provided and valid.')
@@ -649,7 +673,7 @@ export class Pricer {
     maxRewardWei = maxRewardWei.div(BigNumber.from(Math.round(slippageAdjustment * 100))).mul(100)
 
     // Calculate the final amount after all adjustments
-    const { estimatedReceivedAmountWei, gasFeeWei, bridgeFeeWei } = await this.estimateReceivedAmount(
+    const { estimatedReceivedAmountWei, gasFeeWei, bridgeFeeWei, BRNBonusWei } = await this.estimateReceivedAmount(
       fromAsset,
       toAsset,
       fromChain,
@@ -662,6 +686,7 @@ export class Pricer {
       estimatedReceivedAmountWei,
       gasFeeWei,
       bridgeFeeWei,
+      BRNBonusWei,
     }
   }
 

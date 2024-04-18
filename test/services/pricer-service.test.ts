@@ -1065,6 +1065,7 @@ describe('Pricer', () => {
           estimatedReceivedAmountWei: BigNumber.from('990000000000000000'), // 0.99 ETH
           gasFeeWei: BigNumber.from('0'),
           bridgeFeeWei: BigNumber.from(0),
+          BRNBonusWei: BigNumber.from(0),
         })
         sandbox.stub(pricer, 'receiveAssetPriceWithCache').resolves(BigNumber.from('2000')) // $2000 per ETH
         sandbox.stub(pricer, 'retrieveCostInAsset').resolves({

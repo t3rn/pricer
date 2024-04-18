@@ -33,6 +33,7 @@ describe('AssetMapper', () => {
     })
 
     it('should map an existing asset address to its corresponding asset name', () => {
+      networkId = 'opsp'
       assetAddress = '0x4200000000000000000000000000000000000042'
       const expectedAssetName = 'optimism'
 
@@ -66,7 +67,7 @@ describe('AssetMapper', () => {
     })
 
     it('should map an existing asset address to its corresponding asset name', () => {
-      const expectedAssetAddress = '0xd05bC5f794d04340B2b6c55F81fe0ABCEe6349b1'
+      const expectedAssetAddress = '0xdac17f958d2ee523a2206206994597c13d831ec7'
 
       expect(assetMapper.mapAssetByCircuitNumber(networkId, assetNumber)).to.equal(expectedAssetAddress)
     })
