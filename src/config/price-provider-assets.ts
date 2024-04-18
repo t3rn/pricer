@@ -165,12 +165,15 @@ const defaultNetworkData = {
     },
     {
       asset: 'dot',
-      address: '0xb85BCF4d3A2eE1DA17F684F9f890Cd5807Bbe5A3',
+      address: '0x4a84F39b8A265DD2c39A3175B4fFD3731DD8FE17',
     },
-    //usdc
     {
       asset: 'trn',
-      address: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
+      address: '0xeECEC063D5ea592A49340437a8C59A624Fa79159',
+    },
+    {
+      asset: 'brn',
+      address: '0x548CD649Ccb2b6D99612A6b09020A52C868Acb1E',
     },
   ],
   bsc: [
@@ -274,11 +277,15 @@ const defaultNetworkData = {
     },
     {
       asset: 'dot',
-      address: '0x31c7baa3025FbF3b177f26b6Cd2bF972Cfa5893F',
+      address: '0x93aB601aCa2758793a604DDb867BAc4FD91786Da',
     },
     {
       asset: 'trn',
-      address: '0xa790dcFfc723B74b5436ce929E813dE03D5D57ed',
+      address: '0x065D70B9ea0288f071F8501C47d51D9f37F47969',
+    },
+    {
+      asset: 'brn',
+      address: '0xa8F287C6c26258fE52ea94576518076Ff7044010',
     },
   ],
   //not supported on provider, networkNameCircuitToPriceProvider will use 'arbitrum' instead
@@ -348,12 +355,15 @@ const defaultNetworkData = {
     },
     {
       asset: 'dot',
-      address: '0xd36ba3dfd846eFF512Ac3712a92500Ae665689b2',
+      address: '0x93aB601aCa2758793a604DDb867BAc4FD91786Da',
     },
-    //usdt
     {
       asset: 'trn',
-      address: '0x94b008aa00579c1307b0ef2c499ad98a8ce58e58',
+      address: '0x065D70B9ea0288f071F8501C47d51D9f37F47969',
+    },
+    {
+      asset: 'brn',
+      address: '0xa8F287C6c26258fE52ea94576518076Ff7044010',
     },
   ],
   scroll: [
