@@ -1,5 +1,7 @@
 import { BigNumber, ethers } from 'ethers'
 
+//ankr provider supported networks.
+//DO NOT MODIFY THIS ENUM
 export type NetworkNameOnPriceProvider =
   | 'arbitrum'
   | 'avalanche'
@@ -108,6 +110,8 @@ export const mapT3rnVendorAssetsToSupportedAssetPrice = (tokenName: string): Sup
   }
 }
 
+//want to add support for new chains/assets?
+//read HOW_TO.md first
 const defaultNetworkData = {
   arbitrum: [
     {
@@ -167,13 +171,15 @@ const defaultNetworkData = {
       asset: 'dot',
       address: '0x4a84F39b8A265DD2c39A3175B4fFD3731DD8FE17',
     },
+    //usdc because usdt has no supply
     {
       asset: 'trn',
-      address: '0xeECEC063D5ea592A49340437a8C59A624Fa79159',
+      address: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
     },
+    //usdc
     {
       asset: 'brn',
-      address: '0x548CD649Ccb2b6D99612A6b09020A52C868Acb1E',
+      address: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
     },
   ],
   bsc: [
@@ -279,13 +285,15 @@ const defaultNetworkData = {
       asset: 'dot',
       address: '0x93aB601aCa2758793a604DDb867BAc4FD91786Da',
     },
+    //usdt
     {
       asset: 'trn',
-      address: '0x065D70B9ea0288f071F8501C47d51D9f37F47969',
+      address: '0x94b008aa00579c1307b0ef2c499ad98a8ce58e58',
     },
+    //usdc
     {
       asset: 'brn',
-      address: '0xa8F287C6c26258fE52ea94576518076Ff7044010',
+      address: '0x0b2c639c533813f4aa9d7837caf62653d097ff85',
     },
   ],
   //not supported on provider, networkNameCircuitToPriceProvider will use 'arbitrum' instead
@@ -474,6 +482,9 @@ const defaultNetworkData = {
   t2rn: [],
   filecoin: [],
 } as const
+
+//want to add support for new chains/assets?
+//read HOW_TO.md first
 
 // @ts-ignore
 export const networkToAssetAddressOnPriceProviderMap: NetworkToAssetAddressOnPriceProviderMap = defaultNetworkData

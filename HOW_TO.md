@@ -25,10 +25,31 @@ The ankr provider does not have a great list of supported chains. Until we find 
 When we have an unsupported chain, we should do our best to assign it to a similar and supported chain:
 blss: 'base',
 
-Here blss (blast) won't be supported by ankr but we make sure the pricer will return something by assigning it to 'base'
+Here blss (blast) won't be supported by ankr but we make sure the pricer will return something by using 'base' instead.
 
-
-### Address zero
+#### Address zero
 In 'networkToAssetAddressOnPriceProviderMap' mapping we use address zero to represent native tokens on each network.
 In order to fetch a native token price from ankr, we cannot pass address zero as it is not supported, only the network name is required.
 Our proxy server knows to not add address zero to the provider request, therefore we will still get the price.
+
+#### Token addresses
+When you add new tokens for new/existing supported networks, make sure to first check their existence/support against the ankr provider api.
+
+cURL example:
+```env
+curl --location 'https://rpc.ankr.com/multichain/OUR_API_KEY_HERE' \
+--header 'Content-Type: application/json' \
+--data '{
+    "method": "ankr_getTokenPrice",
+    "params": {
+        "blockchain": "arbitrum",
+        "contractAddress": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"
+    },
+    "id": 1,
+    "jsonrpc": "2.0"
+}'
+```
+
+Want to query a chain's native token with address zero? Simply remove 'contractAddress' param, pass just the 'blockchain' value.
+
+Did ankr not respond with the correct price or returned price 0? **DO NOT ADD IT** or find a similar token address, for example: TRN = USDT address
