@@ -20,6 +20,31 @@ Example: opsp: 'optimism'
 
 Where opsp is the incoming chain id from guardian and 'optimism' is the supported ankr chain
 
+#### Mapping meaning
+Example:
+```env
+ arbitrum: [
+    {
+      asset: 'arbitrum',
+      address: ethers.constants.AddressZero,
+    },
+    //wETH
+    {
+      asset: 'eth',
+      address: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+    },
+    ...
+ ]
+```
+
+Key 'arbitrum' is the chain name that ankr supports.  
+Key 'asset' is the asset name that ankr supports.  
+Key 'address' is the token's address found on the blockchain explorer.  
+
+**How do i find the token address?**  
+If for example we want to find eth's address on arbitrum, google arbitrum explorer and then inside it search for ETH.  
+That will bring up the native/ERC20 token and its address.  
+
 #### Unsupported chain
 The ankr provider does not have a great list of supported chains. Until we find and switch to a better provider, follow these steps:
 When we have an unsupported chain, we should do our best to assign it to a similar and supported chain:
