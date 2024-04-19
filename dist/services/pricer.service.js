@@ -115,6 +115,7 @@ class Pricer {
             const dotDetailsOnBSC = price_provider_assets_1.networkToAssetAddressOnPriceProviderMap['bsc'].find((a) => a.asset === 'dot');
             if (dotDetailsOnBSC) {
                 const dotDetails = Object.assign(Object.assign({}, dotDetailsOnBSC), { network: 'bsc' });
+                logger_1.logger.info({ requestedOn: destinationNetwork, fetchedFrom: 'bsc', asset: normalizedAsset }, 'DOT requested. Fetching from bsc.');
                 return {
                     assetObject: dotDetails,
                     isFakePrice: false,

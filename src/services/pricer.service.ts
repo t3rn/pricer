@@ -163,6 +163,10 @@ export class Pricer {
       const dotDetailsOnBSC = networkToAssetAddressOnPriceProviderMap['bsc'].find((a) => a.asset === 'dot')
       if (dotDetailsOnBSC) {
         const dotDetails = { ...dotDetailsOnBSC, network: 'bsc' as NetworkNameOnPriceProvider }
+        logger.info(
+          { requestedOn: destinationNetwork, fetchedFrom: 'bsc', asset: normalizedAsset },
+          'DOT requested. Fetching from bsc.',
+        )
         return {
           assetObject: dotDetails,
           isFakePrice: false,

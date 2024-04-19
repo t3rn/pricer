@@ -3,6 +3,9 @@
 ## Overview
 `@t3rn/pricer` provides functionality for retrieving asset prices, evaluating deals, and proposing deals for a given set amount.
 
+## Development
+For development related questions refer to [HOW_TO.md](HOW_TO.md)
+
 ## Installation
 ```bash
 npm i @t3rn/pricer --save
