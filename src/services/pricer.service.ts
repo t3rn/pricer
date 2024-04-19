@@ -541,23 +541,26 @@ export class Pricer {
       assetObject instanceof BigNumber ? ethers.constants.AddressZero : assetObject.address,
     )
 
-    // Convert the transaction cost to toAsset using the market price.
-    const transactionCostInToAsset = transactionCostData.costInAsset
+    // The bridge fee is the difference between the total max reward available and the sum of the gas fee plus the transaction costs converted to 'toAsset' units.
+    const totalCostsInToAsset = sourceGasFeeWei
       .mul(pricing.priceAinB)
       .div(BigNumber.from(10).pow(18))
+      .add(transactionCostData.costInAsset)
 
-    // Subtract the transaction cost in toAsset from the maxReward in toAsset to estimate the amount received.
-    const estimatedReceivedAmountWei = maxRewardInToAsset.sub(transactionCostInToAsset)
+    const estimatedReceivedAmountInToAssetWei = maxRewardInToAsset.sub(totalCostsInToAsset)
 
-    const bridgeFeeWei = maxRewardWei.sub(estimatedReceivedAmountWei)
+    const bridgeFeeWei = maxRewardWei.sub(
+      sourceGasFeeWei.add(estimatedReceivedAmountInToAssetWei.mul(BigNumber.from(10).pow(18)).div(pricing.priceAinB)),
+    )
 
-    const BRNBonusWei = estimatedReceivedAmountWei
+    // bridgeFeeUsd must then be calculated to the same toAsset, toChain and with bridgeFeeWei
+    // const bridgeFeeUsd = await this.receiveAssetUSDValue(toAsset, toChain, bridgeFeeWei)
 
     return {
-      estimatedReceivedAmountWei,
+      estimatedReceivedAmountWei: estimatedReceivedAmountInToAssetWei,
       gasFeeWei: sourceGasFeeWei,
-      bridgeFeeWei,
-      BRNBonusWei,
+      bridgeFeeWei: bridgeFeeWei,
+      BRNBonusWei: estimatedReceivedAmountInToAssetWei,
     }
   }
 
