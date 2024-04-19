@@ -392,19 +392,20 @@ class Pricer {
             const { assetObject } = this.getAssetObject(fromAsset, fromChain);
             // Calculate the transaction cost in the fromAsset, using the source network's gas price
             const transactionCostData = yield this.retrieveCostInAsset(fromAsset, fromChain, toAsset, toChain, estGasPriceOnSourceInWei, assetObject instanceof ethers_1.BigNumber ? ethers_1.ethers.constants.AddressZero : assetObject.address);
-            // Convert the transaction cost to toAsset using the market price.
-            const transactionCostInToAsset = transactionCostData.costInAsset
+            // The bridge fee is the difference between the total max reward available and the sum of the gas fee plus the transaction costs converted to 'toAsset' units.
+            const totalCostsInToAsset = sourceGasFeeWei
                 .mul(pricing.priceAinB)
-                .div(ethers_1.BigNumber.from(10).pow(18));
-            // Subtract the transaction cost in toAsset from the maxReward in toAsset to estimate the amount received.
-            const estimatedReceivedAmountWei = maxRewardInToAsset.sub(transactionCostInToAsset);
-            const bridgeFeeWei = maxRewardWei.sub(estimatedReceivedAmountWei);
-            const BRNBonusWei = estimatedReceivedAmountWei;
+                .div(ethers_1.BigNumber.from(10).pow(18))
+                .add(transactionCostData.costInAsset);
+            const estimatedReceivedAmountInToAssetWei = maxRewardInToAsset.sub(totalCostsInToAsset);
+            const bridgeFeeWei = maxRewardWei.sub(sourceGasFeeWei.add(estimatedReceivedAmountInToAssetWei.mul(ethers_1.BigNumber.from(10).pow(18)).div(pricing.priceAinB)));
+            // bridgeFeeUsd must then be calculated to the same toAsset, toChain and with bridgeFeeWei
+            // const bridgeFeeUsd = await this.receiveAssetUSDValue(toAsset, toChain, bridgeFeeWei)
             return {
-                estimatedReceivedAmountWei,
+                estimatedReceivedAmountWei: estimatedReceivedAmountInToAssetWei,
                 gasFeeWei: sourceGasFeeWei,
-                bridgeFeeWei,
-                BRNBonusWei,
+                bridgeFeeWei: bridgeFeeWei,
+                BRNBonusWei: estimatedReceivedAmountInToAssetWei,
             };
         });
     }
