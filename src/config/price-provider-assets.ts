@@ -139,7 +139,11 @@ const defaultNetworkData = {
     //usdt
     {
       asset: 'trn',
-      address: '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9',
+      address: '0x371F89D467Cfc4979833AC488C54f98436A3f541',
+    },
+    {
+      asset: 'brn',
+      address: '0xa86fCBB1F436Aea9a9854193A6353e956c86F5AF',
     },
   ],
   base: [
@@ -174,12 +178,12 @@ const defaultNetworkData = {
     //usdc because usdt has no supply
     {
       asset: 'trn',
-      address: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
+      address: '0xeECEC063D5ea592A49340437a8C59A624Fa79159',
     },
     //usdc
     {
       asset: 'brn',
-      address: '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913',
+      address: '0x548CD649Ccb2b6D99612A6b09020A52C868Acb1E',
     },
   ],
   bsc: [
@@ -215,12 +219,15 @@ const defaultNetworkData = {
     },
     {
       asset: 'dot',
-      address: '0x7083609fCE4d1d8Dc0C979AAb8c869Ea2C873402',
+      address: '0xEa830740B3DA0ad06939Ed4DcAE8aFe12256A9Ae',
     },
-    //usdt
     {
       asset: 'trn',
-      address: '0x55d398326f99059ff775485246999027b3197955',
+      address: '0x9868fc3bFB38a139cB63c080F4F2f1D59A12F8bf',
+    },
+    {
+      asset: 'brn',
+      address: '0x57F68AD03403FdD984099664BD8Ba6d39aF5595e',
     },
   ],
   //not supported on provider - networkNameCircuitToPriceProvider will use 'base' instead
@@ -293,7 +300,7 @@ const defaultNetworkData = {
     //usdc
     {
       asset: 'brn',
-      address: '0x0b2c639c533813f4aa9d7837caf62653d097ff85',
+      address: '0xf260922848610007557c474f43408888474daC2d',
     },
   ],
   //not supported on provider, networkNameCircuitToPriceProvider will use 'arbitrum' instead
@@ -309,6 +316,10 @@ const defaultNetworkData = {
     {
       asset: 'trn',
       address: '0xd2fe5faA6269A6bbB17AEA9800B7e59Bb0CadAec',
+    },
+    {
+      asset: 'brn',
+      address: '0xe2bd26E845a1FaC1fbf127D1C84Ed6aF8f693280',
     },
   ],
   linea: [
@@ -328,12 +339,16 @@ const defaultNetworkData = {
     },
     {
       asset: 'dot',
-      address: '0xA219439258ca9da29E9Cc4cE5596924745e12B93',
+      address: '0x4b227b3c6AE905D97CdfB765afe8b23D5154b81c',
     },
     //usdt
     {
       asset: 'trn',
-      address: '0xA219439258ca9da29E9Cc4cE5596924745e12B93',
+      address: '0xEBF92D16133BEc430547D53fe557AC91aeB8332E',
+    },
+    {
+      asset: 'brn',
+      address: '0xEc42549C23C4bCa05e9fe054Ae47eeaF1B397ecd',
     },
   ],
   optimism: [
@@ -342,7 +357,6 @@ const defaultNetworkData = {
       address: ethers.constants.AddressZero,
       // address: '0x4200000000000000000000000000000000000042',
     },
-    //wETH
     {
       asset: 'eth',
       address: '0x4200000000000000000000000000000000000006',
@@ -363,15 +377,15 @@ const defaultNetworkData = {
     },
     {
       asset: 'dot',
-      address: '0x93aB601aCa2758793a604DDb867BAc4FD91786Da',
+      address: '0xAA7B3C6cf7fbEB0330EaFE036891952a40C933E4',
     },
     {
       asset: 'trn',
-      address: '0x065D70B9ea0288f071F8501C47d51D9f37F47969',
+      address: '0x54329fff29D042D2B67FC5b21cF8e9E5165E1A10',
     },
     {
       asset: 'brn',
-      address: '0xa8F287C6c26258fE52ea94576518076Ff7044010',
+      address: '0xa6E2093b57F854ed2F5B1f5c0614d87dd391b1Bc',
     },
   ],
   scroll: [
