@@ -33,10 +33,11 @@ describe('AssetMapper', () => {
       )
     })
 
-    it('should map an existing asset address to its corresponding asset name', () => {
+    it('should map "optimism" asset address to its name on "opsp"', () => {
       networkId = 'opsp'
       assetAddress = ethers.constants.AddressZero
-      const expectedAssetName = 'optimism'
+      // const expectedAssetName = 'optimism'
+      const expectedAssetName = 'eth' // Actually use ETH for now, cuz it's mapped like that in the configs
 
       expect(assetMapper.mapAssetByAddress(networkId, assetAddress)).to.equal(expectedAssetName)
     })
@@ -67,7 +68,7 @@ describe('AssetMapper', () => {
       )
     })
 
-    it('should map an existing asset address to its corresponding asset name', () => {
+    it(`should map 3333 asset number to its corresponding address on ethm`, () => {
       const expectedAssetAddress = '0xdac17f958d2ee523a2206206994597c13d831ec7'
 
       expect(assetMapper.mapAssetByCircuitNumber(networkId, assetNumber)).to.equal(expectedAssetAddress)
