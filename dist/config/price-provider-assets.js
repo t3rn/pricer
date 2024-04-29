@@ -75,13 +75,13 @@ const defaultNetworkData = {
     arbitrum: [
         {
             asset: 'arbitrum',
-            address: ethers_1.ethers.constants.AddressZero,
-            // address: '0x912ce59144191c1204e64559fe8253a0e49e6548',
+            // address: ethers.constants.AddressZero,
+            address: '0x912ce59144191c1204e64559fe8253a0e49e6548',
         },
-        //wETH
         {
             asset: 'eth',
-            address: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+            address: ethers_1.ethers.constants.AddressZero,
+            // address: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1', //wETH
         },
         {
             asset: 'usdc',
@@ -109,13 +109,13 @@ const defaultNetworkData = {
         //wETH
         {
             asset: 'base',
-            address: ethers_1.ethers.constants.AddressZero,
-            // address: '0x4200000000000000000000000000000000000006',
+            address: '0x4200000000000000000000000000000000000006',
+            // address: ethers.constants.AddressZero,
         },
-        //wETH
         {
             asset: 'eth',
-            address: '0x4200000000000000000000000000000000000006',
+            address: ethers_1.ethers.constants.AddressZero,
+            // address: '0x4200000000000000000000000000000000000006',
         },
         {
             asset: 'usdc',
@@ -166,7 +166,7 @@ const defaultNetworkData = {
             asset: 'arbitrum',
             address: '0xa050ffb3eeb8200eeb7f61ce34ff644420fd3522',
         },
-        //TODO: provider returns 0, using usdt
+        //provider returns 0, using usdt instead
         {
             asset: 'optimism',
             address: '0x55d398326f99059ff775485246999027b3197955',
@@ -227,13 +227,12 @@ const defaultNetworkData = {
     //not supported on provider and not used
     file: [
         {
-            asset: 'optimism',
-            address: ethers_1.ethers.constants.AddressZero,
-            // address: '0x4200000000000000000000000000000000000042',
-        },
-        {
             asset: 'eth',
             address: ethers_1.ethers.constants.AddressZero,
+        },
+        {
+            asset: 'optimism',
+            address: '0x4200000000000000000000000000000000000042',
         },
         {
             asset: 'usdc',
@@ -313,12 +312,13 @@ const defaultNetworkData = {
     optimism: [
         {
             asset: 'optimism',
-            address: ethers_1.ethers.constants.AddressZero,
-            // address: '0x4200000000000000000000000000000000000042',
+            // address: ethers.constants.AddressZero,
+            address: '0x4200000000000000000000000000000000000042',
         },
         {
             asset: 'eth',
-            address: '0x4200000000000000000000000000000000000006',
+            address: ethers_1.ethers.constants.AddressZero,
+            // address: '0x4200000000000000000000000000000000000006',
         },
         {
             asset: 'usdc',
@@ -348,11 +348,10 @@ const defaultNetworkData = {
         },
     ],
     scroll: [
-        //wETH
         {
             asset: 'eth',
             address: ethers_1.ethers.constants.AddressZero,
-            // address: '0x5300000000000000000000000000000000000004',
+            // address: '0x5300000000000000000000000000000000000004', //wETH
         },
         {
             asset: 'usdc',
@@ -373,11 +372,9 @@ const defaultNetworkData = {
         },
     ],
     eth: [
-        //wETH
         {
             asset: 'eth',
             address: ethers_1.ethers.constants.AddressZero,
-            // address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
         },
         {
             asset: 'usdc',
@@ -411,10 +408,9 @@ const defaultNetworkData = {
             address: ethers_1.ethers.constants.AddressZero,
             // address: '0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270',
         },
-        //wETH
         {
             asset: 'eth',
-            address: '0xe50fA9b3c56FfB159cB0FCA61F5c9D750e8128c8',
+            address: '0xe50fA9b3c56FfB159cB0FCA61F5c9D750e8128c8', //wETH
         },
         {
             asset: 'usdc',
